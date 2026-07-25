@@ -1,0 +1,3 @@
+# Single-tenant deployment model
+
+Roadly's data model and auth assume one deployment serves exactly one product's roadmap, one admin team, and one pool of end users — there is no Workspace/Account/tenant concept scoping `FeatureRequest`, `User`, or `Vote`. We chose this because MVP scope targets a single product team with no billing/subscription surface, and each customer stands up their own deployment rather than sharing one. Retrofitting tenant scoping later (a `workspaceId` column plus tenant-aware auth and queries) is additive, not a rewrite, but it is deferred — multi-tenant SaaS is explicitly out of scope until a future ADR revisits it.
