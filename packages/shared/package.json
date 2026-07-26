@@ -1,0 +1,15 @@
+{
+  "name": "@roadly/shared",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "echo \"@roadly/shared: nothing to watch yet\" && exit 0",
+    "lint": "echo \"@roadly/shared: lint not yet configured\" && exit 0",
+    "type-check": "tsc --noEmit -p tsconfig.json",
+    "test": "echo \"@roadly/shared: no tests yet\" && exit 0"
+  }
+}

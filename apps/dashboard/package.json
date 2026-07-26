@@ -1,0 +1,13 @@
+{
+  "name": "@roadly/dashboard",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "echo \"@roadly/dashboard: build not yet configured\" && exit 0",
+    "dev": "echo \"@roadly/dashboard: dev not yet configured\" && exit 0",
+    "lint": "echo \"@roadly/dashboard: lint not yet configured\" && exit 0",
+    "type-check": "tsc --noEmit -p tsconfig.json",
+    "test": "echo \"@roadly/dashboard: no tests yet\" && exit 0"
+  }
+}
