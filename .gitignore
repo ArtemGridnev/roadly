@@ -30,3 +30,8 @@ coverage/
 
 # prisma
 apps/api/prisma/*.db
+
+# AI agent tooling / skill files
+.agents/
+.claude/
+.windsurf/

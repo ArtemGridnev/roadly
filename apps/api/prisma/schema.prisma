@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RequestStatus {
+  BACKLOG
+  PLANNED
+  IN_PROGRESS
+  SHIPPED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  requests  FeatureRequest[]
+  votes     Vote[]
+}
+
+model FeatureRequest {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  category    String?
+  status      RequestStatus @default(BACKLOG)
+  createdAt   DateTime      @default(now())
+
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id])
+
+  votes       Vote[]
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  requestId String
+  request   FeatureRequest @relation(fields: [requestId], references: [id])
+
+  @@unique([userId, requestId])
+}
