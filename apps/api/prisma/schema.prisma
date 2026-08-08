@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RequestStatus {
+  BACKLOG
+  PLANNED
+  IN_PROGRESS
+  SHIPPED
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  widgetKey String   @unique @default(cuid())
+  createdAt DateTime @default(now())
+
+  members         WorkspaceMember[]
+  contacts        Contact[]
+  featureRequests FeatureRequest[]
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  agentId String
+  agent   Agent  @relation(fields: [agentId], references: [id])
+
+  @@unique([workspaceId, agentId])
+}
+
+model Agent {
+  id           String   @id @default(cuid()) 
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  memberships WorkspaceMember[]
+}
+
+model Contact {
+  id         String   @id @default(cuid())
+  externalId String
+  name       String
+  email      String
+  createdAt  DateTime @default(now())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  requests FeatureRequest[]
+  votes    Vote[]
+
+  @@unique([workspaceId, externalId])
+}
+
+model FeatureRequest {
+  id          String        @id @default(cuid())
+  title       String
+  description String
+  category    String?
+  status      RequestStatus @default(BACKLOG)
+  createdAt   DateTime      @default(now())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  authorId String
+  author   Contact @relation(fields: [authorId], references: [id])
+
+  votes Vote[]
+
+  @@index([workspaceId, status])
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id])
+
+  requestId String
+  request   FeatureRequest @relation(fields: [requestId], references: [id])
+
+  @@unique([contactId, requestId])
+}

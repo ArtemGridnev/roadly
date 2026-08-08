@@ -68,25 +68,35 @@ roadly/
 
 ## Data Model
 
-- `EndUser` — id, externalId (host-supplied id, upserted on every widget request), name, email. Widget-only; no credentials.
-- `TeamMember` — id, name, email, password credential. Admin dashboard-only; signs in.
-- `FeatureRequest` — id, title, description, status, category (optional free-text string, no predefined list), authorId (→ `EndUser`), createdAt
-- `Vote` — userId (→ `EndUser`) + requestId, with a **unique constraint on (userId, requestId)** to enforce one vote per user per request at the database level
-- `Comment` — requestId, userId (→ `EndUser`), body, createdAt *(future)*
+Multi-tenant: one shared deployment serves many customer businesses. See `docs/adr/0003-multi-tenant-workspace-model.md`.
+
+- `Workspace` — id, name, slug, widgetKey (public key the widget sends at init to identify its tenant). One per customer business.
+- `WorkspaceMember` — links an `Agent` to a `Workspace` it administers, `@@unique([workspaceId, agentId])`. A join table, not a direct FK, so one `Agent` can belong to multiple Workspaces.
+- `Agent` — id, name, email (globally unique), password credential. Admin dashboard-only; signs in; global identity, not scoped to a single Workspace.
+- `Contact` — id, workspaceId, externalId (host-supplied id, upserted on every widget request, unique per `(workspaceId, externalId)` — not globally, since two Workspaces' host apps can send the same externalId), name, email. Widget-only; no credentials.
+- `FeatureRequest` — id, workspaceId (denormalized for query/index simplicity), title, description, status, category (optional free-text string, no predefined list), authorId (→ `Contact`), createdAt
+- `Vote` — contactId (→ `Contact`) + requestId, with a **unique constraint on (contactId, requestId)** to enforce one vote per Contact per request at the database level. No `workspaceId` of its own — see ADR 0003 for why, including the service-layer check still needed once the votes service exists.
+- `Comment` — requestId, contactId (→ `Contact`), body, createdAt *(future — will need workspaceId too when built)*
 
 Status is an enum: `BACKLOG | PLANNED | IN_PROGRESS | SHIPPED`.
 
 ## Auth
 
-### Widget identity (EndUser)
+### Workspace resolution
 
-- **MVP:** the host app passes the current end user's id/name/email into `Roadly.init(...)`. The backend upserts an `EndUser` row keyed by that host-supplied id (stored as `externalId`) and trusts the identity as-is (identified but unverified). Documented as a deliberate trade-off.
+- **Widget:** the `widgetKey` passed at `Roadly.init(...)` resolves which `Workspace` a public request belongs to; every widget-facing query/write is scoped to that Workspace.
+- **Dashboard:** the signed-in `Agent`'s `WorkspaceMember` row(s) determine which Workspace(s) they can act on. If an `Agent` belongs to more than one, the dashboard needs a way to select the active one (not designed yet).
+- The NestJS guards/middleware that actually implement either resolution don't exist yet — documented here as the target, not built.
+
+### Widget identity (Contact)
+
+- **MVP:** the host app passes the current end user's id/name/email into `Roadly.init(...)`. The backend upserts a `Contact` row keyed by that host-supplied id (stored as `externalId`, scoped to the resolved Workspace) and trusts the identity as-is (identified but unverified). Documented as a deliberate trade-off.
 - **Future:** the host app's backend signs a short-lived JWT with a shared secret; the widget passes it at init; the backend verifies signature and expiry before trusting the identity. Prevents impersonation.
 
-### Admin dashboard auth (TeamMember)
+### Admin dashboard auth (Agent)
 
 - Self-built: JWT access tokens + refresh tokens, httpOnly cookies.
-- **MVP:** a single role. NestJS guards enforce authentication only — any signed-in `TeamMember` has full access (view, change status).
+- **MVP:** a single role. NestJS guards enforce authentication only — any signed-in `Agent` has full access (view, change status) within their Workspace(s).
 - **Future:** role-based guards (admin vs. regular) restrict admin-only actions once multiple roles exist.
 
 ## Widget Embedding Model
