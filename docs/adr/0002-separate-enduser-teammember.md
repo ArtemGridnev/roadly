@@ -1,5 +1,7 @@
 # Separate EndUser and TeamMember concepts
 
+> **Terminology renamed by [ADR 0003](0003-multi-tenant-workspace-model.md): `EndUser` → `Contact`, `TeamMember` → `Agent`. The identity split described below is otherwise unchanged.**
+
 Widget end users (no credentials, identified via host-supplied identity) and admin dashboard team members (credentialed, sign in) are modeled as two distinct entities, `EndUser` and `TeamMember`, rather than one shared `User` table with a role flag. `FeatureRequest.authorId` and `Vote.userId` reference `EndUser` only; dashboard auth references `TeamMember` only — a team member can never author a request or be voted for, and an end user can never sign into the dashboard. We chose the split because the two populations have unrelated auth mechanisms (host-trusted identity vs. password/JWT) and non-overlapping capabilities; collapsing them into one table would mean carrying nullable credential fields on every widget-identified row and vice versa.
 
 `EndUser.id` is a Roadly-minted internal id, not the host-supplied id. The host's id is stored separately as `externalId` and upserted on every widget request. We chose this over using the host's id directly as the primary key because host apps aren't guaranteed to supply ids in a format compatible with Roadly's own id strategy, and keeping them separate lets the future verified-identity migration (JWT-signed identity, see `architecture.md` § Auth) swap the verification mechanism without touching `EndUser.id` or any existing `Vote`/`FeatureRequest` foreign keys.

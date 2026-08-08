@@ -13,14 +13,55 @@ enum RequestStatus {
   SHIPPED
 }
 
-model User {
+model Workspace {
   id        String   @id @default(cuid())
   name      String
-  email     String   @unique
+  slug      String   @unique
+  widgetKey String   @unique @default(cuid())
   createdAt DateTime @default(now())
 
-  requests  FeatureRequest[]
-  votes     Vote[]
+  members         WorkspaceMember[]
+  contacts        Contact[]
+  featureRequests FeatureRequest[]
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  agentId String
+  agent   Agent  @relation(fields: [agentId], references: [id])
+
+  @@unique([workspaceId, agentId])
+}
+
+model Agent {
+  id           String   @id @default(cuid()) 
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  memberships WorkspaceMember[]
+}
+
+model Contact {
+  id         String   @id @default(cuid())
+  externalId String
+  name       String
+  email      String
+  createdAt  DateTime @default(now())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  requests FeatureRequest[]
+  votes    Vote[]
+
+  @@unique([workspaceId, externalId])
 }
 
 model FeatureRequest {
@@ -31,21 +72,26 @@ model FeatureRequest {
   status      RequestStatus @default(BACKLOG)
   createdAt   DateTime      @default(now())
 
-  authorId    String
-  author      User          @relation(fields: [authorId], references: [id])
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  votes       Vote[]
+  authorId String
+  author   Contact @relation(fields: [authorId], references: [id])
+
+  votes Vote[]
+
+  @@index([workspaceId, status])
 }
 
 model Vote {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id])
 
   requestId String
   request   FeatureRequest @relation(fields: [requestId], references: [id])
 
-  @@unique([userId, requestId])
+  @@unique([contactId, requestId])
 }
