@@ -6,6 +6,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { FeatureRequestsModule } from './feature-requests/feature-requests.module';
 import { VotesModule } from './votes/votes.module';
 import { AgentsModule } from './agents/agents.module';
+import { WorkspacesModule } from './workspaces/workspaces.module';
+import { WorkspaceMembersModule } from './workspace-members/workspace-members.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { AgentsModule } from './agents/agents.module';
     FeatureRequestsModule,
     VotesModule,
     AgentsModule,
+    WorkspacesModule,
+    WorkspaceMembersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
