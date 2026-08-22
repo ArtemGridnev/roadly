@@ -4,12 +4,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { FeatureRequestsModule } from './feature-requests/feature-requests.module';
+import { VotesModule } from './votes/votes.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     FeatureRequestsModule,
+    VotesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

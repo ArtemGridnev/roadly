@@ -5,5 +5,6 @@ import { FeatureRequestsController } from './feature-requests.controller';
 @Module({
   controllers: [FeatureRequestsController],
   providers: [FeatureRequestsService],
+  exports: [FeatureRequestsService],
 })
 export class FeatureRequestsModule {}
