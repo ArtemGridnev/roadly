@@ -8,6 +8,7 @@ import { VotesModule } from './votes/votes.module';
 import { AgentsModule } from './agents/agents.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { WorkspaceMembersModule } from './workspace-members/workspace-members.module';
+import { ContactsModule } from './contacts/contacts.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { WorkspaceMembersModule } from './workspace-members/workspace-members.mo
     AgentsModule,
     WorkspacesModule,
     WorkspaceMembersModule,
+    ContactsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
