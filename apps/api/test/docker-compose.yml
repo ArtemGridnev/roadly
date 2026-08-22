@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: test-roadly-postgres
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: roadly
+      POSTGRES_PASSWORD: roadly_dev_password
+      POSTGRES_DB: roadly
+    volumes:
+      - roadly_pgdata:/var/lib/postgresql/data
+
+volumes:
+  roadly_pgdata:
