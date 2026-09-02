@@ -45,7 +45,8 @@ model Agent {
   passwordHash String
   createdAt    DateTime @default(now())
 
-  memberships WorkspaceMember[]
+  memberships   WorkspaceMember[]
+  refreshTokens RefreshToken[]
 }
 
 model Contact {
@@ -94,4 +95,16 @@ model Vote {
   request   FeatureRequest @relation(fields: [requestId], references: [id])
 
   @@unique([contactId, requestId])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  agentId   String
+  agent     Agent     @relation(fields: [agentId], references: [id])
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([agentId])
 }
