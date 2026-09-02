@@ -13,11 +13,13 @@ import { AgentsService } from './agents.service';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { UpdateAgentDto } from './dto/update-agent.dto';
 import { AgentResponseDto } from './dto/agent-response.dto';
+import { Public } from 'src/auth/public.decorator';
 
 @Controller('agents')
 export class AgentsController {
   constructor(private readonly agentsService: AgentsService) {}
 
+  @Public()
   @Post()
   create(@Body() createAgentDto: CreateAgentDto): Promise<AgentResponseDto> {
     return this.agentsService.create(createAgentDto);

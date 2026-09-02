@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Agent, Prisma } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAgentDto } from './dto/create-agent.dto';
@@ -37,6 +37,16 @@ export class AgentsService {
     });
 
     return agents.map(AgentResponseDto.fromEntity);
+  }
+
+  async findByEmail(email: string): Promise<Agent> {
+    const agent = await this.prisma.agent.findUnique({ where: { email } });
+
+    if (!agent) {
+      throw new NotFoundException(`Agent ${email} not found`);
+    }
+
+    return agent;
   }
 
   async findOne(id: string): Promise<AgentResponseDto> {

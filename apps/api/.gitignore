@@ -3,3 +3,6 @@ node_modules
 .env
 
 /generated/prisma
+
+# Generated OpenAPI export (regenerate via /api-docs-json)
+openapi.json
