@@ -7,12 +7,17 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { WorkspaceMembersService } from './workspace-members.service';
 import { CreateWorkspaceMemberDto } from './dto/create-workspace-member.dto';
 import { WorkspaceMemberResponseDto } from './dto/workspace-member-response.dto';
+import { WorkspaceMembershipGuard } from '../auth/guards/workspace-membership.guard';
+import { CurrentWorkspace } from '../auth/decorators/current-workspace.decorator';
+import type { ResolvedWorkspace } from '../auth/types/auth-context';
 
-@Controller('workspaces/:workspaceId/members')
+@UseGuards(WorkspaceMembershipGuard)
+@Controller('workspace-members')
 export class WorkspaceMembersController {
   constructor(
     private readonly workspaceMembersService: WorkspaceMembersService,
@@ -20,36 +25,36 @@ export class WorkspaceMembersController {
 
   @Post()
   create(
-    @Param('workspaceId') workspaceId: string,
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
     @Body() createWorkspaceMemberDto: CreateWorkspaceMemberDto,
   ): Promise<WorkspaceMemberResponseDto> {
     return this.workspaceMembersService.create(
-      workspaceId,
+      workspace.id,
       createWorkspaceMemberDto,
     );
   }
 
   @Get()
   findAll(
-    @Param('workspaceId') workspaceId: string,
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
   ): Promise<WorkspaceMemberResponseDto[]> {
-    return this.workspaceMembersService.findAll(workspaceId);
+    return this.workspaceMembersService.findAll(workspace.id);
   }
 
   @Get(':id')
   findOne(
-    @Param('workspaceId') workspaceId: string,
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
     @Param('id') id: string,
   ): Promise<WorkspaceMemberResponseDto> {
-    return this.workspaceMembersService.findOne(workspaceId, id);
+    return this.workspaceMembersService.findOne(workspace.id, id);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
-    @Param('workspaceId') workspaceId: string,
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.workspaceMembersService.remove(workspaceId, id);
+    return this.workspaceMembersService.remove(workspace.id, id);
   }
 }

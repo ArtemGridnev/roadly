@@ -4,40 +4,45 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Building `apps/api` (NestJS + Prisma + Postgres).
+- MVP backend access-scoping is complete on `feat/api-access-scoping`. Next: `packages/shared`, then widget/dashboard frontends. See `context/steps-to-mvp.md` for the full phased plan.
 
 ## Current Goal
 
-- Bring the Prisma schema in line with the multi-tenant `Workspace` model documented in `architecture.md` and `docs/adr/0003-multi-tenant-workspace-model.md` (`Contact`/`Agent`, scoped `FeatureRequest`/`Vote`), then continue building the feature-requests resource on top of it.
+- None — the four access modes (widgetKey-only, widgetKey+contactId, access-token+workspaceId, access-token-only) are all implemented and every e2e suite passes. Move to Phase 2 (`packages/shared`) per `steps-to-mvp.md`.
 
 ## Completed
 
-- Monorepo skeleton on `feat/monorepo-skeleton`: root `package.json`, `pnpm-workspace.yaml`, `turbo.json` (build/dev/lint/type-check/test pipelines), root `tsconfig.base.json` (strict mode), `.gitignore`.
-- Placeholder packages for `apps/widget`, `apps/dashboard`, `apps/api`, `packages/shared` — each with `package.json`, `tsconfig.json` extending the base config, a stub `src/index.ts`, and a `README.md` pointing back to `architecture.md`/`code-standards.md` for its intended stack.
-- App-level scripts (`build`/`dev`/`lint`/`test`) are no-op stubs; `type-check` runs real `tsc --noEmit` against each package. Verified `pnpm install`, `pnpm build`, `pnpm lint`, `pnpm type-check`, `pnpm test` all run cleanly through Turborepo across all 4 packages.
-- `apps/api` scaffolded on `feat/api-feature-requests-resource`: NestJS skeleton, `PrismaService`/`PrismaModule`, local Postgres via `docker-compose.yml` (port 5433), initial migration.
-- On `feat/split-enduser-teammember` (uncommitted, awaiting the user's own review before any commit): replaced the placeholder single `User` model with `EndUser`/`TeamMember` per `docs/adr/0002`, then superseded that with the multi-tenant model per `docs/adr/0003-multi-tenant-workspace-model.md` — added `Workspace` (tenant, `widgetKey`) and `WorkspaceMember` (join table), renamed `EndUser` → `Contact` (now workspace-scoped, `@@unique([workspaceId, externalId])`) and `TeamMember` → `Agent` (stays a global identity, joins Workspaces via `WorkspaceMember`), added denormalized `workspaceId` to `FeatureRequest`, renamed `Vote.userId` → `Vote.contactId`.
+- **Widget-side access scoping (case 1: `widgetKey` only; case 2: `widgetKey` + `contactId`)**:
+  - `@WidgetAuth()` / `@RequireContact()` decorators + extended `AccessTokenAuthGuard` (`apps/api/src/auth/guards/access-token-auth.guard.ts`) resolve `x-widget-key` → `Workspace` and `x-contact-id` → `Contact` (scoped to that workspace), attaching both to the request. `@CurrentWorkspace()` / `@CurrentContact()` param decorators expose them to controllers.
+  - New `apps/api/src/widget/` module: `POST /widget/contacts` (identify/upsert), `GET /widget/feature-requests` (list), `POST /widget/feature-requests` (submit), `POST /widget/feature-requests/:requestId/votes` (vote) — all header-scoped, no `workspaceKey`/`contactId` in the URL or body.
 
-## In Progress
-
-- `feature-requests` resource (controller/service/DTOs) on `feat/api-feature-requests-resource` — not yet wired to the `Contact`/`Workspace`-scoped schema end-to-end (e.g. no endpoint resolves a `Workspace` from `widgetKey` or creates/looks up `Contact` rows yet).
+- **Agent-side access scoping (case 3: `access-token` + `x-workspace-id` header; case 4: `access-token` only)**:
+  - New `WorkspaceMembershipGuard` (`apps/api/src/auth/guards/workspace-membership.guard.ts`), applied via `@UseGuards()` — reads `x-workspace-id`, verifies a `WorkspaceMember` row exists for the authenticated Agent (`request.user.sub`, set by the existing Passport strategy), attaches `request.workspace`. 400 if the header is missing, 403 if the agent isn't a member — deliberately not 404, to avoid leaking workspace existence to a non-member.
+  - Applied to `contacts`, `feature-requests`, `votes`, `workspace-members` controllers (all four now flat routes — `:workspaceId` path segments dropped in favor of the header, matching the widget pattern). `agents` and `workspaces` stay case 4 (access-token only, no workspace scoping) — global admin actions, per explicit scope decision.
+  - `FeatureRequestsController`/`VotesController` now scope every by-id operation (`findOne`/`update`/`remove`/nested votes) through `FeatureRequestsService.findOneForWorkspace`, closing a real cross-tenant gap: previously an authenticated agent could read/mutate another workspace's feature requests or votes by guessing an id.
+  - `CreateFeatureRequestDto`/`FindFeatureRequestsQueryDto` had `workspaceId` removed (guard-resolved now, not client-supplied); `FeatureRequestsService.create`/`findAll` take `workspaceId` as an explicit param instead.
+  - Renamed `auth/types/widget-context.ts` → `auth/types/auth-context.ts`, `WidgetAuthenticatedRequest` → `AuthenticatedRequest` (now also carries `user?: AccessTokenPayload`) — one shared request-context type across both the widget and agent auth paths.
+  - Rewrote all 6 previously-broken e2e suites (`agents`, `workspaces`, `contacts`, `feature-requests`, `votes`, `workspace-members` — they predated JWT auth and never sent a cookie) to authenticate via a new `test/utils/auth.ts` helper (`loginAsNewAgent`, `loginAsAgentInWorkspace`) and send the required headers.
+  - **Full suite: 10/10 test files, 119/119 tests passing** (`npx dotenv -e .env.test -- npx jest --config ./test/jest-e2e.json --runInBand`), `tsc --noEmit` and `nest build` both clean.
 
 ## Next Up
 
-- Seed at least one `Workspace` (+ `Agent` + `WorkspaceMember`) row — required now that `Contact`/`FeatureRequest`/`WorkspaceMember` all carry required `workspaceId`/`agentId` foreign keys, so local API testing needs a tenant to attach test data to.
-- Wire widget-facing endpoints to resolve `Workspace` by `widgetKey`, then upsert `Contact` by `(workspaceId, externalId)` per the MVP auth model (host-supplied identity, unverified).
-- Build `Agent` auth (JWT + refresh, httpOnly cookies) for the admin dashboard, including how an `Agent` with multiple `WorkspaceMember` rows selects the active Workspace (not designed yet).
+- `packages/shared` is still empty — needed before `apps/widget`/`apps/dashboard` frontend work starts.
+- Decide how a multi-workspace `Agent` selects their active workspace in the dashboard (open question, not yet resolved — the `x-workspace-id` header now makes this concrete: the dashboard needs a workspace switcher that sets it).
+- Feature-request list sorting by vote count is not implemented (`FeatureRequestsService.findAll` only sorts by `createdAt`); `project-overview.md` calls for "sortable by votes or newest" — flagged, not built this pass.
 
 ## Open Questions
 
-- None.
+- Does `contacts` need any admin-facing route at all beyond the widget upsert, or should `ContactsController`'s full CRUD be trimmed?
+- Is `DELETE` on feature-requests/votes in MVP scope — not mentioned in `project-overview.md`.
 
 ## Architecture Decisions
 
-- `docs/adr/0003-multi-tenant-workspace-model.md`: Roadly is one shared multi-tenant deployment, not one deployment per customer — supersedes `docs/adr/0001-single-tenant-deployment.md`. Also renames `EndUser`→`Contact`, `TeamMember`→`Agent` (terminology-only re: `docs/adr/0002`, identity split unchanged) and makes `Agent` a global identity linked to Workspaces via `WorkspaceMember` rather than one Workspace per Agent.
+- Widget identity (`widgetKey`, `contactId`) and agent workspace-scoping (`x-workspace-id`) all travel via headers, never path params or body fields — one consistent mechanism across public and admin surfaces, and keeps a future signed-JWT widget-auth migration a one-place change (RTK Query `prepareHeaders`) instead of a route rewrite.
+- Agent-side workspace scoping uses the internal `Workspace.id`, not `widgetKey` — the two identifiers serve different trust models (public/non-secret tenant key for the widget vs. an authorization lookup key for agents) and shouldn't be coupled.
+- Widget-facing and admin-facing controllers are kept on separate route namespaces/modules (`apps/api/src/widget/*` vs. the existing per-resource controllers) rather than mixed on one controller with per-method guards — structurally prevents an admin capability leaking onto the public API.
+- Membership-check failures return 403, not 404, so an agent probing workspace ids can't distinguish "doesn't exist" from "exists but I'm not a member."
 
 ## Session Notes
 
-- 2026-07-25: Grilled context/ docs against each other before implementation start. Fixed stale microfrontend/"training sessions" boilerplate in `AGENTS.md`/`ai-workflow-rules.md`; resolved a Status enum conflict (canonical: `BACKLOG | PLANNED | IN_PROGRESS | SHIPPED`); resolved admin roles as single-role for MVP; split `User` into `EndUser`/`TeamMember`; unified "Roadmap Board" naming; clarified `category` as free-text. See root `CONTEXT.md` for the resulting glossary and `docs/adr/0001-single-tenant-deployment.md` / `docs/adr/0002-separate-enduser-teammember.md` for the two hard-to-reverse decisions that came out of it.
-- 2026-08-08: Implemented the `EndUser`/`TeamMember` split in `prisma/schema.prisma` (previously still a single placeholder `User` model from the initial NestJS scaffold). Local dev DB had 3 test `FeatureRequest` rows authored by a manually-created `user_test_1` row; deleted them (disposable test data) rather than resetting the whole dev DB, then completed the migration's foreign keys by hand after `prisma migrate deploy` partially applied and failed on the FK step. No production/shared data involved — local dev only.
-- 2026-08-08 (same day, later): Realized mid-review that single-tenant-per-deployment (ADR 0001) doesn't fit the actual product goal — a real shared SaaS serving many customer businesses. Wrote `docs/adr/0003-multi-tenant-workspace-model.md` to supersede it: added `Workspace`/`WorkspaceMember`, renamed `EndUser`→`Contact` and `TeamMember`→`Agent` (still avoiding bare "User" per ADR 0002's original reasoning), made `Agent` a global identity spanning Workspaces instead of one-Workspace-per-Agent. Applied locally via `prisma migrate dev`; left uncommitted on `feat/split-enduser-teammember` at the user's request, to review the full schema themselves before anything is committed.
+- None.

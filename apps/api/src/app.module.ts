@@ -13,6 +13,7 @@ import { ContactsModule } from './contacts/contacts.module';
 import { AuthModule } from './auth/auth.module';
 import { RefreshTokensService } from './refresh-tokens/refresh-tokens.service';
 import { RefreshTokensModule } from './refresh-tokens/refresh-tokens.module';
+import { WidgetModule } from './widget/widget.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RefreshTokensModule } from './refresh-tokens/refresh-tokens.module';
     ContactsModule,
     AuthModule,
     RefreshTokensModule,
+    WidgetModule,
   ],
   controllers: [AppController],
   providers: [AppService, RefreshTokensService],

@@ -73,30 +73,40 @@ Multi-tenant: one shared deployment serves many customer businesses. See `docs/a
 - `Workspace` — id, name, slug, widgetKey (public key the widget sends at init to identify its tenant). One per customer business.
 - `WorkspaceMember` — links an `Agent` to a `Workspace` it administers, `@@unique([workspaceId, agentId])`. A join table, not a direct FK, so one `Agent` can belong to multiple Workspaces.
 - `Agent` — id, name, email (globally unique), password credential. Admin dashboard-only; signs in; global identity, not scoped to a single Workspace.
-- `Contact` — id, workspaceId, externalId (host-supplied id, upserted on every widget request, unique per `(workspaceId, externalId)` — not globally, since two Workspaces' host apps can send the same externalId), name, email. Widget-only; no credentials.
+- `Contact` — id, workspaceId, externalId (host-supplied id, upserted via `POST /widget/contacts` at widget init, unique per `(workspaceId, externalId)` — not globally, since two Workspaces' host apps can send the same externalId), name, email. Widget-only; no credentials.
 - `FeatureRequest` — id, workspaceId (denormalized for query/index simplicity), title, description, status, category (optional free-text string, no predefined list), authorId (→ `Contact`), createdAt
-- `Vote` — contactId (→ `Contact`) + requestId, with a **unique constraint on (contactId, requestId)** to enforce one vote per Contact per request at the database level. No `workspaceId` of its own — see ADR 0003 for why, including the service-layer check still needed once the votes service exists.
+- `Vote` — contactId (→ `Contact`) + requestId, with a **unique constraint on (contactId, requestId)** to enforce one vote per Contact per request at the database level. No `workspaceId` of its own — see ADR 0003 for why. The service-layer check ADR 0003 calls for is implemented: every vote operation first resolves the target `FeatureRequest` through `FeatureRequestsService.findOneForWorkspace`, so a vote can't be read/written against a feature request outside the caller's resolved Workspace.
 - `Comment` — requestId, contactId (→ `Contact`), body, createdAt *(future — will need workspaceId too when built)*
 
 Status is an enum: `BACKLOG | PLANNED | IN_PROGRESS | SHIPPED`.
 
 ## Auth
 
+Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never via path/body params:
+
+| Mode | Who | Mechanism | Guard |
+|---|---|---|---|
+| Public + workspace | Widget, read-only | `x-widget-key` header → `Workspace` | `AccessTokenAuthGuard` (`@WidgetAuth()` branch) |
+| Public + workspace + contact | Widget, write | `x-widget-key` + `x-contact-id` headers → `Workspace` + `Contact` | same guard (`@WidgetAuth()` + `@RequireContact()`) |
+| Agent + workspace | Dashboard, workspace-scoped resources | access-token cookie (`Agent`) + `x-workspace-id` header, checked against `WorkspaceMember` | `WorkspaceMembershipGuard`, applied via `@UseGuards()` per controller |
+| Agent only | Dashboard, global resources (`agents`, `workspaces`) | access-token cookie only | `AccessTokenAuthGuard` default path |
+
 ### Workspace resolution
 
-- **Widget:** the `widgetKey` passed at `Roadly.init(...)` resolves which `Workspace` a public request belongs to; every widget-facing query/write is scoped to that Workspace.
-- **Dashboard:** the signed-in `Agent`'s `WorkspaceMember` row(s) determine which Workspace(s) they can act on. If an `Agent` belongs to more than one, the dashboard needs a way to select the active one (not designed yet).
-- The NestJS guards/middleware that actually implement either resolution don't exist yet — documented here as the target, not built.
+- **Widget:** the `widgetKey` passed at `Roadly.init(...)` is sent as the `x-widget-key` header on every widget API call; the guard resolves it to a `Workspace` and attaches it to the request. Unknown/missing key → 401.
+- **Dashboard:** the signed-in `Agent` sends the active `Workspace`'s `id` as the `x-workspace-id` header on every workspace-scoped call; `WorkspaceMembershipGuard` checks a `WorkspaceMember` row exists for that `(Agent, Workspace)` pair. Missing header → 400; agent not a member → 403 (not 404, so workspace existence isn't leaked to a non-member). If an `Agent` belongs to more than one `Workspace`, the dashboard sends whichever one is currently active in this header — the frontend UI for switching between them isn't built yet.
+- Both guards attach the resolved `Workspace` to the request the same way (`request.workspace: { id }`), read via one shared `@CurrentWorkspace()` param decorator regardless of which path resolved it.
+- Widget-facing and admin-facing routes live on separate controllers/route namespaces (`apps/api/src/widget/*` vs. the existing per-resource controllers, e.g. `contacts`, `feature-requests`) rather than mixed on one controller with per-method guards.
 
 ### Widget identity (Contact)
 
-- **MVP:** the host app passes the current end user's id/name/email into `Roadly.init(...)`. The backend upserts a `Contact` row keyed by that host-supplied id (stored as `externalId`, scoped to the resolved Workspace) and trusts the identity as-is (identified but unverified). Documented as a deliberate trade-off.
-- **Future:** the host app's backend signs a short-lived JWT with a shared secret; the widget passes it at init; the backend verifies signature and expiry before trusting the identity. Prevents impersonation.
+- **MVP:** the host app passes the current end user's id/name/email into `Roadly.init(...)`. The widget calls `POST /widget/contacts` once to upsert a `Contact` row keyed by that host-supplied id (stored as `externalId`, scoped to the resolved Workspace) and gets back a `Contact.id`, which it then sends as `x-contact-id` on subsequent write calls. Identity is trusted as-is (identified but unverified). Documented as a deliberate trade-off.
+- **Future:** the host app's backend signs a short-lived JWT with a shared secret; the widget passes it at init instead of raw identity; the backend verifies signature and expiry before trusting the identity. Because identity already travels via headers rather than path/body params, this migration only changes what generates the header value (e.g. RTK Query's `prepareHeaders`), not the route shapes.
 
 ### Admin dashboard auth (Agent)
 
 - Self-built: JWT access tokens + refresh tokens, httpOnly cookies.
-- **MVP:** a single role. NestJS guards enforce authentication only — any signed-in `Agent` has full access (view, change status) within their Workspace(s).
+- **MVP:** a single role. Beyond authentication, `WorkspaceMembershipGuard` enforces workspace membership on workspace-scoped resources — an `Agent` can only view/change data within a `Workspace` they belong to; `agents`/`workspaces` management stays global (any signed-in `Agent`, no workspace scoping).
 - **Future:** role-based guards (admin vs. regular) restrict admin-only actions once multiple roles exist.
 
 ## Widget Embedding Model

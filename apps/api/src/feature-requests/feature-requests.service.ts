@@ -10,21 +10,23 @@ export class FeatureRequestsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(
+    workspaceId: string,
     createFeatureRequestDto: CreateFeatureRequestDto,
   ): Promise<FeatureRequestResponseDto> {
     const featureRequest = await this.prisma.featureRequest.create({
-      data: createFeatureRequestDto,
+      data: { ...createFeatureRequestDto, workspaceId },
     });
 
     return FeatureRequestResponseDto.fromEntity(featureRequest);
   }
 
   async findAll(
+    workspaceId: string,
     query: FindFeatureRequestsQueryDto,
   ): Promise<FeatureRequestResponseDto[]> {
     const featureRequests = await this.prisma.featureRequest.findMany({
       where: {
-        workspaceId: query.workspaceId,
+        workspaceId,
         status: query.status,
       },
       orderBy: { createdAt: 'desc' },
@@ -40,6 +42,23 @@ export class FeatureRequestsService {
 
     if (!featureRequest) {
       throw new NotFoundException(`Feature request ${id} not found`);
+    }
+
+    return FeatureRequestResponseDto.fromEntity(featureRequest);
+  }
+
+  async findOneForWorkspace(
+    workspaceId: string,
+    id: string,
+  ): Promise<FeatureRequestResponseDto> {
+    const featureRequest = await this.prisma.featureRequest.findUnique({
+      where: { id },
+    });
+
+    if (!featureRequest || featureRequest.workspaceId !== workspaceId) {
+      throw new NotFoundException(
+        `Feature request ${id} not found for workspace ${workspaceId}`,
+      );
     }
 
     return FeatureRequestResponseDto.fromEntity(featureRequest);

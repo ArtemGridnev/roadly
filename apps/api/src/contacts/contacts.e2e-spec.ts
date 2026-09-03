@@ -2,11 +2,14 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { prisma } from '../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
+import { loginAsAgentInWorkspace } from 'test/utils/auth';
+import { WORKSPACE_ID_HEADER } from '../auth/constants/workspace-header';
 import { ContactResponseDto } from './dto/contact-response.dto';
 
 describe('ContactsController (e2e)', () => {
   let app: INestApplication;
   let workspaceId: string;
+  let agentCookie: string;
 
   beforeAll(async () => {
     app = await createTestingApp();
@@ -22,12 +25,19 @@ describe('ContactsController (e2e)', () => {
       data: { name: 'Acme', slug: `acme-${Date.now()}-${Math.random()}` },
     });
     workspaceId = workspace.id;
+    agentCookie = await loginAsAgentInWorkspace(app, workspaceId);
   });
 
-  describe('POST /workspaces/:workspaceId/contacts', () => {
+  function authed(method: 'get' | 'post' | 'patch' | 'delete', url: string) {
+    return request(app.getHttpServer())
+      [method](url)
+      .set('Cookie', [agentCookie])
+      .set(WORKSPACE_ID_HEADER, workspaceId);
+  }
+
+  describe('POST /contacts', () => {
     it('creates a contact', async () => {
-      const response = await request(app.getHttpServer())
-        .post(`/workspaces/${workspaceId}/contacts`)
+      const response = await authed('post', '/contacts')
         .send({
           externalId: 'ext-1',
           name: 'Jane Doe',
@@ -47,22 +57,17 @@ describe('ContactsController (e2e)', () => {
     });
 
     it('rejects a request missing required fields', async () => {
-      await request(app.getHttpServer())
-        .post(`/workspaces/${workspaceId}/contacts`)
-        .send({ name: 'Jane Doe' })
-        .expect(400);
+      await authed('post', '/contacts').send({ name: 'Jane Doe' }).expect(400);
     });
 
     it('rejects an invalid email', async () => {
-      await request(app.getHttpServer())
-        .post(`/workspaces/${workspaceId}/contacts`)
+      await authed('post', '/contacts')
         .send({ externalId: 'ext-1', name: 'Jane Doe', email: 'not-an-email' })
         .expect(400);
     });
 
     it('rejects unknown fields', async () => {
-      await request(app.getHttpServer())
-        .post(`/workspaces/${workspaceId}/contacts`)
+      await authed('post', '/contacts')
         .send({
           externalId: 'ext-1',
           name: 'Jane Doe',
@@ -82,8 +87,7 @@ describe('ContactsController (e2e)', () => {
         },
       });
 
-      await request(app.getHttpServer())
-        .post(`/workspaces/${workspaceId}/contacts`)
+      await authed('post', '/contacts')
         .send({
           externalId: 'ext-1',
           name: 'Impostor',
@@ -92,20 +96,50 @@ describe('ContactsController (e2e)', () => {
         .expect(409);
     });
 
-    it('returns 404 for an unknown workspace', async () => {
+    it('rejects a request with no access token', async () => {
       await request(app.getHttpServer())
-        .post('/workspaces/does-not-exist/contacts')
+        .post('/contacts')
+        .set(WORKSPACE_ID_HEADER, workspaceId)
         .send({
           externalId: 'ext-1',
           name: 'Jane Doe',
           email: 'jane@example.com',
         })
-        .expect(404);
+        .expect(401);
+    });
+
+    it('rejects a request missing the workspace id header', async () => {
+      await request(app.getHttpServer())
+        .post('/contacts')
+        .set('Cookie', [agentCookie])
+        .send({
+          externalId: 'ext-1',
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+        })
+        .expect(400);
+    });
+
+    it('rejects a request when the agent is not a member of the workspace', async () => {
+      const otherWorkspace = await prisma.workspace.create({
+        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
+      });
+
+      await request(app.getHttpServer())
+        .post('/contacts')
+        .set('Cookie', [agentCookie])
+        .set(WORKSPACE_ID_HEADER, otherWorkspace.id)
+        .send({
+          externalId: 'ext-1',
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+        })
+        .expect(403);
     });
   });
 
-  describe('GET /workspaces/:workspaceId/contacts', () => {
-    it('lists contacts for a workspace', async () => {
+  describe('GET /contacts', () => {
+    it('lists contacts for the resolved workspace', async () => {
       await prisma.contact.create({
         data: {
           workspaceId,
@@ -123,23 +157,15 @@ describe('ContactsController (e2e)', () => {
         },
       });
 
-      const response = await request(app.getHttpServer())
-        .get(`/workspaces/${workspaceId}/contacts`)
-        .expect(200);
+      const response = await authed('get', '/contacts').expect(200);
 
       const body = response.body as ContactResponseDto[];
 
       expect(body).toHaveLength(2);
     });
-
-    it('returns 404 for an unknown workspace', async () => {
-      await request(app.getHttpServer())
-        .get('/workspaces/does-not-exist/contacts')
-        .expect(404);
-    });
   });
 
-  describe('GET /workspaces/:workspaceId/contacts/:id', () => {
+  describe('GET /contacts/:id', () => {
     it('returns a single contact', async () => {
       const contact = await prisma.contact.create({
         data: {
@@ -150,9 +176,9 @@ describe('ContactsController (e2e)', () => {
         },
       });
 
-      const response = await request(app.getHttpServer())
-        .get(`/workspaces/${workspaceId}/contacts/${contact.id}`)
-        .expect(200);
+      const response = await authed('get', `/contacts/${contact.id}`).expect(
+        200,
+      );
 
       const body = response.body as ContactResponseDto;
 
@@ -160,9 +186,7 @@ describe('ContactsController (e2e)', () => {
     });
 
     it('returns 404 for an unknown id', async () => {
-      await request(app.getHttpServer())
-        .get(`/workspaces/${workspaceId}/contacts/does-not-exist`)
-        .expect(404);
+      await authed('get', '/contacts/does-not-exist').expect(404);
     });
 
     it('returns 404 when the contact belongs to a different workspace', async () => {
@@ -178,13 +202,11 @@ describe('ContactsController (e2e)', () => {
         },
       });
 
-      await request(app.getHttpServer())
-        .get(`/workspaces/${workspaceId}/contacts/${contact.id}`)
-        .expect(404);
+      await authed('get', `/contacts/${contact.id}`).expect(404);
     });
   });
 
-  describe('PATCH /workspaces/:workspaceId/contacts/:id', () => {
+  describe('PATCH /contacts/:id', () => {
     it('updates a contact', async () => {
       const contact = await prisma.contact.create({
         data: {
@@ -195,8 +217,7 @@ describe('ContactsController (e2e)', () => {
         },
       });
 
-      const response = await request(app.getHttpServer())
-        .patch(`/workspaces/${workspaceId}/contacts/${contact.id}`)
+      const response = await authed('patch', `/contacts/${contact.id}`)
         .send({ name: 'Jane Updated' })
         .expect(200);
 
@@ -207,8 +228,7 @@ describe('ContactsController (e2e)', () => {
     });
 
     it('returns 404 when updating an unknown id', async () => {
-      await request(app.getHttpServer())
-        .patch(`/workspaces/${workspaceId}/contacts/does-not-exist`)
+      await authed('patch', '/contacts/does-not-exist')
         .send({ name: 'Jane Updated' })
         .expect(404);
     });
@@ -231,14 +251,13 @@ describe('ContactsController (e2e)', () => {
         },
       });
 
-      await request(app.getHttpServer())
-        .patch(`/workspaces/${workspaceId}/contacts/${contact.id}`)
+      await authed('patch', `/contacts/${contact.id}`)
         .send({ externalId: 'ext-1' })
         .expect(409);
     });
   });
 
-  describe('DELETE /workspaces/:workspaceId/contacts/:id', () => {
+  describe('DELETE /contacts/:id', () => {
     it('deletes a contact', async () => {
       const contact = await prisma.contact.create({
         data: {
@@ -249,19 +268,13 @@ describe('ContactsController (e2e)', () => {
         },
       });
 
-      await request(app.getHttpServer())
-        .delete(`/workspaces/${workspaceId}/contacts/${contact.id}`)
-        .expect(204);
+      await authed('delete', `/contacts/${contact.id}`).expect(204);
 
-      await request(app.getHttpServer())
-        .get(`/workspaces/${workspaceId}/contacts/${contact.id}`)
-        .expect(404);
+      await authed('get', `/contacts/${contact.id}`).expect(404);
     });
 
     it('returns 404 when deleting an unknown id', async () => {
-      await request(app.getHttpServer())
-        .delete(`/workspaces/${workspaceId}/contacts/does-not-exist`)
-        .expect(404);
+      await authed('delete', '/contacts/does-not-exist').expect(404);
     });
   });
 });

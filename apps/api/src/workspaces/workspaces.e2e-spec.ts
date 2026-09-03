@@ -2,10 +2,12 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { prisma } from '../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
+import { loginAsNewAgent } from 'test/utils/auth';
 import { WorkspaceResponseDto } from './dto/workspace-response.dto';
 
 describe('WorkspacesController (e2e)', () => {
   let app: INestApplication;
+  let agentCookie: string;
 
   beforeAll(async () => {
     app = await createTestingApp();
@@ -16,10 +18,19 @@ describe('WorkspacesController (e2e)', () => {
     await app.close();
   });
 
+  beforeEach(async () => {
+    agentCookie = await loginAsNewAgent(app);
+  });
+
+  function authed(method: 'get' | 'post' | 'patch' | 'delete', url: string) {
+    return request(app.getHttpServer())
+      [method](url)
+      .set('Cookie', [agentCookie]);
+  }
+
   describe('POST /workspaces', () => {
     it('creates a workspace', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/workspaces')
+      const response = await authed('post', '/workspaces')
         .send({ name: 'Acme', slug: 'acme' })
         .expect(201);
 
@@ -31,29 +42,30 @@ describe('WorkspacesController (e2e)', () => {
     });
 
     it('rejects a request missing required fields', async () => {
-      await request(app.getHttpServer())
-        .post('/workspaces')
-        .send({ name: 'Acme' })
-        .expect(400);
+      await authed('post', '/workspaces').send({ name: 'Acme' }).expect(400);
     });
 
     it('rejects unknown fields', async () => {
-      await request(app.getHttpServer())
-        .post('/workspaces')
+      await authed('post', '/workspaces')
         .send({ name: 'Acme', slug: 'acme', notAllowed: 'nope' })
         .expect(400);
     });
 
     it('rejects a duplicate slug', async () => {
-      await request(app.getHttpServer())
-        .post('/workspaces')
+      await authed('post', '/workspaces')
         .send({ name: 'Acme', slug: 'acme' })
         .expect(201);
 
-      await request(app.getHttpServer())
-        .post('/workspaces')
+      await authed('post', '/workspaces')
         .send({ name: 'Acme Impostor', slug: 'acme' })
         .expect(409);
+    });
+
+    it('rejects a request with no access token', async () => {
+      await request(app.getHttpServer())
+        .post('/workspaces')
+        .send({ name: 'Acme', slug: 'acme' })
+        .expect(401);
     });
   });
 
@@ -62,9 +74,7 @@ describe('WorkspacesController (e2e)', () => {
       await prisma.workspace.create({ data: { name: 'A', slug: 'a' } });
       await prisma.workspace.create({ data: { name: 'B', slug: 'b' } });
 
-      const response = await request(app.getHttpServer())
-        .get('/workspaces')
-        .expect(200);
+      const response = await authed('get', '/workspaces').expect(200);
 
       const body = response.body as WorkspaceResponseDto[];
 
@@ -78,9 +88,10 @@ describe('WorkspacesController (e2e)', () => {
         data: { name: 'A', slug: 'a' },
       });
 
-      const response = await request(app.getHttpServer())
-        .get(`/workspaces/${workspace.id}`)
-        .expect(200);
+      const response = await authed(
+        'get',
+        `/workspaces/${workspace.id}`,
+      ).expect(200);
 
       const body = response.body as WorkspaceResponseDto;
 
@@ -88,9 +99,7 @@ describe('WorkspacesController (e2e)', () => {
     });
 
     it('returns 404 for an unknown id', async () => {
-      await request(app.getHttpServer())
-        .get('/workspaces/does-not-exist')
-        .expect(404);
+      await authed('get', '/workspaces/does-not-exist').expect(404);
     });
   });
 
@@ -100,8 +109,7 @@ describe('WorkspacesController (e2e)', () => {
         data: { name: 'A', slug: 'a' },
       });
 
-      const response = await request(app.getHttpServer())
-        .patch(`/workspaces/${workspace.id}`)
+      const response = await authed('patch', `/workspaces/${workspace.id}`)
         .send({ name: 'A Updated' })
         .expect(200);
 
@@ -112,8 +120,7 @@ describe('WorkspacesController (e2e)', () => {
     });
 
     it('returns 404 when updating an unknown id', async () => {
-      await request(app.getHttpServer())
-        .patch('/workspaces/does-not-exist')
+      await authed('patch', '/workspaces/does-not-exist')
         .send({ name: 'A Updated' })
         .expect(404);
     });
@@ -124,8 +131,7 @@ describe('WorkspacesController (e2e)', () => {
         data: { name: 'B', slug: 'b' },
       });
 
-      await request(app.getHttpServer())
-        .patch(`/workspaces/${workspace.id}`)
+      await authed('patch', `/workspaces/${workspace.id}`)
         .send({ slug: 'a' })
         .expect(409);
     });
@@ -137,19 +143,13 @@ describe('WorkspacesController (e2e)', () => {
         data: { name: 'A', slug: 'a' },
       });
 
-      await request(app.getHttpServer())
-        .delete(`/workspaces/${workspace.id}`)
-        .expect(204);
+      await authed('delete', `/workspaces/${workspace.id}`).expect(204);
 
-      await request(app.getHttpServer())
-        .get(`/workspaces/${workspace.id}`)
-        .expect(404);
+      await authed('get', `/workspaces/${workspace.id}`).expect(404);
     });
 
     it('returns 404 when deleting an unknown id', async () => {
-      await request(app.getHttpServer())
-        .delete('/workspaces/does-not-exist')
-        .expect(404);
+      await authed('delete', '/workspaces/does-not-exist').expect(404);
     });
   });
 });

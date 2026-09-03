@@ -8,54 +8,59 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ContactsService } from './contacts.service';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 import { ContactResponseDto } from './dto/contact-response.dto';
+import { WorkspaceMembershipGuard } from '../auth/guards/workspace-membership.guard';
+import { CurrentWorkspace } from '../auth/decorators/current-workspace.decorator';
+import type { ResolvedWorkspace } from '../auth/types/auth-context';
 
-@Controller('workspaces/:workspaceId/contacts')
+@UseGuards(WorkspaceMembershipGuard)
+@Controller('contacts')
 export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 
   @Post()
   create(
-    @Param('workspaceId') workspaceId: string,
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
     @Body() createContactDto: CreateContactDto,
   ): Promise<ContactResponseDto> {
-    return this.contactsService.create(workspaceId, createContactDto);
+    return this.contactsService.create(workspace.id, createContactDto);
   }
 
   @Get()
   findAll(
-    @Param('workspaceId') workspaceId: string,
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
   ): Promise<ContactResponseDto[]> {
-    return this.contactsService.findAll(workspaceId);
+    return this.contactsService.findAll(workspace.id);
   }
 
   @Get(':id')
   findOne(
-    @Param('workspaceId') workspaceId: string,
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
     @Param('id') id: string,
   ): Promise<ContactResponseDto> {
-    return this.contactsService.findOne(workspaceId, id);
+    return this.contactsService.findOne(workspace.id, id);
   }
 
   @Patch(':id')
   update(
-    @Param('workspaceId') workspaceId: string,
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
     @Param('id') id: string,
     @Body() updateContactDto: UpdateContactDto,
   ): Promise<ContactResponseDto> {
-    return this.contactsService.update(workspaceId, id, updateContactDto);
+    return this.contactsService.update(workspace.id, id, updateContactDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(
-    @Param('workspaceId') workspaceId: string,
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.contactsService.remove(workspaceId, id);
+    return this.contactsService.remove(workspace.id, id);
   }
 }
