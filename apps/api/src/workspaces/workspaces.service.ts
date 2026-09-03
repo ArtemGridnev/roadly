@@ -47,6 +47,20 @@ export class WorkspacesService {
     return WorkspaceResponseDto.fromEntity(workspace);
   }
 
+  async findByWidgetKey(widgetKey: string): Promise<WorkspaceResponseDto> {
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { widgetKey },
+    });
+
+    if (!workspace) {
+      throw new NotFoundException(
+        `Workspace with widget key ${widgetKey} not found`,
+      );
+    }
+
+    return WorkspaceResponseDto.fromEntity(workspace);
+  }
+
   async update(
     id: string,
     updateWorkspaceDto: UpdateWorkspaceDto,

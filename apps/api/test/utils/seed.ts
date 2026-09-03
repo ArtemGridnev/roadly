@@ -13,5 +13,10 @@ export async function seedWorkspaceWithContact() {
     },
   });
 
-  return { workspaceId: workspace.id, authorId: contact.id };
+  return {
+    workspaceId: workspace.id,
+    authorId: contact.id,
+    widgetKey: workspace.widgetKey,
+    contactExternalId: contact.externalId,
+  };
 }

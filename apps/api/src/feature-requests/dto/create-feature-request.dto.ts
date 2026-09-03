@@ -20,9 +20,5 @@ export class CreateFeatureRequestDto {
 
   @IsString()
   @IsNotEmpty()
-  readonly workspaceId!: string;
-
-  @IsString()
-  @IsNotEmpty()
   readonly authorId!: string;
 }

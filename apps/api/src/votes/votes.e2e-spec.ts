@@ -3,6 +3,8 @@ import request from 'supertest';
 import { prisma } from '../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
 import { seedWorkspaceWithContact } from 'test/utils/seed';
+import { loginAsAgentInWorkspace } from 'test/utils/auth';
+import { WORKSPACE_ID_HEADER } from '../auth/constants/workspace-header';
 import { VoteResponseDto } from './dto/vote-response.dto';
 
 describe('VotesController (e2e)', () => {
@@ -10,6 +12,7 @@ describe('VotesController (e2e)', () => {
   let workspaceId: string;
   let contactId: string;
   let requestId: string;
+  let agentCookie: string;
 
   beforeAll(async () => {
     app = await createTestingApp();
@@ -22,6 +25,7 @@ describe('VotesController (e2e)', () => {
 
   beforeEach(async () => {
     ({ workspaceId, authorId: contactId } = await seedWorkspaceWithContact());
+    agentCookie = await loginAsAgentInWorkspace(app, workspaceId);
     const featureRequest = await prisma.featureRequest.create({
       data: {
         title: 'Dark mode',
@@ -33,10 +37,19 @@ describe('VotesController (e2e)', () => {
     requestId = featureRequest.id;
   });
 
+  function authed(method: 'get' | 'post' | 'patch' | 'delete', url: string) {
+    return request(app.getHttpServer())
+      [method](url)
+      .set('Cookie', [agentCookie])
+      .set(WORKSPACE_ID_HEADER, workspaceId);
+  }
+
   describe('POST /feature-requests/:requestId/votes', () => {
     it('creates a vote', async () => {
-      const response = await request(app.getHttpServer())
-        .post(`/feature-requests/${requestId}/votes`)
+      const response = await authed(
+        'post',
+        `/feature-requests/${requestId}/votes`,
+      )
         .send({ contactId })
         .expect(201);
 
@@ -47,15 +60,13 @@ describe('VotesController (e2e)', () => {
     });
 
     it('rejects a request missing required fields', async () => {
-      await request(app.getHttpServer())
-        .post(`/feature-requests/${requestId}/votes`)
+      await authed('post', `/feature-requests/${requestId}/votes`)
         .send({})
         .expect(400);
     });
 
     it('rejects unknown fields', async () => {
-      await request(app.getHttpServer())
-        .post(`/feature-requests/${requestId}/votes`)
+      await authed('post', `/feature-requests/${requestId}/votes`)
         .send({ contactId, notAllowed: 'nope' })
         .expect(400);
     });
@@ -63,17 +74,40 @@ describe('VotesController (e2e)', () => {
     it('rejects a duplicate vote from the same contact', async () => {
       await prisma.vote.create({ data: { contactId, requestId } });
 
-      await request(app.getHttpServer())
-        .post(`/feature-requests/${requestId}/votes`)
+      await authed('post', `/feature-requests/${requestId}/votes`)
         .send({ contactId })
         .expect(409);
     });
 
     it('returns 404 for an unknown feature request', async () => {
-      await request(app.getHttpServer())
-        .post('/feature-requests/does-not-exist/votes')
+      await authed('post', '/feature-requests/does-not-exist/votes')
         .send({ contactId })
         .expect(404);
+    });
+
+    it('returns 404 for a feature request belonging to a different workspace', async () => {
+      const { workspaceId: otherWorkspaceId, authorId: otherContactId } =
+        await seedWorkspaceWithContact();
+      const otherRequest = await prisma.featureRequest.create({
+        data: {
+          title: 'Other',
+          description: 'Other desc',
+          workspaceId: otherWorkspaceId,
+          authorId: otherContactId,
+        },
+      });
+
+      await authed('post', `/feature-requests/${otherRequest.id}/votes`)
+        .send({ contactId })
+        .expect(404);
+    });
+
+    it('rejects a request with no access token', async () => {
+      await request(app.getHttpServer())
+        .post(`/feature-requests/${requestId}/votes`)
+        .set(WORKSPACE_ID_HEADER, workspaceId)
+        .send({ contactId })
+        .expect(401);
     });
   });
 
@@ -92,9 +126,10 @@ describe('VotesController (e2e)', () => {
         data: { contactId: otherContact.id, requestId },
       });
 
-      const response = await request(app.getHttpServer())
-        .get(`/feature-requests/${requestId}/votes`)
-        .expect(200);
+      const response = await authed(
+        'get',
+        `/feature-requests/${requestId}/votes`,
+      ).expect(200);
 
       const body = response.body as VoteResponseDto[];
 
@@ -115,8 +150,10 @@ describe('VotesController (e2e)', () => {
         data: { contactId: otherContact.id, requestId },
       });
 
-      const response = await request(app.getHttpServer())
-        .get(`/feature-requests/${requestId}/votes`)
+      const response = await authed(
+        'get',
+        `/feature-requests/${requestId}/votes`,
+      )
         .query({ contactId })
         .expect(200);
 
@@ -127,9 +164,7 @@ describe('VotesController (e2e)', () => {
     });
 
     it('returns 404 for an unknown feature request', async () => {
-      await request(app.getHttpServer())
-        .get('/feature-requests/does-not-exist/votes')
-        .expect(404);
+      await authed('get', '/feature-requests/does-not-exist/votes').expect(404);
     });
   });
 
@@ -137,9 +172,10 @@ describe('VotesController (e2e)', () => {
     it('returns a single vote', async () => {
       const vote = await prisma.vote.create({ data: { contactId, requestId } });
 
-      const response = await request(app.getHttpServer())
-        .get(`/feature-requests/${requestId}/votes/${vote.id}`)
-        .expect(200);
+      const response = await authed(
+        'get',
+        `/feature-requests/${requestId}/votes/${vote.id}`,
+      ).expect(200);
 
       const body = response.body as VoteResponseDto;
 
@@ -147,9 +183,10 @@ describe('VotesController (e2e)', () => {
     });
 
     it('returns 404 for an unknown id', async () => {
-      await request(app.getHttpServer())
-        .get(`/feature-requests/${requestId}/votes/does-not-exist`)
-        .expect(404);
+      await authed(
+        'get',
+        `/feature-requests/${requestId}/votes/does-not-exist`,
+      ).expect(404);
     });
 
     it('returns 404 when the vote belongs to a different feature request', async () => {
@@ -165,9 +202,10 @@ describe('VotesController (e2e)', () => {
         data: { contactId, requestId: otherRequest.id },
       });
 
-      await request(app.getHttpServer())
-        .get(`/feature-requests/${requestId}/votes/${vote.id}`)
-        .expect(404);
+      await authed(
+        'get',
+        `/feature-requests/${requestId}/votes/${vote.id}`,
+      ).expect(404);
     });
   });
 
@@ -183,8 +221,10 @@ describe('VotesController (e2e)', () => {
         },
       });
 
-      const response = await request(app.getHttpServer())
-        .patch(`/feature-requests/${requestId}/votes/${vote.id}`)
+      const response = await authed(
+        'patch',
+        `/feature-requests/${requestId}/votes/${vote.id}`,
+      )
         .send({ contactId: otherContact.id })
         .expect(200);
 
@@ -195,8 +235,10 @@ describe('VotesController (e2e)', () => {
     });
 
     it('returns 404 when updating an unknown id', async () => {
-      await request(app.getHttpServer())
-        .patch(`/feature-requests/${requestId}/votes/does-not-exist`)
+      await authed(
+        'patch',
+        `/feature-requests/${requestId}/votes/does-not-exist`,
+      )
         .send({ contactId })
         .expect(404);
     });
@@ -215,8 +257,7 @@ describe('VotesController (e2e)', () => {
       });
       await prisma.vote.create({ data: { contactId, requestId } });
 
-      await request(app.getHttpServer())
-        .patch(`/feature-requests/${requestId}/votes/${vote.id}`)
+      await authed('patch', `/feature-requests/${requestId}/votes/${vote.id}`)
         .send({ contactId })
         .expect(409);
     });
@@ -226,19 +267,22 @@ describe('VotesController (e2e)', () => {
     it('deletes a vote', async () => {
       const vote = await prisma.vote.create({ data: { contactId, requestId } });
 
-      await request(app.getHttpServer())
-        .delete(`/feature-requests/${requestId}/votes/${vote.id}`)
-        .expect(204);
+      await authed(
+        'delete',
+        `/feature-requests/${requestId}/votes/${vote.id}`,
+      ).expect(204);
 
-      await request(app.getHttpServer())
-        .get(`/feature-requests/${requestId}/votes/${vote.id}`)
-        .expect(404);
+      await authed(
+        'get',
+        `/feature-requests/${requestId}/votes/${vote.id}`,
+      ).expect(404);
     });
 
     it('returns 404 when deleting an unknown id', async () => {
-      await request(app.getHttpServer())
-        .delete(`/feature-requests/${requestId}/votes/does-not-exist`)
-        .expect(404);
+      await authed(
+        'delete',
+        `/feature-requests/${requestId}/votes/does-not-exist`,
+      ).expect(404);
     });
   });
 });

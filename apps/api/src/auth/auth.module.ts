@@ -3,6 +3,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { AgentsModule } from 'src/agents/agents.module';
+import { WorkspacesModule } from 'src/workspaces/workspaces.module';
+import { ContactsModule } from 'src/contacts/contacts.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { AccessTokenStrategy } from './strategies/access-token.strategy';
@@ -15,6 +17,8 @@ import { RefreshTokensModule } from 'src/refresh-tokens/refresh-tokens.module';
   imports: [
     AgentsModule,
     RefreshTokensModule,
+    WorkspacesModule,
+    ContactsModule,
     PassportModule,
     JwtModule.register({}),
   ],
@@ -25,6 +29,6 @@ import { RefreshTokensModule } from 'src/refresh-tokens/refresh-tokens.module';
     LocalStrategy,
     { provide: APP_GUARD, useClass: AccessTokenAuthGuard },
   ],
-  controllers: [AuthController]
+  controllers: [AuthController],
 })
 export class AuthModule {}

@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Request, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import { Public } from './public.decorator';
+import { Public } from './decorators/public.decorator';
 import { AgentLoginDto } from './dto/agent-login.dto';
 import type { Response } from 'express';
 import { REFRESH_COOKIE_NAME, setAccessCookie, setRefreshCookie } from './utils/authCookie';

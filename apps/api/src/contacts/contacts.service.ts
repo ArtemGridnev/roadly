@@ -34,6 +34,29 @@ export class ContactsService {
     }
   }
 
+  async findOrCreateByExternalId(
+    workspaceId: string,
+    identifyContactDto: CreateContactDto,
+  ): Promise<ContactResponseDto> {
+    await this.workspacesService.findOne(workspaceId);
+
+    const contact = await this.prisma.contact.upsert({
+      where: {
+        workspaceId_externalId: {
+          workspaceId,
+          externalId: identifyContactDto.externalId,
+        },
+      },
+      update: {
+        name: identifyContactDto.name,
+        email: identifyContactDto.email,
+      },
+      create: { ...identifyContactDto, workspaceId },
+    });
+
+    return ContactResponseDto.fromEntity(contact);
+  }
+
   async findAll(workspaceId: string): Promise<ContactResponseDto[]> {
     await this.workspacesService.findOne(workspaceId);
 

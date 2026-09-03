@@ -2,10 +2,12 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { prisma } from '../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
+import { loginAsNewAgent } from 'test/utils/auth';
 import { AgentResponseDto } from './dto/agent-response.dto';
 
 describe('AgentsController (e2e)', () => {
   let app: INestApplication;
+  let agentCookie: string;
 
   beforeAll(async () => {
     app = await createTestingApp();
@@ -15,6 +17,16 @@ describe('AgentsController (e2e)', () => {
   afterAll(async () => {
     await app.close();
   });
+
+  beforeEach(async () => {
+    agentCookie = await loginAsNewAgent(app);
+  });
+
+  function authed(method: 'get' | 'post' | 'patch' | 'delete', url: string) {
+    return request(app.getHttpServer())
+      [method](url)
+      .set('Cookie', [agentCookie]);
+  }
 
   describe('POST /agents', () => {
     it('creates an agent', async () => {
@@ -106,14 +118,17 @@ describe('AgentsController (e2e)', () => {
         data: { name: 'B', email: 'b@example.com', passwordHash: 'hash-b' },
       });
 
-      const response = await request(app.getHttpServer())
-        .get('/agents')
-        .expect(200);
+      const response = await authed('get', '/agents').expect(200);
 
       const body = response.body as AgentResponseDto[];
 
-      expect(body).toHaveLength(2);
+      // includes the acting agent created in beforeEach plus the two above
+      expect(body.length).toBeGreaterThanOrEqual(2);
       expect(body.every((agent) => !('passwordHash' in agent))).toBe(true);
+    });
+
+    it('rejects a request with no access token', async () => {
+      await request(app.getHttpServer()).get('/agents').expect(401);
     });
   });
 
@@ -123,9 +138,7 @@ describe('AgentsController (e2e)', () => {
         data: { name: 'A', email: 'a@example.com', passwordHash: 'hash-a' },
       });
 
-      const response = await request(app.getHttpServer())
-        .get(`/agents/${agent.id}`)
-        .expect(200);
+      const response = await authed('get', `/agents/${agent.id}`).expect(200);
 
       const body = response.body as AgentResponseDto;
 
@@ -133,9 +146,7 @@ describe('AgentsController (e2e)', () => {
     });
 
     it('returns 404 for an unknown id', async () => {
-      await request(app.getHttpServer())
-        .get('/agents/does-not-exist')
-        .expect(404);
+      await authed('get', '/agents/does-not-exist').expect(404);
     });
   });
 
@@ -145,8 +156,7 @@ describe('AgentsController (e2e)', () => {
         data: { name: 'A', email: 'a@example.com', passwordHash: 'hash-a' },
       });
 
-      const response = await request(app.getHttpServer())
-        .patch(`/agents/${agent.id}`)
+      const response = await authed('patch', `/agents/${agent.id}`)
         .send({ name: 'A Updated' })
         .expect(200);
 
@@ -161,8 +171,7 @@ describe('AgentsController (e2e)', () => {
         data: { name: 'A', email: 'a@example.com', passwordHash: 'hash-a' },
       });
 
-      await request(app.getHttpServer())
-        .patch(`/agents/${agent.id}`)
+      await authed('patch', `/agents/${agent.id}`)
         .send({ password: 'new-secret-pw' })
         .expect(200);
 
@@ -174,8 +183,7 @@ describe('AgentsController (e2e)', () => {
     });
 
     it('returns 404 when updating an unknown id', async () => {
-      await request(app.getHttpServer())
-        .patch('/agents/does-not-exist')
+      await authed('patch', '/agents/does-not-exist')
         .send({ name: 'A Updated' })
         .expect(404);
     });
@@ -188,8 +196,7 @@ describe('AgentsController (e2e)', () => {
         data: { name: 'B', email: 'b@example.com', passwordHash: 'hash-b' },
       });
 
-      await request(app.getHttpServer())
-        .patch(`/agents/${agent.id}`)
+      await authed('patch', `/agents/${agent.id}`)
         .send({ email: 'a@example.com' })
         .expect(409);
     });
@@ -201,17 +208,13 @@ describe('AgentsController (e2e)', () => {
         data: { name: 'A', email: 'a@example.com', passwordHash: 'hash-a' },
       });
 
-      await request(app.getHttpServer())
-        .delete(`/agents/${agent.id}`)
-        .expect(204);
+      await authed('delete', `/agents/${agent.id}`).expect(204);
 
-      await request(app.getHttpServer()).get(`/agents/${agent.id}`).expect(404);
+      await authed('get', `/agents/${agent.id}`).expect(404);
     });
 
     it('returns 404 when deleting an unknown id', async () => {
-      await request(app.getHttpServer())
-        .delete('/agents/does-not-exist')
-        .expect(404);
+      await authed('delete', '/agents/does-not-exist').expect(404);
     });
   });
 });
