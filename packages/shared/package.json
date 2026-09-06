@@ -11,5 +11,8 @@
     "lint": "echo \"@roadly/shared: lint not yet configured\" && exit 0",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "test": "echo \"@roadly/shared: no tests yet\" && exit 0"
+  },
+  "dependencies": {
+    "zod": "^4.5.4"
   }
 }
