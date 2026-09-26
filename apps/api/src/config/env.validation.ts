@@ -21,6 +21,10 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   NODE_ENV?: string;
+
+  @IsOptional()
+  @IsString()
+  DASHBOARD_URL?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {

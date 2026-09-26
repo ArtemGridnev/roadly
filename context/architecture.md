@@ -26,7 +26,7 @@ roadly/
 ### Widget (`apps/widget`)
 
 - React + TypeScript
-- Redux Toolkit + RTK Query
+- TanStack Query (see State Management below — no Redux, unlike the dashboard)
 - Built with Vite in **library mode** to a single self-mounting bundle (IIFE/UMD)
 - Ships its own React — cannot assume the host app has it
 - Mounts into a host-provided container and renders inside a **Shadow DOM** for full style isolation from the host
@@ -60,11 +60,11 @@ roadly/
 
 ## State Management
 
-- **RTK Query** owns all server state (requests, votes, board data) — caching, refetching, and optimistic updates.
-- **Redux Toolkit slices** own client state that isn't server-derived:
-  - `requestsSlice` — normalized requests (entity adapter), filter/sort state
-  - `boardSlice` — column order and drag state (dashboard)
-- Optimistic updates on upvote, so the count reflects immediately and rolls back on failure.
+Diverges by app: the widget ships its own React into host pages, where bundle size matters more than for the dashboard (precedent: widget already skips shadcn/ui too, see Stack above).
+
+- **Dashboard:** RTK Query owns server state. Redux Toolkit slices own non-server client state (`boardSlice` — column order and drag state).
+- **Widget:** TanStack Query owns server state. No Redux — no non-server client state to justify it.
+- Optimistic updates on upvote, so the count reflects immediately and rolls back on failure (both apps).
 
 ## Data Model
 
@@ -101,7 +101,7 @@ Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never
 ### Widget identity (Contact)
 
 - **MVP:** the host app passes the current end user's id/name/email into `Roadly.init(...)`. The widget calls `POST /widget/contacts` once to upsert a `Contact` row keyed by that host-supplied id (stored as `externalId`, scoped to the resolved Workspace) and gets back a `Contact.id`, which it then sends as `x-contact-id` on subsequent write calls. Identity is trusted as-is (identified but unverified). Documented as a deliberate trade-off.
-- **Future:** the host app's backend signs a short-lived JWT with a shared secret; the widget passes it at init instead of raw identity; the backend verifies signature and expiry before trusting the identity. Because identity already travels via headers rather than path/body params, this migration only changes what generates the header value (e.g. RTK Query's `prepareHeaders`), not the route shapes.
+- **Future:** the host app's backend signs a short-lived JWT with a shared secret; the widget passes it at init instead of raw identity; the backend verifies signature and expiry before trusting the identity. Because identity already travels via headers rather than path/body params, this migration only changes what generates the header value (the widget's TanStack Query fetcher), not the route shapes.
 
 ### Admin dashboard auth (Agent)
 
