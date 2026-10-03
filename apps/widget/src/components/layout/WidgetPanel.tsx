@@ -6,6 +6,7 @@ import { TabBar } from './TabBar'
 import { DEFAULT_TAB, WIDGET_TABS, type TabId } from './tabs'
 import { Button } from '../ui/Button'
 import { NewRequestOverlay } from '../new-request/NewRequestOverlay'
+import { RequestDetailOverlay } from '../requests/RequestDetailOverlay'
 import { RequestsView } from '../../views/RequestsView'
 import { MyRequestsView } from '../../views/MyRequestsView'
 
@@ -22,6 +23,8 @@ export function WidgetPanel({ onClose }: WidgetPanelProps) {
   const [announcement, setAnnouncement] = useState('')
   const newRequestButtonRef = useRef<HTMLButtonElement>(null)
   const shouldRestoreFocus = useRef(false)
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
+  const detailTriggerRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!isComposing && shouldRestoreFocus.current) {
@@ -29,6 +32,18 @@ export function WidgetPanel({ onClose }: WidgetPanelProps) {
       newRequestButtonRef.current?.focus()
     }
   }, [isComposing])
+
+  useEffect(() => {
+    if (!selectedRequestId && detailTriggerRef.current) {
+      detailTriggerRef.current.focus()
+      detailTriggerRef.current = null
+    }
+  }, [selectedRequestId])
+
+  const openDetails = (requestId: string, trigger: HTMLElement | null) => {
+    detailTriggerRef.current = trigger
+    setSelectedRequestId(requestId)
+  }
 
   const openComposer = () => {
     setAnnouncement('')
@@ -46,6 +61,7 @@ export function WidgetPanel({ onClose }: WidgetPanelProps) {
     closeComposer()
   }
 
+  const isOverlayOpen = isComposing || selectedRequestId !== null
   const activeTitle = WIDGET_TABS.find((tab) => tab.id === activeTab)?.title ?? ''
 
   return (
@@ -54,16 +70,16 @@ export function WidgetPanel({ onClose }: WidgetPanelProps) {
       onValueChange={(value) => setActiveTab(value as TabId)}
       className="relative flex h-[min(34rem,calc(100vh-7.5rem))] w-[21rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-lg"
     >
-      <div inert={isComposing} className="flex min-h-0 flex-1 flex-col">
+      <div inert={isOverlayOpen} className="flex min-h-0 flex-1 flex-col">
         <PanelHeader title={activeTitle} onClose={onClose} />
 
         <div className="relative flex min-h-0 flex-1 flex-col">
           <Tabs.Content value="requests" className={TAB_CONTENT_CLASSES}>
-            <RequestsView />
+            <RequestsView onSelectRequest={openDetails} />
           </Tabs.Content>
 
           <Tabs.Content value="mine" className={TAB_CONTENT_CLASSES}>
-            <MyRequestsView />
+            <MyRequestsView onSelectRequest={openDetails} />
           </Tabs.Content>
 
           <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
@@ -82,6 +98,13 @@ export function WidgetPanel({ onClose }: WidgetPanelProps) {
       </div>
 
       {isComposing ? <NewRequestOverlay onBack={closeComposer} onSent={handleSent} /> : null}
+
+      {selectedRequestId ? (
+        <RequestDetailOverlay
+          requestId={selectedRequestId}
+          onBack={() => setSelectedRequestId(null)}
+        />
+      ) : null}
 
       <p role="status" className="sr-only">
         {announcement}

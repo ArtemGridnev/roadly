@@ -5,7 +5,11 @@ import { useWidgetSession } from '../session/widget-session'
 import { RequestList } from '../components/requests/RequestList'
 import { SortToggle } from '../components/requests/SortToggle'
 
-export function MyRequestsView() {
+interface MyRequestsViewProps {
+  onSelectRequest: (requestId: string, trigger: HTMLElement | null) => void
+}
+
+export function MyRequestsView({ onSelectRequest }: MyRequestsViewProps) {
   const { widgetKey, contact, identifyError } = useWidgetSession()
   const [sort, setSort] = useState<WidgetFeatureRequestSort>('newest')
   const { data, isPending, error, refetch } = useFeatureRequests(widgetKey, contact?.id, sort)
@@ -22,6 +26,7 @@ export function MyRequestsView() {
       emptyTitle="You haven't requested anything yet"
       emptyDescription="Requests you submit will show up here with their status."
       onRetry={() => void refetch()}
+      onSelect={onSelectRequest}
       toolbar={<SortToggle value={sort} onChange={setSort} />}
     />
   )
