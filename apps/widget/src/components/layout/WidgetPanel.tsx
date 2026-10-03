@@ -10,14 +10,15 @@ import { RequestDetailOverlay } from '../requests/RequestDetailOverlay'
 import { RequestsView } from '../../views/RequestsView'
 import { MyRequestsView } from '../../views/MyRequestsView'
 
-const TAB_CONTENT_CLASSES =
-  'min-h-0 flex-1 overflow-y-auto p-4 pb-16 focus-visible:outline-none'
+const TAB_CONTENT_CLASSES = 'min-h-0 flex-1 overflow-y-auto p-4 focus-visible:outline-none'
 
 interface WidgetPanelProps {
+  isClosing: boolean
   onClose: () => void
+  onExited: () => void
 }
 
-export function WidgetPanel({ onClose }: WidgetPanelProps) {
+export function WidgetPanel({ isClosing, onClose, onExited }: WidgetPanelProps) {
   const [activeTab, setActiveTab] = useState<TabId>(DEFAULT_TAB)
   const [isComposing, setIsComposing] = useState(false)
   const [announcement, setAnnouncement] = useState('')
@@ -68,7 +69,12 @@ export function WidgetPanel({ onClose }: WidgetPanelProps) {
     <Tabs.Root
       value={activeTab}
       onValueChange={(value) => setActiveTab(value as TabId)}
-      className="relative flex h-[min(34rem,calc(100vh-7.5rem))] w-[21rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-lg border border-border bg-background text-foreground shadow-lg"
+      inert={isClosing}
+      data-state={isClosing ? 'closing' : 'open'}
+      onAnimationEnd={(event) => {
+        if (isClosing && event.target === event.currentTarget) onExited()
+      }}
+      className="relative flex h-[min(38rem,calc(100vh-7.5rem))] w-[24rem] max-w-[calc(100vw-2rem)] origin-bottom-right animate-panel-in flex-col overflow-clip rounded-lg border border-border bg-background text-foreground shadow-lg data-[state=closing]:animate-panel-out max-sm:fixed max-sm:inset-0 max-sm:h-auto max-sm:w-auto max-sm:max-w-none max-sm:rounded-none max-sm:animate-none max-sm:border-0"
     >
       <div inert={isOverlayOpen} className="flex min-h-0 flex-1 flex-col">
         <PanelHeader title={activeTitle} onClose={onClose} />
@@ -78,20 +84,22 @@ export function WidgetPanel({ onClose }: WidgetPanelProps) {
             <RequestsView onSelectRequest={openDetails} />
           </Tabs.Content>
 
-          <Tabs.Content value="mine" className={TAB_CONTENT_CLASSES}>
+          <Tabs.Content value="mine" className={`${TAB_CONTENT_CLASSES} pb-16`}>
             <MyRequestsView onSelectRequest={openDetails} />
           </Tabs.Content>
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
-            <Button
-              ref={newRequestButtonRef}
-              onClick={openComposer}
-              className="pointer-events-auto shadow-sm"
-            >
-              <Plus className="size-4" aria-hidden="true" />
-              New request
-            </Button>
-          </div>
+          {activeTab === 'mine' ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
+              <Button
+                ref={newRequestButtonRef}
+                onClick={openComposer}
+                className="pointer-events-auto shadow-sm"
+              >
+                <Plus className="size-4" aria-hidden="true" />
+                New request
+              </Button>
+            </div>
+          ) : null}
         </div>
 
         <TabBar />
