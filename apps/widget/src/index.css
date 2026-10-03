@@ -36,11 +36,27 @@
   --color-destructive: oklch(0.577 0.245 27.325);
 
   --animate-overlay-in: overlay-in 160ms ease-out;
+  --animate-panel-in: panel-in 120ms ease-out;
+  --animate-panel-out: panel-out 100ms ease-in forwards;
 
   @keyframes overlay-in {
     from {
       opacity: 0;
       transform: translateY(0.5rem);
+    }
+  }
+
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+
+  @keyframes panel-out {
+    to {
+      opacity: 0;
+      transform: scale(0.95);
     }
   }
 }

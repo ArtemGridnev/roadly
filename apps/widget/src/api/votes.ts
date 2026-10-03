@@ -3,8 +3,6 @@ import type { WidgetFeatureRequest } from '@roadly/shared'
 import { apiRequest } from './client'
 import { widgetQueryKeys } from './query-keys'
 
-const VOTE_MUTATION_KEY = ['widget', 'vote'] as const
-
 interface ToggleVoteParams {
   widgetKey: string
   contactId: string
@@ -15,21 +13,10 @@ interface ToggleVoteParams {
 export function useToggleVote() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationKey: VOTE_MUTATION_KEY,
-    mutationFn: ({ widgetKey, contactId, requestId, hasVoted }: ToggleVoteParams) =>
-      apiRequest<unknown>(`/widget/feature-requests/${requestId}/votes`, {
-        method: hasVoted ? 'DELETE' : 'POST',
-        widgetKey,
-        contactId,
-      }),
-    onMutate: async ({ widgetKey, requestId, hasVoted }) => {
-      const queryKey = widgetQueryKeys.featureRequests(widgetKey)
-      await queryClient.cancelQueries({ queryKey })
-
-      const previousLists = queryClient.getQueriesData<WidgetFeatureRequest[]>({ queryKey })
-
-      queryClient.setQueriesData<WidgetFeatureRequest[]>({ queryKey }, (requests) =>
+  const applyVote = (widgetKey: string, requestId: string, hasVoted: boolean) =>
+    queryClient.setQueriesData<WidgetFeatureRequest[]>(
+      { queryKey: widgetQueryKeys.featureRequests(widgetKey) },
+      (requests) =>
         requests?.map((request) =>
           request.id === requestId
             ? {
@@ -39,22 +26,26 @@ export function useToggleVote() {
               }
             : request,
         ),
-      )
+    )
 
-      return { previousLists }
+  return useMutation({
+    mutationFn: ({ widgetKey, contactId, requestId, hasVoted }: ToggleVoteParams) =>
+      apiRequest<unknown>(`/widget/feature-requests/${requestId}/votes`, {
+        method: hasVoted ? 'DELETE' : 'POST',
+        widgetKey,
+        contactId,
+      }),
+    onMutate: async ({ widgetKey, requestId, hasVoted }) => {
+      await queryClient.cancelQueries({ queryKey: widgetQueryKeys.featureRequests(widgetKey) })
+      applyVote(widgetKey, requestId, hasVoted)
     },
-    onError: (_error, _params, context) => {
-      context?.previousLists.forEach(([queryKey, requests]) => {
-        queryClient.setQueryData(queryKey, requests)
-      })
+    onError: (_error, { widgetKey, requestId, hasVoted }) => {
+      applyVote(widgetKey, requestId, !hasVoted)
     },
-    onSettled: (_data, _error, { widgetKey }) => {
-      // Only the last in-flight vote refetches, so no refetch clobbers a pending vote.
-      if (queryClient.isMutating({ mutationKey: VOTE_MUTATION_KEY }) === 1) {
-        return queryClient.invalidateQueries({
-          queryKey: widgetQueryKeys.featureRequests(widgetKey),
-        })
-      }
-    },
+    onSettled: (_data, _error, { widgetKey }) =>
+      queryClient.invalidateQueries({
+        queryKey: widgetQueryKeys.featureRequests(widgetKey),
+        refetchType: 'none',
+      }),
   })
 }
