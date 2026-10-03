@@ -1,5 +1,5 @@
 import type { WidgetFeatureRequest } from '@roadly/shared'
-import { useVote } from '../../api/votes'
+import { useToggleVote } from '../../api/votes'
 import { useWidgetSession } from '../../session/widget-session'
 import { StatusBadge } from '../ui/StatusBadge'
 import { VoteButton } from '../ui/VoteButton'
@@ -11,14 +11,19 @@ interface RequestCardProps {
 
 export function RequestCard({ request }: RequestCardProps) {
   const { widgetKey, contact } = useWidgetSession()
-  const vote = useVote()
+  const toggleVote = useToggleVote()
 
   const handleVote = () => {
-    if (!contact) {
+    if (!contact || toggleVote.isPending) {
       return
     }
 
-    vote.mutate({ widgetKey, contactId: contact.id, requestId: request.id })
+    toggleVote.mutate({
+      widgetKey,
+      contactId: contact.id,
+      requestId: request.id,
+      hasVoted: request.hasVoted,
+    })
   }
 
   return (
@@ -26,7 +31,7 @@ export function RequestCard({ request }: RequestCardProps) {
       <VoteButton
         count={request.voteCount}
         hasVoted={request.hasVoted}
-        disabled={!contact || vote.isPending}
+        disabled={!contact}
         onVote={handleVote}
       />
 

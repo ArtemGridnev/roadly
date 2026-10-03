@@ -11,7 +11,7 @@ export class ApiError extends Error {
 }
 
 interface ApiRequestOptions {
-  method?: 'GET' | 'POST'
+  method?: 'GET' | 'POST' | 'DELETE'
   body?: unknown
   widgetKey: string
   contactId?: string
@@ -41,6 +41,10 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     throw new ApiError(response.status, `${method} ${path} failed with ${response.status}`)
+  }
+
+  if (response.status === 204) {
+    return undefined as T
   }
 
   return response.json() as Promise<T>

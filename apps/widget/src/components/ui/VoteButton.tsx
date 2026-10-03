@@ -13,15 +13,15 @@ export function VoteButton({ count, hasVoted, disabled, onVote }: VoteButtonProp
     <button
       type="button"
       aria-pressed={hasVoted}
-      disabled={disabled || hasVoted}
+      disabled={disabled}
       onClick={onVote}
       className={cn(
         'flex w-11 shrink-0 flex-col items-center gap-0.5 self-start rounded-lg border py-1.5 transition-colors',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
         hasVoted
-          ? 'border-primary bg-primary/10 text-primary'
+          ? 'border-primary bg-primary/10 text-primary enabled:hover:bg-primary/15'
           : 'border-border bg-background text-muted-foreground enabled:hover:border-primary enabled:hover:text-primary',
-        disabled && !hasVoted && 'opacity-50',
+        disabled && 'opacity-50',
       )}
     >
       <ArrowBigUp className={cn('size-4', hasVoted && 'fill-current')} aria-hidden="true" />
