@@ -7,6 +7,7 @@ import {
   WIDGET_KEY_HEADER,
 } from '../../auth/constants/widget-headers';
 import { FeatureRequestResponseDto } from '../../feature-requests/dto/feature-request-response.dto';
+import { WidgetFeatureRequestResponseDto } from './dto/widget-feature-request-response.dto';
 
 describe('WidgetFeatureRequestsController (e2e)', () => {
   let app: INestApplication;
@@ -136,6 +137,94 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       const body = response.body as FeatureRequestResponseDto[];
 
       expect(body[0].voteCount).toBe(0);
+    });
+
+    describe('hasVoted', () => {
+      let votedId: string;
+      let unvotedId: string;
+
+      beforeEach(async () => {
+        const voted = await prisma.featureRequest.create({
+          data: {
+            title: 'Voted',
+            description: 'Voted',
+            workspaceId,
+            authorId: contactId,
+          },
+        });
+        const unvoted = await prisma.featureRequest.create({
+          data: {
+            title: 'Unvoted',
+            description: 'Unvoted',
+            workspaceId,
+            authorId: contactId,
+          },
+        });
+        votedId = voted.id;
+        unvotedId = unvoted.id;
+
+        await prisma.vote.create({ data: { requestId: votedId, contactId } });
+      });
+
+      const hasVotedById = (body: WidgetFeatureRequestResponseDto[]) =>
+        Object.fromEntries(
+          body.map((featureRequest) => [
+            featureRequest.id,
+            featureRequest.hasVoted,
+          ]),
+        );
+
+      it("reflects the identified contact's votes", async () => {
+        const response = await request(app.getHttpServer())
+          .get('/widget/feature-requests')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set(CONTACT_ID_HEADER, contactId)
+          .expect(200);
+
+        expect(
+          hasVotedById(response.body as WidgetFeatureRequestResponseDto[]),
+        ).toEqual({ [votedId]: true, [unvotedId]: false });
+      });
+
+      it("ignores other contacts' votes", async () => {
+        const otherContact = await prisma.contact.create({
+          data: {
+            workspaceId,
+            externalId: 'ext-2',
+            name: 'John Roe',
+            email: 'john@example.com',
+          },
+        });
+
+        const response = await request(app.getHttpServer())
+          .get('/widget/feature-requests')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set(CONTACT_ID_HEADER, otherContact.id)
+          .expect(200);
+
+        expect(
+          hasVotedById(response.body as WidgetFeatureRequestResponseDto[]),
+        ).toEqual({ [votedId]: false, [unvotedId]: false });
+      });
+
+      it('is false everywhere without a contact id header', async () => {
+        const response = await request(app.getHttpServer())
+          .get('/widget/feature-requests')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .expect(200);
+
+        expect(
+          hasVotedById(response.body as WidgetFeatureRequestResponseDto[]),
+        ).toEqual({ [votedId]: false, [unvotedId]: false });
+      });
+
+      it('rejects a contact id that does not belong to the workspace', async () => {
+        await request(app.getHttpServer())
+          .get('/widget/feature-requests')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set(CONTACT_ID_HEADER, 'does-not-exist')
+          .expect(401);
+      });
     });
 
     describe('sorting', () => {

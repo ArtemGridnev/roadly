@@ -49,6 +49,18 @@ export class VotesService {
     return votes.map(VoteResponseDto.fromEntity);
   }
 
+  async findVotedRequestIds(
+    contactId: string,
+    requestIds: string[],
+  ): Promise<Set<string>> {
+    const votes = await this.prisma.vote.findMany({
+      where: { contactId, requestId: { in: requestIds } },
+      select: { requestId: true },
+    });
+
+    return new Set(votes.map((vote) => vote.requestId));
+  }
+
   async findOne(requestId: string, id: string): Promise<VoteResponseDto> {
     await this.featureRequestsService.findOne(requestId);
 

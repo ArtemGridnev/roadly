@@ -71,11 +71,11 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
       [context.getHandler(), context.getClass()],
     );
 
-    if (requiresContact) {
-      request.contact = await this.resolveContact(
-        workspace.id,
-        request.header(CONTACT_ID_HEADER),
-      );
+    const contactId = request.header(CONTACT_ID_HEADER);
+
+    // Optional on other widget routes, but an invalid id still rejects.
+    if (requiresContact || contactId) {
+      request.contact = await this.resolveContact(workspace.id, contactId);
     }
 
     return true;

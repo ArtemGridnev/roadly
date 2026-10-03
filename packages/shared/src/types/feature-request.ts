@@ -11,3 +11,7 @@ export interface FeatureRequest {
   voteCount: number;
   createdAt: string;
 }
+
+export interface WidgetFeatureRequest extends FeatureRequest {
+  hasVoted: boolean;
+}
