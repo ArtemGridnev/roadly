@@ -1,4 +1,11 @@
-import { Controller, Param, Post } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { VotesService } from '../../votes/votes.service';
 import { FeatureRequestsService } from '../../feature-requests/feature-requests.service';
 import { VoteResponseDto } from '../../votes/dto/vote-response.dto';
@@ -32,5 +39,20 @@ export class WidgetVotesController {
     );
 
     return this.votesService.create(requestId, { contactId: contact.id });
+  }
+
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
+    @CurrentContact() contact: ResolvedContact,
+    @Param('requestId') requestId: string,
+  ): Promise<void> {
+    await this.featureRequestsService.findOneForWorkspace(
+      workspace.id,
+      requestId,
+    );
+
+    await this.votesService.removeForContact(requestId, contact.id);
   }
 }

@@ -100,6 +100,18 @@ export class VotesService {
     await this.prisma.vote.delete({ where: { id } });
   }
 
+  async removeForContact(requestId: string, contactId: string): Promise<void> {
+    const { count } = await this.prisma.vote.deleteMany({
+      where: { requestId, contactId },
+    });
+
+    if (count === 0) {
+      throw new NotFoundException(
+        `Contact ${contactId} has not voted for feature request ${requestId}`,
+      );
+    }
+  }
+
   private mapKnownError(error: unknown): unknown {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

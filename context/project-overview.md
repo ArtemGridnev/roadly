@@ -35,7 +35,8 @@ Roadly is a feature request and roadmap tool. End users submit feature requests 
 
 - Submit a feature request (title, description, optional category).
 - Public list view, sortable by votes or newest.
-- Upvote — one vote per user per request, with duplicate-vote prevention.
+- Upvote — one vote per user per request, with duplicate-vote prevention. A second click removes the vote. No limit on how many requests a user can vote on.
+- Submitting a request automatically casts the author's vote on it.
 
 ### Roadmap Board (admin dashboard)
 
@@ -78,5 +79,5 @@ Roadly is a feature request and roadmap tool. End users submit feature requests 
 ## Success Criteria
 
 1. An end user can submit a feature request through the widget and see it appear in the list.
-2. An end user can upvote a request once, with a second attempt prevented, and the count updates immediately.
+2. An end user can upvote a request once and remove that vote with a second click, and the count updates immediately.
 3. An admin can sign in and drag a request between status columns, persisting the new status.

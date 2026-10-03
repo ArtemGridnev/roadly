@@ -33,7 +33,7 @@ A titled, described suggestion submitted by a Contact through the Widget, with a
 _Avoid_: issue, ticket, item, idea
 
 **Vote**:
-A single Contact's upvote on one Feature Request. One Vote per (Contact, Feature Request) pair — enforced by a unique constraint. There is no downvote in scope.
+A single Contact's upvote on one Feature Request. One Vote per (Contact, Feature Request) pair — enforced by a unique constraint. Submitting a Feature Request casts its author's Vote. A Contact can remove their own Vote (un-vote); there is no downvote in scope.
 _Avoid_: like, upvote (as a noun — "upvote" is the action of casting a Vote, "Vote" is the record)
 
 **Category**:

@@ -361,6 +361,23 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       });
     });
 
+    it("casts the author's vote on the new feature request", async () => {
+      const response = await request(app.getHttpServer())
+        .post('/widget/feature-requests')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set(CONTACT_ID_HEADER, contactId)
+        .send({ title: 'Dark mode', description: 'Please add dark mode' })
+        .expect(201);
+
+      const body = response.body as FeatureRequestResponseDto;
+      const votes = await prisma.vote.findMany({
+        where: { requestId: body.id },
+      });
+
+      expect(body.voteCount).toBe(1);
+      expect(votes.map((vote) => vote.contactId)).toEqual([contactId]);
+    });
+
     it('rejects a request missing required fields', async () => {
       await request(app.getHttpServer())
         .post('/widget/feature-requests')

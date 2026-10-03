@@ -54,9 +54,10 @@ export class WidgetFeatureRequestsController {
     @CurrentContact() contact: ResolvedContact,
     @Body() createFeatureRequestDto: CreateWidgetFeatureRequestDto,
   ): Promise<FeatureRequestResponseDto> {
-    return this.featureRequestsService.create(workspace.id, {
-      ...createFeatureRequestDto,
-      authorId: contact.id,
-    });
+    return this.featureRequestsService.create(
+      workspace.id,
+      { ...createFeatureRequestDto, authorId: contact.id },
+      { withAuthorVote: true },
+    );
   }
 }

@@ -125,7 +125,7 @@ Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never
 
 ## API Surface (high level)
 
-- **Public (widget):** list requests, submit request, upvote request — scoped to the identity passed by the host.
+- **Public (widget):** list requests, submit request (casts the author's vote), upvote / remove own vote — scoped to the identity passed by the host.
 - **Admin (dashboard, authenticated):** manage requests, change status, (future) comments.
 
 ## Build & Deploy (planned)

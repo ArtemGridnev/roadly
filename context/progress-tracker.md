@@ -15,9 +15,10 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Widget upvote (`feat/widget-upvote`)**:
   - API: `GET /widget/feature-requests` returns a widget-only `WidgetFeatureRequestResponseDto` (`FeatureRequestResponseDto & { hasVoted }`), mirrored in `packages/shared` as `WidgetFeatureRequest`. `hasVoted` comes from one `vote.findMany` over the listed ids (`VotesService.findVotedRequestIds`), so the shared feature-request query stays contact-agnostic.
   - `AccessTokenAuthGuard` now resolves `x-contact-id` on any `@WidgetAuth()` route when the header is present (an invalid id still 401s); `@RequireContact()` only makes it mandatory. New `@OptionalContact()` param decorator. 4 new e2e tests (130/130).
-  - Widget: `VoteCount` → `VoteButton` (`aria-pressed`, filled primary state once voted). The list query key carries `contactId`, so the list loads before identify and refetches with vote state after it.
-  - `useVote` updates every cached sort list optimistically (`voteCount + 1`, `hasVoted: true`), rolls back on error, and refetches on settle — only when it is the last in-flight vote (shared `mutationKey`), so one vote's refetch can't clobber another's optimistic state. A 409 resolves the same way: rollback, then the refetch shows the real state.
-  - No un-vote: a voted button stays pressed and disabled, since `DELETE` is still an open question. "Most voted" re-sorts on the refetch, not on click.
+  - `DELETE /widget/feature-requests/:requestId/votes` removes the current contact's vote (204; 404 if they hadn't voted). `POST /widget/feature-requests` casts the author's vote in the same Prisma create, so a new request starts at 1. Admin-side create is unchanged. 7 new e2e tests (137/137).
+  - Widget: `VoteCount` → `VoteButton` (`aria-pressed` toggle, filled primary state once voted). The list query key carries `contactId`, so the list loads before identify and refetches with vote state after it.
+  - `useToggleVote` POSTs or DELETEs based on the current `hasVoted`, updates every cached sort list optimistically (count ±1, `hasVoted` flipped), rolls back on error, and refetches on settle — only when it is the last in-flight vote (shared `mutationKey`), so one vote's refetch can't clobber another's optimistic state. A 409/404 from a stale `hasVoted` resolves the same way: rollback, then the refetch shows the real state. Clicks are ignored while that card's vote is in flight.
+  - No cap on how many requests a Contact can vote on (explicit decision). "Most voted" re-sorts on the refetch, not on click.
   - Rollback is not covered by a test yet — `code-standards.md` requires it, and it lands with the widget test stack below.
 
 - **Widget UI shell — launcher, tab navigation, feature request list (`feat/widget-ui-base`)**:
@@ -57,7 +58,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: upvote optimistic update + rollback, submit form.
+- Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 - Decide how a multi-workspace `Agent` selects their active workspace in the dashboard (open question, not yet resolved — the `x-workspace-id` header now makes this concrete: the dashboard needs a workspace switcher that sets it).
 
 ## Open Questions
@@ -67,7 +68,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - The widget launcher is `position: fixed` bottom-right rather than flowing inside the host-provided container. That matches how the sketch and every comparable widget behaves, but it means a host container with a `transform`/`filter`/`contain` ancestor will re-parent the containing block and misplace the launcher. Worth deciding whether placement becomes an `init` option.
 - `ui-context.md` §5 says the widget should inherit the host page font and fall back to Inter only if none is set. Implemented as an overridable `--roadly-font-family` defaulting to Inter, which inverts that default — the host opts in to its own font rather than the widget detecting one. Confirm this reading or change the default.
 - Does `contacts` need any admin-facing route at all beyond the widget upsert, or should `ContactsController`'s full CRUD be trimmed?
-- Is `DELETE` on feature-requests/votes in MVP scope — not mentioned in `project-overview.md`.
+- Is `DELETE` on feature-requests in MVP scope — not mentioned in `project-overview.md`. (Vote removal is resolved: in scope, widget-side.)
 
 ## Architecture Decisions
 
