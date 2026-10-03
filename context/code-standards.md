@@ -67,6 +67,12 @@
 - Atomic commits — one logical change each; the message explains the *why*.
 - Never commit secrets, `.env` files, debug logs, or commented-out code. Provide `.env.example`.
 
+## Forms
+
+- Schema-driven: react-hook-form + `zodResolver` over the shared zod schema from `packages/shared` — never a redeclared shape.
+- User-facing error copy is mapped per field in the component, not via zod messages, so shared schemas stay copy-free.
+- Normalize input with `setValueAs` (trim; empty optional → `undefined`) so validation sees what will be sent.
+
 ## Comments
 
 - Prefer self-documenting code.
@@ -85,7 +91,6 @@
 
 Lock these down once the first implementation exists — do not invent them prematurely:
 
-- Form pattern (schema-driven vs. per-form).
 - List / loading / empty / error state wrappers.
 - Query-key / cache-key conventions for RTK Query endpoints.
 - Per-app folder structure — documented in each app's own `README.md`.

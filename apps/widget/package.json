@@ -11,12 +11,15 @@
     "type-check": "tsc -b"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
     "@radix-ui/react-tabs": "^1.1.21",
     "@roadly/shared": "workspace:*",
     "@tanstack/react-query": "^5.104.0",
     "lucide-react": "^1.48.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-hook-form": "^7.89.0",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",

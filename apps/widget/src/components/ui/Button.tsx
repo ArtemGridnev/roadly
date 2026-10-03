@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { ComponentProps } from 'react'
 import { cn } from '../../lib/cn'
 
 const VARIANT_CLASSES = {
@@ -6,7 +6,7 @@ const VARIANT_CLASSES = {
   secondary: 'border border-border bg-card text-foreground hover:bg-accent',
 } as const
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ComponentProps<'button'> {
   variant?: keyof typeof VARIANT_CLASSES
 }
 

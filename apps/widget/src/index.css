@@ -33,6 +33,23 @@
   --color-border: oklch(0.92 0.004 286.32);
   --color-input: oklch(0.92 0.004 286.32);
   --color-ring: var(--roadly-primary, oklch(0.585 0.233 277.117));
+  --color-destructive: oklch(0.577 0.245 27.325);
+
+  --animate-overlay-in: overlay-in 160ms ease-out;
+
+  @keyframes overlay-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+  }
+}
+
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 [data-roadly-theme='light'] {
@@ -56,4 +73,11 @@
   --color-accent-foreground: oklch(0.985 0 0);
   --color-border: oklch(0.274 0.006 286.033);
   --color-input: oklch(0.274 0.006 286.033);
+  --color-destructive: oklch(0.704 0.191 22.216);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-roadly-theme] * {
+    animation: none !important;
+  }
 }
