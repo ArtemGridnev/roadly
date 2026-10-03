@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { FeatureRequestsService } from '../../feature-requests/feature-requests.service';
 import { FeatureRequestResponseDto } from '../../feature-requests/dto/feature-request-response.dto';
 import { CreateWidgetFeatureRequestDto } from './dto/create-widget-feature-request.dto';
+import { FindWidgetFeatureRequestsQueryDto } from './dto/find-widget-feature-requests-query.dto';
 import { WidgetAuth } from '../../auth/decorators/widget-auth.decorator';
 import { RequireContact } from '../../auth/decorators/require-contact.decorator';
 import { CurrentWorkspace } from '../../auth/decorators/current-workspace.decorator';
@@ -21,8 +22,11 @@ export class WidgetFeatureRequestsController {
   @Get()
   findAll(
     @CurrentWorkspace() workspace: ResolvedWorkspace,
+    @Query() query: FindWidgetFeatureRequestsQueryDto,
   ): Promise<FeatureRequestResponseDto[]> {
-    return this.featureRequestsService.findAll(workspace.id, {});
+    return this.featureRequestsService.findAll(workspace.id, {
+      sort: query.sort,
+    });
   }
 
   @RequireContact()

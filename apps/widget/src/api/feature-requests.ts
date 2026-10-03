@@ -1,12 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { CreateWidgetFeatureRequestInput, FeatureRequest } from '@roadly/shared'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type {
+  CreateWidgetFeatureRequestInput,
+  FeatureRequest,
+  WidgetFeatureRequestSort,
+} from '@roadly/shared'
 import { apiRequest } from './client'
 import { widgetQueryKeys } from './query-keys'
 
-export function useFeatureRequests(widgetKey: string) {
+export function useFeatureRequests(widgetKey: string, sort: WidgetFeatureRequestSort) {
   return useQuery({
-    queryKey: widgetQueryKeys.featureRequests(widgetKey),
-    queryFn: () => apiRequest<FeatureRequest[]>('/widget/feature-requests', { widgetKey }),
+    queryKey: widgetQueryKeys.featureRequestList(widgetKey, sort),
+    queryFn: () =>
+      apiRequest<FeatureRequest[]>(`/widget/feature-requests?sort=${sort}`, { widgetKey }),
+    placeholderData: keepPreviousData,
   })
 }
 

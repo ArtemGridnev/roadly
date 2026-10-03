@@ -4,11 +4,48 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>widget</title>
+    <title>Roadly widget — dev harness</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 48px;
+        min-height: 100vh;
+        color: #1c1c1e;
+        background: #fff;
+      }
+      main {
+        max-width: 42rem;
+      }
+      p {
+        color: #6b6b70;
+        line-height: 1.6;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #fafafa;
+          background: #101014;
+        }
+        p {
+          color: #a1a1aa;
+        }
+      }
+    </style>
   </head>
-  <body style="font-family: system-ui, sans-serif; padding: 40px">
-    <h1>Host page (dev harness)</h1>
-    <p>Simulates a customer site embedding the widget.</p>
+  <body>
+    <main>
+      <h1>Host page (dev harness)</h1>
+      <p>
+        Simulates a customer site embedding the widget. The launcher pins itself to the
+        bottom-right of the viewport; everything it renders lives inside a shadow root on
+        <code>#widget-container</code>, so nothing on this page can style it.
+      </p>
+      <p>
+        Theme is <code>auto</code> — switch your OS between light and dark to watch the widget
+        follow this page.
+      </p>
+    </main>
+
     <div id="widget-container"></div>
 
     <script type="module" src="/src/widget.tsx"></script>

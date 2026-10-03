@@ -3,7 +3,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateFeatureRequestDto } from './dto/create-feature-request.dto';
 import { UpdateFeatureRequestDto } from './dto/update-feature-request.dto';
 import { FindFeatureRequestsQueryDto } from './dto/find-feature-requests-query.dto';
-import { FeatureRequestResponseDto } from './dto/feature-request-response.dto';
+import {
+  FeatureRequestResponseDto,
+  featureRequestVoteCountSelect,
+} from './dto/feature-request-response.dto';
 
 @Injectable()
 export class FeatureRequestsService {
@@ -15,6 +18,7 @@ export class FeatureRequestsService {
   ): Promise<FeatureRequestResponseDto> {
     const featureRequest = await this.prisma.featureRequest.create({
       data: { ...createFeatureRequestDto, workspaceId },
+      include: featureRequestVoteCountSelect,
     });
 
     return FeatureRequestResponseDto.fromEntity(featureRequest);
@@ -29,7 +33,11 @@ export class FeatureRequestsService {
         workspaceId,
         status: query.status,
       },
-      orderBy: { createdAt: 'desc' },
+      include: featureRequestVoteCountSelect,
+      orderBy:
+        query.sort === 'top'
+          ? [{ votes: { _count: 'desc' } }, { createdAt: 'desc' }]
+          : { createdAt: 'desc' },
     });
 
     return featureRequests.map(FeatureRequestResponseDto.fromEntity);
@@ -38,6 +46,7 @@ export class FeatureRequestsService {
   async findOne(id: string): Promise<FeatureRequestResponseDto> {
     const featureRequest = await this.prisma.featureRequest.findUnique({
       where: { id },
+      include: featureRequestVoteCountSelect,
     });
 
     if (!featureRequest) {
@@ -53,6 +62,7 @@ export class FeatureRequestsService {
   ): Promise<FeatureRequestResponseDto> {
     const featureRequest = await this.prisma.featureRequest.findUnique({
       where: { id },
+      include: featureRequestVoteCountSelect,
     });
 
     if (!featureRequest || featureRequest.workspaceId !== workspaceId) {
@@ -73,6 +83,7 @@ export class FeatureRequestsService {
     const featureRequest = await this.prisma.featureRequest.update({
       where: { id },
       data: updateFeatureRequestDto,
+      include: featureRequestVoteCountSelect,
     });
 
     return FeatureRequestResponseDto.fromEntity(featureRequest);

@@ -57,5 +57,13 @@ export type {
   FindVotesQuery,
 } from './api/vote';
 
-export { createWidgetFeatureRequestSchema } from './api/widget';
-export type { CreateWidgetFeatureRequestInput } from './api/widget';
+export {
+  createWidgetFeatureRequestSchema,
+  widgetFeatureRequestSortSchema,
+  findWidgetFeatureRequestsQuerySchema,
+} from './api/widget';
+export type {
+  CreateWidgetFeatureRequestInput,
+  WidgetFeatureRequestSort,
+  FindWidgetFeatureRequestsQuery,
+} from './api/widget';
