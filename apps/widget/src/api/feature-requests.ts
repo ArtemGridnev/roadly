@@ -8,7 +8,6 @@ import type {
 import { apiRequest } from './client'
 import { widgetQueryKeys } from './query-keys'
 
-// Without contactId the list still loads, with hasVoted false.
 export function useFeatureRequests(
   widgetKey: string,
   contactId: string | undefined,

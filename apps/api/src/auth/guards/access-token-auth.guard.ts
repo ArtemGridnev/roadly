@@ -73,7 +73,6 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
 
     const contactId = request.header(CONTACT_ID_HEADER);
 
-    // Optional on other widget routes, but an invalid id still rejects.
     if (requiresContact || contactId) {
       request.contact = await this.resolveContact(workspace.id, contactId);
     }
