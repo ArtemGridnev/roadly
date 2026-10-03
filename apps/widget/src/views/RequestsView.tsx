@@ -6,9 +6,9 @@ import { RequestList } from '../components/requests/RequestList'
 import { SortToggle } from '../components/requests/SortToggle'
 
 export function RequestsView() {
-  const { widgetKey } = useWidgetSession()
+  const { widgetKey, contact } = useWidgetSession()
   const [sort, setSort] = useState<WidgetFeatureRequestSort>('top')
-  const { data, isPending, error, refetch } = useFeatureRequests(widgetKey, sort)
+  const { data, isPending, error, refetch } = useFeatureRequests(widgetKey, contact?.id, sort)
 
   return (
     <RequestList

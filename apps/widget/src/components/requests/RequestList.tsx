@@ -1,4 +1,4 @@
-import type { FeatureRequest } from '@roadly/shared'
+import type { WidgetFeatureRequest } from '@roadly/shared'
 import { Inbox, TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { RequestCard } from './RequestCard'
@@ -7,7 +7,7 @@ import { StateMessage } from '../ui/StateMessage'
 import { Button } from '../ui/Button'
 
 interface RequestListContentProps {
-  requests: FeatureRequest[] | undefined
+  requests: WidgetFeatureRequest[] | undefined
   isPending: boolean
   emptyTitle: string
   emptyDescription: string

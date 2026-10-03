@@ -8,7 +8,7 @@ import { SortToggle } from '../components/requests/SortToggle'
 export function MyRequestsView() {
   const { widgetKey, contact, identifyError } = useWidgetSession()
   const [sort, setSort] = useState<WidgetFeatureRequestSort>('newest')
-  const { data, isPending, error, refetch } = useFeatureRequests(widgetKey, sort)
+  const { data, isPending, error, refetch } = useFeatureRequests(widgetKey, contact?.id, sort)
 
   const myRequests = contact
     ? data?.filter((request) => request.authorId === contact.id)

@@ -2,16 +2,25 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import type {
   CreateWidgetFeatureRequestInput,
   FeatureRequest,
+  WidgetFeatureRequest,
   WidgetFeatureRequestSort,
 } from '@roadly/shared'
 import { apiRequest } from './client'
 import { widgetQueryKeys } from './query-keys'
 
-export function useFeatureRequests(widgetKey: string, sort: WidgetFeatureRequestSort) {
+// Without contactId the list still loads, with hasVoted false.
+export function useFeatureRequests(
+  widgetKey: string,
+  contactId: string | undefined,
+  sort: WidgetFeatureRequestSort,
+) {
   return useQuery({
-    queryKey: widgetQueryKeys.featureRequestList(widgetKey, sort),
+    queryKey: widgetQueryKeys.featureRequestList(widgetKey, sort, contactId),
     queryFn: () =>
-      apiRequest<FeatureRequest[]>(`/widget/feature-requests?sort=${sort}`, { widgetKey }),
+      apiRequest<WidgetFeatureRequest[]>(`/widget/feature-requests?sort=${sort}`, {
+        widgetKey,
+        contactId,
+      }),
     placeholderData: keepPreviousData,
   })
 }
