@@ -4,6 +4,7 @@ import { FeatureRequestsModule } from '../feature-requests/feature-requests.modu
 import { VotesModule } from '../votes/votes.module';
 import { WidgetContactsController } from './contacts/widget-contacts.controller';
 import { WidgetFeatureRequestsController } from './feature-requests/widget-feature-requests.controller';
+import { WidgetFeatureRequestsService } from './feature-requests/widget-feature-requests.service';
 import { WidgetVotesController } from './votes/widget-votes.controller';
 
 @Module({
@@ -13,5 +14,6 @@ import { WidgetVotesController } from './votes/widget-votes.controller';
     WidgetFeatureRequestsController,
     WidgetVotesController,
   ],
+  providers: [WidgetFeatureRequestsService],
 })
 export class WidgetModule {}

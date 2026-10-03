@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { FeatureRequestsService } from '../../feature-requests/feature-requests.service';
-import { VotesService } from '../../votes/votes.service';
+import { WidgetFeatureRequestsService } from './widget-feature-requests.service';
 import { FeatureRequestResponseDto } from '../../feature-requests/dto/feature-request-response.dto';
 import { CreateWidgetFeatureRequestDto } from './dto/create-widget-feature-request.dto';
 import { FindWidgetFeatureRequestsQueryDto } from './dto/find-widget-feature-requests-query.dto';
@@ -20,31 +20,20 @@ import type {
 export class WidgetFeatureRequestsController {
   constructor(
     private readonly featureRequestsService: FeatureRequestsService,
-    private readonly votesService: VotesService,
+    private readonly widgetFeatureRequestsService: WidgetFeatureRequestsService,
   ) {}
 
   @Get()
-  async findAll(
+  findAll(
     @CurrentWorkspace() workspace: ResolvedWorkspace,
     @OptionalContact() contact: ResolvedContact | undefined,
     @Query() query: FindWidgetFeatureRequestsQueryDto,
   ): Promise<WidgetFeatureRequestResponseDto[]> {
-    const featureRequests = await this.featureRequestsService.findAll(
+    return this.widgetFeatureRequestsService.findAll(
       workspace.id,
-      { sort: query.sort },
+      contact?.id,
+      query,
     );
-
-    const votedIds = contact
-      ? await this.votesService.findVotedRequestIds(
-          contact.id,
-          featureRequests.map((featureRequest) => featureRequest.id),
-        )
-      : new Set<string>();
-
-    return featureRequests.map((featureRequest) => ({
-      ...featureRequest,
-      hasVoted: votedIds.has(featureRequest.id),
-    }));
   }
 
   @RequireContact()
