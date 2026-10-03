@@ -8,7 +8,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Widget write surfaces: the submit form (react-hook-form + zod) and the upvote action with optimistic updates. Both were explicitly deferred out of the UI-shell step.
+- Widget upvote action with optimistic updates (the last widget write surface).
 
 ## Completed
 
@@ -19,6 +19,13 @@ Update this file whenever the current phase, active feature, or implementation s
   - Information architecture diverges from the original sketch: two bottom tabs — **Requests** (`ArrowBigUp`, all feature requests, the landing tab since voting is the widget's main job) and **My requests** (`CircleUser`) — with submission kept as a CTA rather than a third tab, per `ui-context.md` §5 ("inline expand, no heavy modals").
   - `RequestList` establishes the list/loading/empty/error wrapper that `code-standards.md` left "to be established": skeleton while pending, `StateMessage` + retry on error, per-view empty copy.
   - `Roadly.init()` now validates host-supplied options at the boundary and threads `theme` into the tree.
+
+- **Widget submit form**:
+  - "New request" CTA floats above the tab bar (per the sketch) and opens `NewRequestOverlay`: a layer over the whole panel with a back arrow, not a tab and not a modal (`ui-context.md` §5). Background is `inert` while open; Escape closes; focus returns to the CTA. Title, description, optional category.
+  - react-hook-form + `zodResolver` over the shared `createWidgetFeatureRequestSchema`; values are trimmed before validation so whitespace-only input is rejected. Error copy mapped per field in the component. Pattern recorded in `code-standards.md` § Forms.
+  - Button reads "Send request" → "Sending…"; on success the panel switches to My requests (newest first, list invalidated by the existing mutation) and announces "Request sent" via a `role="status"` region. Submit is disabled until the Contact is identified; identify and send failures render inline.
+  - New `destructive` color token added to both themes and to `ui-context.md`.
+  - **Bundle cost:** 91.9 → 127.2 kB gzipped. ~23 kB of that is zod classic, which does not tree-shake (single deduped copy, verified); react-hook-form ~11 kB, resolver ~1 kB.
 
 - **Sort by votes / newest**:
   - `GET /widget/feature-requests?sort=top|newest` (default `newest`). `top` orders by `_count.votes` with `createdAt desc` as the tie-break so equal-vote requests don't reshuffle between fetches. The widget route has its own query DTO exposing only `sort` — `status` stays admin-only and returns 400 on the widget. `sort` is also accepted on the admin `FindFeatureRequestsQueryDto`. Contract mirrored in `packages/shared` as `widgetFeatureRequestSortSchema`. 5 new e2e tests (126/126).
@@ -42,13 +49,14 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Widget submit form (react-hook-form + zod) and the "New request" CTA in the panel.
 - Widget upvote: needs `hasVoted` on the widget list response (contact-relative, so it belongs on a widget-only response shape, not the shared `FeatureRequest`) plus optional-contact resolution in `AccessTokenAuthGuard` — `GET /widget/feature-requests` currently only resolves a contact when `@RequireContact()` is set. Optimistic update lives in the API slice per `code-standards.md`.
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`.
 - Decide how a multi-workspace `Agent` selects their active workspace in the dashboard (open question, not yet resolved — the `x-workspace-id` header now makes this concrete: the dashboard needs a workspace switcher that sets it).
 
 ## Open Questions
 
+- Zod costs the widget ~23 kB gzipped (a quarter of the bundle) because the shared schemas use zod classic, which doesn't tree-shake. Options: accept it; migrate `packages/shared` schemas to `zod/mini` (tree-shakeable, same runtime, different API — touches every consumer); or validate the widget form with react-hook-form's built-in rules instead of the shared schema (diverges from `architecture.md`).
+- The launcher uses `rounded-full`, which breaks the `ui-context.md` hard rule (`rounded-lg` everywhere, except status badges). Either square it off or add launchers to the documented exceptions.
 - The widget launcher is `position: fixed` bottom-right rather than flowing inside the host-provided container. That matches how the sketch and every comparable widget behaves, but it means a host container with a `transform`/`filter`/`contain` ancestor will re-parent the containing block and misplace the launcher. Worth deciding whether placement becomes an `init` option.
 - `ui-context.md` §5 says the widget should inherit the host page font and fall back to Inter only if none is set. Implemented as an overridable `--roadly-font-family` defaulting to Inter, which inverts that default — the host opts in to its own font rather than the widget detecting one. Confirm this reading or change the default.
 - Does `contacts` need any admin-facing route at all beyond the widget upsert, or should `ContactsController`'s full CRUD be trimmed?

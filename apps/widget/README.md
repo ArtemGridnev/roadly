@@ -26,8 +26,9 @@ Run `pnpm dev` and open the dev harness (`index.html`) to work on it against a r
 | `src/app/` | `WidgetRoot` — launcher/panel open state and resolved theme |
 | `src/components/launcher/` | The floating launcher button |
 | `src/components/layout/` | Panel shell, header, bottom tab bar, tab definitions |
-| `src/components/requests/` | Feature request card, list, loading skeleton |
-| `src/components/ui/` | Hand-styled primitives (button, badge, skeleton, state message) |
+| `src/components/requests/` | Feature request card, list, loading skeleton, sort toggle |
+| `src/components/new-request/` | Submit form and the overlay that floats it over the panel |
+| `src/components/ui/` | Hand-styled primitives (button, badge, skeleton, state message, form fields) |
 | `src/views/` | One component per tab, binding a query to a list |
 | `src/api/` | TanStack Query hooks and the fetch client |
 | `src/session/` | Contact identification from the host-supplied user |
@@ -81,3 +82,7 @@ CSP blocks the stylesheet, the widget falls back to the host's system font stack
 - TanStack Query owns server state; no Redux.
 - List surfaces route loading / empty / error through `RequestList`, which renders a skeleton, a
   `StateMessage` with a retry action, or an empty state with copy supplied by the calling view.
+- The submit form is an overlay inside the panel (`NewRequestOverlay`), not a tab or a modal: it
+  covers the list and tab bar, the background is `inert` while it is open, Escape or the back arrow
+  closes it, and focus returns to the "New request" button. On success it switches to My requests,
+  where the new request appears first.

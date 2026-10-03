@@ -53,6 +53,7 @@ HSL, space-separated, referenced as `hsl(var(--x))`. Values chosen below; hex so
   --border: 240 6% 90%;           /* zinc-200 — hairline separation */
   --input: 240 6% 90%;
   --ring: 239 84% 67%;            /* focus ring = brand */
+  --destructive: 0 72% 51%;       /* red-600 — form errors */
   --radius: 0.5rem;               /* 8px — defined once, shared by both themes */
 }
 
@@ -74,6 +75,7 @@ HSL, space-separated, referenced as `hsl(var(--x))`. Values chosen below; hex so
   --border: 240 4% 16%;           /* zinc-800 — lighter than bg in dark */
   --input: 240 4% 16%;
   --ring: 239 84% 67%;
+  --destructive: 0 91% 71%;       /* red-400 — lighter for contrast on dark */
 }
 ```
 > On Tailwind v4 / newest shadcn the format is OKLCH instead of HSL — convert from the hex in the comments if so. Meaning of each variable is unchanged.
