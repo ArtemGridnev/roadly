@@ -83,6 +83,162 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       expect(body[0].title).toBe('Dark mode');
     });
 
+    it('returns the vote count for each feature request', async () => {
+      const featureRequest = await prisma.featureRequest.create({
+        data: {
+          title: 'Dark mode',
+          description: 'Please add dark mode',
+          workspaceId,
+          authorId: contactId,
+        },
+      });
+
+      const voter = await prisma.contact.create({
+        data: {
+          workspaceId,
+          externalId: 'ext-2',
+          name: 'John Roe',
+          email: 'john@example.com',
+        },
+      });
+      await prisma.vote.createMany({
+        data: [
+          { requestId: featureRequest.id, contactId },
+          { requestId: featureRequest.id, contactId: voter.id },
+        ],
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/widget/feature-requests')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .expect(200);
+
+      const body = response.body as FeatureRequestResponseDto[];
+
+      expect(body[0].voteCount).toBe(2);
+    });
+
+    it('returns a zero vote count for a feature request with no votes', async () => {
+      await prisma.featureRequest.create({
+        data: {
+          title: 'Dark mode',
+          description: 'Please add dark mode',
+          workspaceId,
+          authorId: contactId,
+        },
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/widget/feature-requests')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .expect(200);
+
+      const body = response.body as FeatureRequestResponseDto[];
+
+      expect(body[0].voteCount).toBe(0);
+    });
+
+    describe('sorting', () => {
+      let oldPopularId: string;
+      let newUnpopularId: string;
+      let midTiedOlderId: string;
+      let midTiedNewerId: string;
+
+      beforeEach(async () => {
+        const voters = await Promise.all(
+          [1, 2, 3].map((n) =>
+            prisma.contact.create({
+              data: {
+                workspaceId,
+                externalId: `voter-${n}`,
+                name: `Voter ${n}`,
+                email: `voter${n}@example.com`,
+              },
+            }),
+          ),
+        );
+
+        const createRequest = (title: string, createdAt: string) =>
+          prisma.featureRequest.create({
+            data: {
+              title,
+              description: title,
+              workspaceId,
+              authorId: contactId,
+              createdAt: new Date(createdAt),
+            },
+          });
+
+        const oldPopular = await createRequest('Old popular', '2026-01-01');
+        const midTiedOlder = await createRequest('Mid tied older', '2026-02-01');
+        const midTiedNewer = await createRequest('Mid tied newer', '2026-03-01');
+        const newUnpopular = await createRequest('New unpopular', '2026-04-01');
+
+        oldPopularId = oldPopular.id;
+        midTiedOlderId = midTiedOlder.id;
+        midTiedNewerId = midTiedNewer.id;
+        newUnpopularId = newUnpopular.id;
+
+        await prisma.vote.createMany({
+          data: [
+            ...voters.map((voter) => ({
+              requestId: oldPopular.id,
+              contactId: voter.id,
+            })),
+            { requestId: midTiedOlder.id, contactId: voters[0].id },
+            { requestId: midTiedNewer.id, contactId: voters[0].id },
+          ],
+        });
+      });
+
+      const listIds = async (query: string) => {
+        const response = await request(app.getHttpServer())
+          .get(`/widget/feature-requests${query}`)
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .expect(200);
+
+        return (response.body as FeatureRequestResponseDto[]).map(
+          (featureRequest) => featureRequest.id,
+        );
+      };
+
+      it('orders by vote count when sort=top, breaking ties by newest', async () => {
+        expect(await listIds('?sort=top')).toEqual([
+          oldPopularId,
+          midTiedNewerId,
+          midTiedOlderId,
+          newUnpopularId,
+        ]);
+      });
+
+      it('orders by creation date when sort=newest', async () => {
+        expect(await listIds('?sort=newest')).toEqual([
+          newUnpopularId,
+          midTiedNewerId,
+          midTiedOlderId,
+          oldPopularId,
+        ]);
+      });
+
+      it('defaults to newest when no sort is given', async () => {
+        expect(await listIds('')).toEqual(await listIds('?sort=newest'));
+      });
+
+      it('rejects an unknown sort value', async () => {
+        await request(app.getHttpServer())
+          .get('/widget/feature-requests?sort=oldest')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .expect(400);
+      });
+
+      it('rejects the admin-only status filter', async () => {
+        await request(app.getHttpServer())
+          .get('/widget/feature-requests?status=SHIPPED')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .expect(400);
+      });
+    });
+
     it('rejects a request missing the widget key header', async () => {
       await request(app.getHttpServer())
         .get('/widget/feature-requests')

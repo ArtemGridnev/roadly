@@ -2,36 +2,45 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { RoadlyInitOptions } from '@roadly/shared'
-import App from './App.tsx'
-import { WidgetSessionProvider } from './session/widget-session.tsx'
+import { WidgetRoot } from './app/WidgetRoot'
+import { WidgetSessionProvider } from './session/widget-session'
+import { mountShadowRoot } from './shadow/mount'
 import cssText from './index.css?inline'
 
-function init(options: RoadlyInitOptions) {
-  const container =
-    typeof options.container === 'string'
-      ? document.querySelector<HTMLElement>(options.container)
-      : options.container
+function resolveContainer(container: RoadlyInitOptions['container']): HTMLElement | null {
+  return typeof container === 'string'
+    ? document.querySelector<HTMLElement>(container)
+    : container
+}
 
-  if (!container || container.shadowRoot) {
+function isValidOptions(options: RoadlyInitOptions): boolean {
+  return Boolean(options?.widgetKey && options.user?.id && options.user.name && options.user.email)
+}
+
+function init(options: RoadlyInitOptions) {
+  if (!isValidOptions(options)) {
+    console.error('[Roadly] init requires widgetKey and user { id, name, email }')
     return
   }
 
-  const shadowRoot = container.attachShadow({ mode: 'open' })
+  const container = resolveContainer(options.container)
+  if (!container) {
+    console.error('[Roadly] init could not resolve the given container')
+    return
+  }
 
-  const style = document.createElement('style')
-  style.textContent = cssText
-  shadowRoot.appendChild(style)
-
-  const mountPoint = document.createElement('div')
-  shadowRoot.appendChild(mountPoint)
+  const mount = mountShadowRoot(container, cssText)
+  if (!mount) {
+    return
+  }
 
   const queryClient = new QueryClient()
 
-  createRoot(mountPoint).render(
+  createRoot(mount.mountPoint).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <WidgetSessionProvider widgetKey={options.widgetKey} user={options.user}>
-          <App />
+          <WidgetRoot theme={options.theme ?? 'auto'} />
         </WidgetSessionProvider>
       </QueryClientProvider>
     </StrictMode>,

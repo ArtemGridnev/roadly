@@ -8,5 +8,6 @@ export interface FeatureRequest {
   status: RequestStatus;
   workspaceId: string;
   authorId: string;
+  voteCount: number;
   createdAt: string;
 }
