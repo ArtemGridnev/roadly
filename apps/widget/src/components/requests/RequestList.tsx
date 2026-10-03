@@ -11,6 +11,7 @@ interface RequestListContentProps {
   isPending: boolean
   emptyTitle: string
   emptyDescription: string
+  onSelect: (requestId: string, trigger: HTMLElement | null) => void
 }
 
 interface RequestListProps extends RequestListContentProps {
@@ -48,6 +49,7 @@ function RequestListContent({
   isPending,
   emptyTitle,
   emptyDescription,
+  onSelect,
 }: RequestListContentProps) {
   if (isPending) {
     return <RequestListSkeleton />
@@ -60,7 +62,7 @@ function RequestListContent({
   return (
     <ul className="flex flex-col gap-3">
       {requests.map((request) => (
-        <RequestCard key={request.id} request={request} />
+        <RequestCard key={request.id} request={request} onSelect={onSelect} />
       ))}
     </ul>
   )

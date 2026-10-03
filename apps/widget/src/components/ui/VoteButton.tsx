@@ -1,11 +1,12 @@
 import { ArrowBigUp } from 'lucide-react'
+import type { MouseEvent } from 'react'
 import { cn } from '../../lib/cn'
 
 interface VoteButtonProps {
   count: number
   hasVoted: boolean
   disabled: boolean
-  onVote: () => void
+  onVote: (event: MouseEvent<HTMLButtonElement>) => void
 }
 
 export function VoteButton({ count, hasVoted, disabled, onVote }: VoteButtonProps) {
