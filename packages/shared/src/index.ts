@@ -3,7 +3,10 @@ export type { RequestStatus } from './types/request-status';
 export type { Workspace } from './types/workspace';
 export type { Agent } from './types/agent';
 export type { Contact } from './types/contact';
-export type { FeatureRequest } from './types/feature-request';
+export type {
+  FeatureRequest,
+  WidgetFeatureRequest,
+} from './types/feature-request';
 export type { Vote } from './types/vote';
 export type { WorkspaceMember } from './types/workspace-member';
 

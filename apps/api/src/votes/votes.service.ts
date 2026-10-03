@@ -49,6 +49,18 @@ export class VotesService {
     return votes.map(VoteResponseDto.fromEntity);
   }
 
+  async findVotedRequestIds(
+    contactId: string,
+    requestIds: string[],
+  ): Promise<Set<string>> {
+    const votes = await this.prisma.vote.findMany({
+      where: { contactId, requestId: { in: requestIds } },
+      select: { requestId: true },
+    });
+
+    return new Set(votes.map((vote) => vote.requestId));
+  }
+
   async findOne(requestId: string, id: string): Promise<VoteResponseDto> {
     await this.featureRequestsService.findOne(requestId);
 
@@ -86,6 +98,18 @@ export class VotesService {
     await this.findOne(requestId, id);
 
     await this.prisma.vote.delete({ where: { id } });
+  }
+
+  async removeForContact(requestId: string, contactId: string): Promise<void> {
+    const { count } = await this.prisma.vote.deleteMany({
+      where: { requestId, contactId },
+    });
+
+    if (count === 0) {
+      throw new NotFoundException(
+        `Contact ${contactId} has not voted for feature request ${requestId}`,
+      );
+    }
   }
 
   private mapKnownError(error: unknown): unknown {

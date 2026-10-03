@@ -1,16 +1,39 @@
-import type { FeatureRequest } from '@roadly/shared'
+import type { WidgetFeatureRequest } from '@roadly/shared'
+import { useToggleVote } from '../../api/votes'
+import { useWidgetSession } from '../../session/widget-session'
 import { StatusBadge } from '../ui/StatusBadge'
-import { VoteCount } from '../ui/VoteCount'
+import { VoteButton } from '../ui/VoteButton'
 import { formatRequestDate } from '../../lib/format-date'
 
 interface RequestCardProps {
-  request: FeatureRequest
+  request: WidgetFeatureRequest
 }
 
 export function RequestCard({ request }: RequestCardProps) {
+  const { widgetKey, contact } = useWidgetSession()
+  const toggleVote = useToggleVote()
+
+  const handleVote = () => {
+    if (!contact || toggleVote.isPending) {
+      return
+    }
+
+    toggleVote.mutate({
+      widgetKey,
+      contactId: contact.id,
+      requestId: request.id,
+      hasVoted: request.hasVoted,
+    })
+  }
+
   return (
     <li className="flex gap-3 rounded-lg border border-border bg-card p-4">
-      <VoteCount count={request.voteCount} />
+      <VoteButton
+        count={request.voteCount}
+        hasVoted={request.hasVoted}
+        disabled={!contact}
+        onVote={handleVote}
+      />
 
       <div className="min-w-0 flex-1">
         <h3 className="text-sm font-semibold text-card-foreground">{request.title}</h3>
