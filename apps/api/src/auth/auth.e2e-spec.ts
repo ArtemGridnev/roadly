@@ -7,12 +7,12 @@ import { createTestingApp } from 'test/utils/create-testing-app';
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     app = await createTestingApp();
     await app.init();
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close();
   });
 
@@ -47,6 +47,27 @@ describe('AuthController (e2e)', () => {
       await request(app.getHttpServer())
         .post('/auth/login')
         .send({ email: 'nobody@example.com', password: 'whatever1' })
+        .expect(401);
+    });
+
+    it('rate limits login attempts per email to 5 per minute', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+
+      for (let i = 0; i < 5; i++) {
+        await request(app.getHttpServer())
+          .post('/auth/login')
+          .send({ email: 'jane@example.com', password: 'wrong-password' })
+          .expect(401);
+      }
+
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(429);
+
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'other@example.com', password: 'whatever1' })
         .expect(401);
     });
 
@@ -112,7 +133,7 @@ describe('AuthController (e2e)', () => {
     it('creates the agent and signs them in', async () => {
       const response = await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'super-secret' })
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1' })
         .expect(201);
 
       const cookies = getCookies(response);
@@ -127,39 +148,56 @@ describe('AuthController (e2e)', () => {
 
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'super-secret' })
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1' })
         .expect(409);
     });
 
-    it('rejects a password shorter than 8 characters', async () => {
+    it.each([
+      ['shorter than 8 characters', 'Sh0rt'],
+      ['missing a lowercase letter', 'SUPER-SECRET1'],
+      ['missing an uppercase letter', 'super-secret1'],
+      ['missing a number', 'Super-secret'],
+    ])('rejects a password %s', async (_, password) => {
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'short' })
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password })
         .expect(400);
+    });
+
+    it('rate limits signups from one IP to 10 per hour', async () => {
+      for (let i = 0; i < 10; i++) {
+        await request(app.getHttpServer())
+          .post('/auth/signup')
+          .send({ name: 'Jane Doe', email: `jane-${i}@example.com`, password: 'Super-secret1' })
+          .expect(201);
+      }
+
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane-10@example.com', password: 'Super-secret1' })
+        .expect(429);
     });
 
     it('rejects an invalid email', async () => {
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'not-an-email', password: 'super-secret' })
+        .send({ name: 'Jane Doe', email: 'not-an-email', password: 'Super-secret1' })
         .expect(400);
     });
 
     it('rejects a request missing required fields', async () => {
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .send({ email: 'jane@example.com', password: 'Super-secret1' })
         .expect(400);
     });
 
     it('rejects unknown fields', async () => {
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'super-secret', role: 'admin' })
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1', role: 'admin' })
         .expect(400);
     });
-
-
   });
 
   describe('GET /auth/me', () => {

@@ -12,13 +12,15 @@ import { CreateAgentDto } from 'src/agents/dto/create-agent.dto';
 import { AgentResponseDto } from 'src/agents/dto/agent-response.dto';
 import { CurrentAgent } from './decorators/current-agent.decorator';
 import { AccessTokenPayload } from './dto/access-token-payload.dto';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { LoginThrottlerGuard } from './guards/login-throttler.guard';
 
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     @Public()
-    @UseGuards(LocalAuthGuard)
+    @UseGuards(LoginThrottlerGuard, LocalAuthGuard)
     @Post('login')
     async login(@Res({ passthrough: true }) res: Response, @Request() req, @Body() _loginDto: AgentLoginDto): Promise<AgentLoginResponseDto> {
         const { accessToken, refreshToken, agent } = await this.authService.login(req.user);
@@ -30,6 +32,8 @@ export class AuthController {
     }
 
     @Public()
+    @UseGuards(ThrottlerGuard)
+    @Throttle({ default: { ttl: 3_600_000, limit: 10 } })
     @Post('signup')
     async signup(@Res({ passthrough: true }) res: Response, @Body() createAgentDto: CreateAgentDto): Promise<AgentLoginResponseDto> {
         const { accessToken, refreshToken, agent } = await this.authService.signup(createAgentDto);

@@ -12,6 +12,7 @@ import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { AccessTokenAuthGuard } from './guards/access-token-auth.guard';
 import { RefreshTokensModule } from 'src/refresh-tokens/refresh-tokens.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RefreshTokensModule } from 'src/refresh-tokens/refresh-tokens.module';
     ContactsModule,
     PassportModule,
     JwtModule.register({}),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 5 }]),
   ],
   providers: [
     AuthService,
