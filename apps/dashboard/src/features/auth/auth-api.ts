@@ -11,13 +11,33 @@ const authApi = api.injectEndpoints({
     login: builder.mutation<AgentLoginResponse, AgentLoginInput>({
       query: (body) => ({ url: '/auth/login', method: 'POST', body }),
       invalidatesTags: (result) =>
-        result ? ['Workspace', 'FeatureRequest'] : [],
+        result ? ['Agent', 'Workspace', 'FeatureRequest'] : [],
     }),
 
-    signup: builder.mutation<Agent, CreateAgentInput>({
-      query: (body) => ({ url: '/agents', method: 'POST', body }),
+    signup: builder.mutation<AgentLoginResponse, CreateAgentInput>({
+      query: (body) => ({ url: '/auth/signup', method: 'POST', body }),
+      invalidatesTags: (result) =>
+        result ? ['Agent', 'Workspace', 'FeatureRequest'] : [],
+    }),
+
+    getMe: builder.query<Agent, void>({
+      query: () => '/auth/me',
+      providesTags: ['Agent'],
+    }),
+
+    logout: builder.mutation<void, void>({
+      query: () => ({ url: '/auth/logout', method: 'POST' }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled.catch(() => undefined);
+        dispatch(api.util.resetApiState());
+      },
     }),
   }),
 });
 
-export const { useLoginMutation, useSignupMutation } = authApi;
+export const {
+  useLoginMutation,
+  useSignupMutation,
+  useGetMeQuery,
+  useLogoutMutation,
+} = authApi;
