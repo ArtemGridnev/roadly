@@ -7,12 +7,12 @@ import { createTestingApp } from 'test/utils/create-testing-app';
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     app = await createTestingApp();
     await app.init();
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await app.close();
   });
 
@@ -47,6 +47,27 @@ describe('AuthController (e2e)', () => {
       await request(app.getHttpServer())
         .post('/auth/login')
         .send({ email: 'nobody@example.com', password: 'whatever1' })
+        .expect(401);
+    });
+
+    it('rate limits login attempts per email to 5 per minute', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+
+      for (let i = 0; i < 5; i++) {
+        await request(app.getHttpServer())
+          .post('/auth/login')
+          .send({ email: 'jane@example.com', password: 'wrong-password' })
+          .expect(401);
+      }
+
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(429);
+
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'other@example.com', password: 'whatever1' })
         .expect(401);
     });
 
@@ -105,6 +126,158 @@ describe('AuthController (e2e)', () => {
 
     it('rejects a request with no refresh token', async () => {
       await request(app.getHttpServer()).post('/auth/refresh').expect(401);
+    });
+  });
+
+  describe('POST /auth/signup', () => {
+    it('creates the agent and signs them in', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1' })
+        .expect(201);
+
+      const cookies = getCookies(response);
+      expect(cookies.some((c) => c.startsWith('access_token='))).toBe(true);
+      expect(cookies.some((c) => c.startsWith('refresh_token='))).toBe(true);
+      expect(response.body.agent).toMatchObject({ name: 'Jane Doe', email: 'jane@example.com' });
+      expect(response.body.agent.passwordHash).toBeUndefined();
+    });
+
+    it('rejects an already registered email with 409', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1' })
+        .expect(409);
+    });
+
+    it.each([
+      ['shorter than 8 characters', 'Sh0rt'],
+      ['missing a lowercase letter', 'SUPER-SECRET1'],
+      ['missing an uppercase letter', 'super-secret1'],
+      ['missing a number', 'Super-secret'],
+    ])('rejects a password %s', async (_, password) => {
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password })
+        .expect(400);
+    });
+
+    it('rate limits signups from one IP to 10 per hour', async () => {
+      for (let i = 0; i < 10; i++) {
+        await request(app.getHttpServer())
+          .post('/auth/signup')
+          .send({ name: 'Jane Doe', email: `jane-${i}@example.com`, password: 'Super-secret1' })
+          .expect(201);
+      }
+
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane-10@example.com', password: 'Super-secret1' })
+        .expect(429);
+    });
+
+    it('rejects an invalid email', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'not-an-email', password: 'Super-secret1' })
+        .expect(400);
+    });
+
+    it('rejects a request missing required fields', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ email: 'jane@example.com', password: 'Super-secret1' })
+        .expect(400);
+    });
+
+    it('rejects unknown fields', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1', role: 'admin' })
+        .expect(400);
+    });
+  });
+
+  describe('GET /auth/me', () => {
+    it('returns the current agent', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(201);
+      const accessCookie = getCookies(login).find((c) => c.startsWith('access_token='))!;
+
+      const response = await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Cookie', [accessCookie])
+        .expect(200);
+
+      expect(response.body).toMatchObject({ email: 'jane@example.com' });
+      expect(response.body.passwordHash).toBeUndefined();
+    });
+
+    it('rejects a request with no access token', async () => {
+      await request(app.getHttpServer()).get('/auth/me').expect(401);
+    });
+
+    it('returns 401 when the agent no longer exists', async () => {
+      const agent = await createAgent('jane@example.com', 'super-secret');
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(201);
+      const accessCookie = getCookies(login).find((c) => c.startsWith('access_token='))!;
+
+      await prisma.refreshToken.deleteMany({ where: { agentId: agent.id } });
+      await prisma.agent.delete({ where: { id: agent.id } });
+
+      await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Cookie', [accessCookie])
+        .expect(401);
+    });
+  });
+
+  describe('POST /auth/logout', () => {
+    it('revokes the refresh token and clears both cookies', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(201);
+      const refreshCookie = getCookies(login).find((c) => c.startsWith('refresh_token='))!;
+
+      const response = await request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Cookie', [refreshCookie])
+        .expect(204);
+
+      const cookies = getCookies(response);
+      expect(cookies.some((c) => c.startsWith('access_token=;'))).toBe(true);
+      expect(cookies.some((c) => c.startsWith('refresh_token=;'))).toBe(true);
+
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', [refreshCookie])
+        .expect(401);
+    });
+
+    it('returns 204 with no session', async () => {
+      await request(app.getHttpServer()).post('/auth/logout').expect(204);
+    });
+
+    it('returns 204 with an already revoked refresh token', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(201);
+      const refreshCookie = getCookies(login).find((c) => c.startsWith('refresh_token='))!;
+
+      await request(app.getHttpServer()).post('/auth/logout').set('Cookie', [refreshCookie]).expect(204);
+      await request(app.getHttpServer()).post('/auth/logout').set('Cookie', [refreshCookie]).expect(204);
     });
   });
 });

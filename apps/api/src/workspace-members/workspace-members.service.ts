@@ -1,12 +1,6 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { WorkspacesService } from '../workspaces/workspaces.service';
-import { CreateWorkspaceMemberDto } from './dto/create-workspace-member.dto';
 import { WorkspaceMemberResponseDto } from './dto/workspace-member-response.dto';
 
 @Injectable()
@@ -15,23 +9,6 @@ export class WorkspaceMembersService {
     private readonly prisma: PrismaService,
     private readonly workspacesService: WorkspacesService,
   ) {}
-
-  async create(
-    workspaceId: string,
-    createWorkspaceMemberDto: CreateWorkspaceMemberDto,
-  ): Promise<WorkspaceMemberResponseDto> {
-    await this.workspacesService.findOne(workspaceId);
-
-    try {
-      const workspaceMember = await this.prisma.workspaceMember.create({
-        data: { ...createWorkspaceMemberDto, workspaceId },
-      });
-
-      return WorkspaceMemberResponseDto.fromEntity(workspaceMember);
-    } catch (error) {
-      throw this.mapKnownError(error);
-    }
-  }
 
   async findAll(workspaceId: string): Promise<WorkspaceMemberResponseDto[]> {
     await this.workspacesService.findOne(workspaceId);
@@ -61,24 +38,5 @@ export class WorkspaceMembersService {
     }
 
     return WorkspaceMemberResponseDto.fromEntity(workspaceMember);
-  }
-
-  async remove(workspaceId: string, id: string): Promise<void> {
-    await this.findOne(workspaceId, id);
-
-    await this.prisma.workspaceMember.delete({ where: { id } });
-  }
-
-  private mapKnownError(error: unknown): unknown {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002'
-    ) {
-      return new ConflictException(
-        'This agent is already a member of the workspace',
-      );
-    }
-
-    return error;
   }
 }

@@ -9,5 +9,17 @@
     "lint": "echo \"@roadly/dashboard: lint not yet configured\" && exit 0",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "test": "echo \"@roadly/dashboard: no tests yet\" && exit 0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "vite": "^8.2.2"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.13.0",
+    "@roadly/shared": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-redux": "^9.3.0"
   }
 }

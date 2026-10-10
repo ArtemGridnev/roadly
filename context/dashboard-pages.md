@@ -95,12 +95,17 @@ Top to bottom:
 
 ## API work this needs
 
-Not built yet; each is a prerequisite for the page that uses it.
+Built:
 
-- `POST /workspaces` adds the creator as a `WorkspaceMember` in the same transaction; validates slug format, reserved words and uniqueness (409 on a taken slug).
-- `GET /workspaces` returns only the current Agent's workspaces — today it lists every workspace in the system.
-- `GET /auth/me` — current Agent, so the dashboard can restore the session after a reload.
-- Logout endpoint that revokes the refresh token.
+- `POST /auth/signup` (public) — creates the Agent and signs them in (same cookies and response as `/auth/login`); 409 on a registered email. The `/agents` routes are removed.
+- `GET /auth/me` — current Agent; 401 if the session is dead. The dashboard calls it on load; on a 401 the base query tries `/auth/refresh` once, then the guard sends the Agent to `/login`. Never call `/auth/refresh` just to check who's signed in — refresh tokens are single-use, so two tabs doing it at once would sign one out.
+- `POST /auth/logout` (public) — revokes the refresh token and clears both cookies; always 204, even with an expired or missing session.
+- `GET /workspaces` returns only the Agent's own workspaces. `GET/PATCH/DELETE /workspaces/:id` are removed (unscoped, and the MVP has no workspace edit or delete).
+- `POST /workspaces` adds the creator as a `WorkspaceMember` in the same create; validates slug format, length and reserved words (400) and uniqueness (409).
+- `POST /feature-requests` takes no `authorId` — Agent-created requests have no Contact author (`authorId: null`) and start at 0 votes.
+- Admin vote routes are removed — Agents don't vote.
+- `/workspace-members` is read-only (list, get); adding/removing members is removed until joining exists. The creator is a workspace's only member.
+- Signup requires a password of 8+ characters with a lowercase letter, an uppercase letter and a digit (shared `createAgentSchema`). Rate limits: login 5/min per IP+email, signup 10/hour per IP.
 
 ---
 

@@ -76,8 +76,8 @@ model FeatureRequest {
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  authorId String
-  author   Contact @relation(fields: [authorId], references: [id])
+  authorId String?
+  author   Contact? @relation(fields: [authorId], references: [id])
 
   votes Vote[]
 
@@ -92,7 +92,7 @@ model Vote {
   contact   Contact  @relation(fields: [contactId], references: [id])
 
   requestId String
-  request   FeatureRequest @relation(fields: [requestId], references: [id])
+  request   FeatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
   @@unique([contactId, requestId])
 }

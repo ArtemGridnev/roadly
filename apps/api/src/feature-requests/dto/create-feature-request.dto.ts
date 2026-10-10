@@ -17,8 +17,4 @@ export class CreateFeatureRequestDto {
   @IsOptional()
   @IsEnum(RequestStatus)
   readonly status?: RequestStatus;
-
-  @IsString()
-  @IsNotEmpty()
-  readonly authorId!: string;
 }
