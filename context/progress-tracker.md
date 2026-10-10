@@ -58,6 +58,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
+- Move the design tokens (colors, radius, font) out of `apps/widget/src/index.css` into `packages/shared` so the dashboard imports them instead of copying — decided, do before the dashboard scaffold.
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 - Decide how a multi-workspace `Agent` selects their active workspace in the dashboard (open question, not yet resolved — the `x-workspace-id` header now makes this concrete: the dashboard needs a workspace switcher that sets it).
 
@@ -68,7 +69,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - The widget launcher is `position: fixed` bottom-right rather than flowing inside the host-provided container. That matches how the sketch and every comparable widget behaves, but it means a host container with a `transform`/`filter`/`contain` ancestor will re-parent the containing block and misplace the launcher. Worth deciding whether placement becomes an `init` option.
 - `ui-context.md` §5 says the widget should inherit the host page font and fall back to Inter only if none is set. Implemented as an overridable `--roadly-font-family` defaulting to Inter, which inverts that default — the host opts in to its own font rather than the widget detecting one. Confirm this reading or change the default.
 - Does `contacts` need any admin-facing route at all beyond the widget upsert, or should `ContactsController`'s full CRUD be trimmed?
-- Is `DELETE` on feature-requests in MVP scope — not mentioned in `project-overview.md`. (Vote removal is resolved: in scope, widget-side.)
+- ~~Is `DELETE` on feature-requests in MVP scope~~ — resolved: yes, admin-only, from the dashboard drawer (`dashboard-pages.md`). Vote removal is in scope widget-side.
 
 ## Architecture Decisions
 

@@ -42,6 +42,7 @@ Roadly is a feature request and roadmap tool. End users submit feature requests 
 
 - Roadmap Board with columns: Backlog / Planned / In Progress / Shipped.
 - Drag-and-drop requests between statuses (admin only).
+- Edit a request's title, description, category and status, or delete it (admin only).
 
 ### Authentication
 

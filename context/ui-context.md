@@ -101,7 +101,7 @@ Matches the canonical `Status` enum in `CONTEXT.md` — do not add, rename, or r
   - 14 → body default, table cells, form labels
   - 16 → section headers, modal titles
   - 20–24 → page titles
-  - 32 → dashboard stat numbers only
+  - 32 → dashboard stat numbers only (no stats row in the MVP — unused for now)
 - Weights: **400** body · **500** labels & buttons · **600** headings. Don't use 700+.
 
 ### Spacing
