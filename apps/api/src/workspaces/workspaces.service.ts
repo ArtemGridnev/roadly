@@ -6,7 +6,6 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
-import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { WorkspaceResponseDto } from './dto/workspace-response.dto';
 
 @Injectable()
@@ -61,30 +60,6 @@ export class WorkspacesService {
     }
 
     return WorkspaceResponseDto.fromEntity(workspace);
-  }
-
-  async update(
-    id: string,
-    updateWorkspaceDto: UpdateWorkspaceDto,
-  ): Promise<WorkspaceResponseDto> {
-    await this.findOne(id);
-
-    try {
-      const workspace = await this.prisma.workspace.update({
-        where: { id },
-        data: updateWorkspaceDto,
-      });
-
-      return WorkspaceResponseDto.fromEntity(workspace);
-    } catch (error) {
-      throw this.mapKnownError(error);
-    }
-  }
-
-  async remove(id: string): Promise<void> {
-    await this.findOne(id);
-
-    await this.prisma.workspace.delete({ where: { id } });
   }
 
   private mapKnownError(error: unknown): unknown {

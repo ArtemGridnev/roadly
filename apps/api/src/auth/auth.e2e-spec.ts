@@ -138,6 +138,27 @@ describe('AuthController (e2e)', () => {
         .expect(400);
     });
 
+    it('rejects an invalid email', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'not-an-email', password: 'super-secret' })
+        .expect(400);
+    });
+
+    it('rejects a request missing required fields', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(400);
+    });
+
+    it('rejects unknown fields', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'super-secret', role: 'admin' })
+        .expect(400);
+    });
+
 
   });
 

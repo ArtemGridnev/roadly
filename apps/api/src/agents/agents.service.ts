@@ -7,7 +7,6 @@ import { Agent, Prisma } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAgentDto } from './dto/create-agent.dto';
-import { UpdateAgentDto } from './dto/update-agent.dto';
 import { AgentResponseDto } from './dto/agent-response.dto';
 
 const SALT_ROUNDS = 10;
@@ -31,14 +30,6 @@ export class AgentsService {
     }
   }
 
-  async findAll(): Promise<AgentResponseDto[]> {
-    const agents = await this.prisma.agent.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return agents.map(AgentResponseDto.fromEntity);
-  }
-
   async findByEmail(email: string): Promise<Agent> {
     const agent = await this.prisma.agent.findUnique({ where: { email } });
 
@@ -57,35 +48,6 @@ export class AgentsService {
     }
 
     return AgentResponseDto.fromEntity(agent);
-  }
-
-  async update(
-    id: string,
-    updateAgentDto: UpdateAgentDto,
-  ): Promise<AgentResponseDto> {
-    await this.findOne(id);
-
-    const { password, ...rest } = updateAgentDto;
-    const passwordHash = password
-      ? await hash(password, SALT_ROUNDS)
-      : undefined;
-
-    try {
-      const agent = await this.prisma.agent.update({
-        where: { id },
-        data: { ...rest, passwordHash },
-      });
-
-      return AgentResponseDto.fromEntity(agent);
-    } catch (error) {
-      throw this.mapKnownError(error);
-    }
-  }
-
-  async remove(id: string): Promise<void> {
-    await this.findOne(id);
-
-    await this.prisma.agent.delete({ where: { id } });
   }
 
   private mapKnownError(error: unknown): unknown {

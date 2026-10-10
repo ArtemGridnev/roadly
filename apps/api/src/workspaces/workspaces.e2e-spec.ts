@@ -112,74 +112,16 @@ describe('WorkspacesController (e2e)', () => {
     });
   });
 
-  describe('GET /workspaces/:id', () => {
-    it('returns a single workspace', async () => {
-      const workspace = await prisma.workspace.create({
-        data: { name: 'A', slug: 'a' },
-      });
+  describe('removed routes', () => {
+    it.each(['get', 'patch', 'delete'] as const)(
+      'does not expose %s /workspaces/:id',
+      async (method) => {
+        const workspace = await prisma.workspace.create({
+          data: { name: 'Other', slug: 'other' },
+        });
 
-      const response = await authed(
-        'get',
-        `/workspaces/${workspace.id}`,
-      ).expect(200);
-
-      const body = response.body as WorkspaceResponseDto;
-
-      expect(body.id).toBe(workspace.id);
-    });
-
-    it('returns 404 for an unknown id', async () => {
-      await authed('get', '/workspaces/does-not-exist').expect(404);
-    });
-  });
-
-  describe('PATCH /workspaces/:id', () => {
-    it('updates a workspace', async () => {
-      const workspace = await prisma.workspace.create({
-        data: { name: 'A', slug: 'a' },
-      });
-
-      const response = await authed('patch', `/workspaces/${workspace.id}`)
-        .send({ name: 'A Updated' })
-        .expect(200);
-
-      const body = response.body as WorkspaceResponseDto;
-
-      expect(body.name).toBe('A Updated');
-      expect(body.slug).toBe('a');
-    });
-
-    it('returns 404 when updating an unknown id', async () => {
-      await authed('patch', '/workspaces/does-not-exist')
-        .send({ name: 'A Updated' })
-        .expect(404);
-    });
-
-    it('returns 409 when the update creates a duplicate slug', async () => {
-      await prisma.workspace.create({ data: { name: 'A', slug: 'acme' } });
-      const workspace = await prisma.workspace.create({
-        data: { name: 'B', slug: 'beta' },
-      });
-
-      await authed('patch', `/workspaces/${workspace.id}`)
-        .send({ slug: 'acme' })
-        .expect(409);
-    });
-  });
-
-  describe('DELETE /workspaces/:id', () => {
-    it('deletes a workspace', async () => {
-      const workspace = await prisma.workspace.create({
-        data: { name: 'A', slug: 'a' },
-      });
-
-      await authed('delete', `/workspaces/${workspace.id}`).expect(204);
-
-      await authed('get', `/workspaces/${workspace.id}`).expect(404);
-    });
-
-    it('returns 404 when deleting an unknown id', async () => {
-      await authed('delete', '/workspaces/does-not-exist').expect(404);
-    });
+        await authed(method, `/workspaces/${workspace.id}`).expect(404);
+      },
+    );
   });
 });
