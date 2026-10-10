@@ -31,8 +31,8 @@ Conventions for all UI in this project. **Read before adding or changing UI.** T
 
 ## 2. Tokens
 
-### shadcn CSS variables (drop into `globals.css`)
-HSL, space-separated, referenced as `hsl(var(--x))`. Values chosen below; hex source of truth in comments.
+### shadcn CSS variables
+Implemented once, in OKLCH, in `packages/shared/src/styles/tokens.css` (exported as `@roadly/shared/tokens.css`) — both apps `@import` it after `tailwindcss`; never copy values into an app. Dark tokens apply under `.dark` (dashboard, on `<html>`) and `[data-roadly-theme='dark']` (widget, on its shadow root element). Brand, radius and font are also exposed as `--roadly-default-*` so the widget can wrap them in its host override hooks. The HSL reference below is the design source; hex in comments.
 
 ```css
 :root {

@@ -34,6 +34,10 @@ Update this file whenever the current phase, active feature, or implementation s
   - Endpoints: login, signup, get/create workspaces, list/update/delete feature requests. `updateFeatureRequest` patches every cached list optimistically (dropping/inserting by status filter) and undoes on error.
   - No tests — rollback test lands with the dashboard test stack.
 
+- **Shared design tokens (`feat/dashboard-foundation`)**:
+  - Color, radius and font tokens moved from `apps/widget/src/index.css` to `packages/shared/src/styles/tokens.css`, exported as `@roadly/shared/tokens.css` (new `exports` map on `@roadly/shared`). Light set in `@theme`; dark set under `.dark, [data-roadly-theme='dark']` so each app keeps its own toggle.
+  - Brand, radius and font defaults are raw `--roadly-default-*` vars; the widget keeps its `--roadly-primary` / `--roadly-radius` / `--roadly-font-family` hooks in its own CSS, wrapping those defaults. Compiled widget tokens verified identical before/after against the built bundle.
+
 - **Widget upvote (`feat/widget-upvote`)**:
   - API: `GET /widget/feature-requests` returns a widget-only `WidgetFeatureRequestResponseDto` (`FeatureRequestResponseDto & { hasVoted }`), mirrored in `packages/shared` as `WidgetFeatureRequest`. `hasVoted` comes from one `vote.findMany` over the listed ids (`VotesService.findVotedRequestIds`), so the shared feature-request query stays contact-agnostic.
   - `AccessTokenAuthGuard` now resolves `x-contact-id` on any `@WidgetAuth()` route when the header is present (an invalid id still 401s); `@RequireContact()` only makes it mandatory. New `@OptionalContact()` param decorator. 4 new e2e tests (130/130).
@@ -80,7 +84,6 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Move the design tokens (colors, radius, font) out of `apps/widget/src/index.css` into `packages/shared` so the dashboard imports them instead of copying — decided, do before the dashboard scaffold.
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 - Decide how a multi-workspace `Agent` selects their active workspace in the dashboard (open question, not yet resolved — the `x-workspace-id` header now makes this concrete: the dashboard needs a workspace switcher that sets it).
 

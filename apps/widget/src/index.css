@@ -1,39 +1,15 @@
 @import 'tailwindcss';
+@import '@roadly/shared/tokens.css';
 
 @custom-variant dark (&:where([data-roadly-theme='dark'], [data-roadly-theme='dark'] *));
 
 @theme {
-  --font-sans: var(
-    --roadly-font-family,
-    'Inter',
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif
-  );
+  --font-sans: var(--roadly-font-family, var(--roadly-default-font-family));
 
-  --radius-lg: var(--roadly-radius, 0.5rem);
+  --radius-lg: var(--roadly-radius, var(--roadly-default-radius));
 
-  --color-background: oklch(0.985 0 0);
-  --color-foreground: oklch(0.21 0.006 285.885);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.21 0.006 285.885);
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.21 0.006 285.885);
-  --color-primary: var(--roadly-primary, oklch(0.585 0.233 277.117));
-  --color-primary-foreground: oklch(1 0 0);
-  --color-secondary: oklch(0.967 0.001 286.375);
-  --color-secondary-foreground: oklch(0.21 0.006 285.885);
-  --color-muted: oklch(0.967 0.001 286.375);
-  --color-muted-foreground: oklch(0.552 0.016 285.938);
-  --color-accent: oklch(0.967 0.001 286.375);
-  --color-accent-foreground: oklch(0.21 0.006 285.885);
-  --color-border: oklch(0.92 0.004 286.32);
-  --color-input: oklch(0.92 0.004 286.32);
-  --color-ring: var(--roadly-primary, oklch(0.585 0.233 277.117));
-  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-primary: var(--roadly-primary, var(--roadly-default-primary));
+  --color-ring: var(--roadly-primary, var(--roadly-default-primary));
 
   --animate-overlay-in: overlay-in 160ms ease-out;
   --animate-panel-in: panel-in 120ms ease-out;
@@ -74,22 +50,6 @@
 
 [data-roadly-theme='dark'] {
   color-scheme: dark;
-
-  --color-background: oklch(0.141 0.005 285.823);
-  --color-foreground: oklch(0.985 0 0);
-  --color-card: oklch(0.21 0.006 285.885);
-  --color-card-foreground: oklch(0.985 0 0);
-  --color-popover: oklch(0.21 0.006 285.885);
-  --color-popover-foreground: oklch(0.985 0 0);
-  --color-secondary: oklch(0.274 0.006 286.033);
-  --color-secondary-foreground: oklch(0.985 0 0);
-  --color-muted: oklch(0.274 0.006 286.033);
-  --color-muted-foreground: oklch(0.705 0.015 286.067);
-  --color-accent: oklch(0.274 0.006 286.033);
-  --color-accent-foreground: oklch(0.985 0 0);
-  --color-border: oklch(0.274 0.006 286.033);
-  --color-input: oklch(0.274 0.006 286.033);
-  --color-destructive: oklch(0.704 0.191 22.216);
 }
 
 @media (prefers-reduced-motion: reduce) {
