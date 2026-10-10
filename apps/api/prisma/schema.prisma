@@ -92,7 +92,7 @@ model Vote {
   contact   Contact  @relation(fields: [contactId], references: [id])
 
   requestId String
-  request   FeatureRequest @relation(fields: [requestId], references: [id])
+  request   FeatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
   @@unique([contactId, requestId])
 }

@@ -274,6 +274,26 @@ describe('FeatureRequestsController (e2e)', () => {
       await authed('get', `/feature-requests/${featureRequest.id}`).expect(404);
     });
 
+    it('deletes a feature request that has votes', async () => {
+      const featureRequest = await prisma.featureRequest.create({
+        data: {
+          title: 'A',
+          description: 'A desc',
+          workspaceId,
+          authorId,
+          votes: { create: { contactId: authorId } },
+        },
+      });
+
+      await authed('delete', `/feature-requests/${featureRequest.id}`).expect(
+        204,
+      );
+
+      expect(
+        await prisma.vote.count({ where: { requestId: featureRequest.id } }),
+      ).toBe(0);
+    });
+
     it('returns 404 when deleting an unknown id', async () => {
       await authed('delete', '/feature-requests/does-not-exist').expect(404);
     });
