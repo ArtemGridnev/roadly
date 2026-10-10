@@ -7,7 +7,7 @@ export interface FeatureRequest {
   category: string | null;
   status: RequestStatus;
   workspaceId: string;
-  authorId: string;
+  authorId: string | null;
   voteCount: number;
   createdAt: string;
 }

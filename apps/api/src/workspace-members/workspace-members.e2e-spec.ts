@@ -45,64 +45,6 @@ describe('WorkspaceMembersController (e2e)', () => {
       .set(WORKSPACE_ID_HEADER, workspaceId);
   }
 
-  describe('POST /workspace-members', () => {
-    it('creates a workspace member', async () => {
-      const response = await authed('post', '/workspace-members')
-        .send({ agentId })
-        .expect(201);
-
-      const body = response.body as WorkspaceMemberResponseDto;
-
-      expect(body).toMatchObject({ workspaceId, agentId });
-      expect(body.id).toEqual(expect.any(String));
-    });
-
-    it('rejects a request missing required fields', async () => {
-      await authed('post', '/workspace-members').send({}).expect(400);
-    });
-
-    it('rejects unknown fields', async () => {
-      await authed('post', '/workspace-members')
-        .send({ agentId, notAllowed: 'nope' })
-        .expect(400);
-    });
-
-    it('rejects a duplicate membership for the same agent', async () => {
-      await prisma.workspaceMember.create({ data: { agentId, workspaceId } });
-
-      await authed('post', '/workspace-members').send({ agentId }).expect(409);
-    });
-
-    it('rejects a request with no access token', async () => {
-      await request(app.getHttpServer())
-        .post('/workspace-members')
-        .set(WORKSPACE_ID_HEADER, workspaceId)
-        .send({ agentId })
-        .expect(401);
-    });
-
-    it('rejects a request missing the workspace id header', async () => {
-      await request(app.getHttpServer())
-        .post('/workspace-members')
-        .set('Cookie', [agentCookie])
-        .send({ agentId })
-        .expect(400);
-    });
-
-    it('rejects a request when the acting agent is not a member of the workspace', async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
-
-      await request(app.getHttpServer())
-        .post('/workspace-members')
-        .set('Cookie', [agentCookie])
-        .set(WORKSPACE_ID_HEADER, otherWorkspace.id)
-        .send({ agentId })
-        .expect(403);
-    });
-  });
-
   describe('GET /workspace-members', () => {
     it('lists members of the resolved workspace', async () => {
       const otherAgent = await prisma.agent.create({
@@ -123,6 +65,18 @@ describe('WorkspaceMembersController (e2e)', () => {
 
       // includes the acting agent's own seeded membership plus the two above
       expect(body.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('rejects a request when the acting agent is not a member of the workspace', async () => {
+      const otherWorkspace = await prisma.workspace.create({
+        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
+      });
+
+      await request(app.getHttpServer())
+        .get('/workspace-members')
+        .set('Cookie', [agentCookie])
+        .set(WORKSPACE_ID_HEADER, otherWorkspace.id)
+        .expect(403);
     });
   });
 
@@ -158,19 +112,17 @@ describe('WorkspaceMembersController (e2e)', () => {
     });
   });
 
-  describe('DELETE /workspace-members/:id', () => {
-    it('deletes a workspace member', async () => {
+  describe('removed routes', () => {
+    it('does not expose POST /workspace-members', async () => {
+      await authed('post', '/workspace-members').send({ agentId }).expect(404);
+    });
+
+    it('does not expose DELETE /workspace-members/:id', async () => {
       const member = await prisma.workspaceMember.create({
         data: { agentId, workspaceId },
       });
 
-      await authed('delete', `/workspace-members/${member.id}`).expect(204);
-
-      await authed('get', `/workspace-members/${member.id}`).expect(404);
-    });
-
-    it('returns 404 when deleting an unknown id', async () => {
-      await authed('delete', '/workspace-members/does-not-exist').expect(404);
+      await authed('delete', `/workspace-members/${member.id}`).expect(404);
     });
   });
 });

@@ -15,7 +15,7 @@ export class FeatureRequestResponseDto {
   readonly category: string | null;
   readonly status: RequestStatus;
   readonly workspaceId: string;
-  readonly authorId: string;
+  readonly authorId: string | null;
   readonly voteCount: number;
   readonly createdAt: Date;
 

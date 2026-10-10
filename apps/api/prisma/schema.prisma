@@ -76,8 +76,8 @@ model FeatureRequest {
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  authorId String
-  author   Contact @relation(fields: [authorId], references: [id])
+  authorId String?
+  author   Contact? @relation(fields: [authorId], references: [id])
 
   votes Vote[]
 

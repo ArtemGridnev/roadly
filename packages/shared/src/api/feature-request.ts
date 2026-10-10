@@ -6,16 +6,13 @@ export const createFeatureRequestSchema = z.object({
   description: z.string().min(1),
   category: z.string().optional(),
   status: requestStatusSchema.optional(),
-  authorId: z.string().min(1),
 });
 
 export type CreateFeatureRequestInput = z.infer<
   typeof createFeatureRequestSchema
 >;
 
-export const updateFeatureRequestSchema = createFeatureRequestSchema
-  .omit({ authorId: true })
-  .partial();
+export const updateFeatureRequestSchema = createFeatureRequestSchema.partial();
 
 export type UpdateFeatureRequestInput = z.infer<
   typeof updateFeatureRequestSchema

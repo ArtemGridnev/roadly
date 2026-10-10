@@ -45,7 +45,6 @@ describe('FeatureRequestsController (e2e)', () => {
         .send({
           title: 'Dark mode',
           description: 'Please add dark mode',
-          authorId,
         })
         .expect(201);
 
@@ -56,7 +55,8 @@ describe('FeatureRequestsController (e2e)', () => {
         description: 'Please add dark mode',
         status: RequestStatus.BACKLOG,
         workspaceId,
-        authorId,
+        authorId: null,
+        voteCount: 0,
       });
       expect(body.id).toEqual(expect.any(String));
     });
@@ -72,8 +72,17 @@ describe('FeatureRequestsController (e2e)', () => {
         .send({
           title: 'Dark mode',
           description: 'Please add dark mode',
-          authorId,
           notAllowed: 'nope',
+        })
+        .expect(400);
+    });
+
+    it('rejects a client-supplied authorId', async () => {
+      await authed('post', '/feature-requests')
+        .send({
+          title: 'Dark mode',
+          description: 'Please add dark mode',
+          authorId,
         })
         .expect(400);
     });
@@ -83,7 +92,6 @@ describe('FeatureRequestsController (e2e)', () => {
         .send({
           title: 'Dark mode',
           description: 'Please add dark mode',
-          authorId,
           workspaceId: 'attacker-workspace',
         })
         .expect(400);
@@ -96,7 +104,6 @@ describe('FeatureRequestsController (e2e)', () => {
         .send({
           title: 'Dark mode',
           description: 'Please add dark mode',
-          authorId,
         })
         .expect(401);
     });
@@ -108,7 +115,6 @@ describe('FeatureRequestsController (e2e)', () => {
         .send({
           title: 'Dark mode',
           description: 'Please add dark mode',
-          authorId,
         })
         .expect(400);
     });
@@ -122,7 +128,6 @@ describe('FeatureRequestsController (e2e)', () => {
         .send({
           title: 'Dark mode',
           description: 'Please add dark mode',
-          authorId,
         })
         .expect(403);
     });
@@ -296,6 +301,22 @@ describe('FeatureRequestsController (e2e)', () => {
 
     it('returns 404 when deleting an unknown id', async () => {
       await authed('delete', '/feature-requests/does-not-exist').expect(404);
+    });
+  });
+
+  describe('removed vote routes', () => {
+    it.each([
+      ['post', ''],
+      ['get', ''],
+      ['get', '/some-id'],
+      ['patch', '/some-id'],
+      ['delete', '/some-id'],
+    ] as const)('does not expose %s /feature-requests/:id/votes%s', async (method, suffix) => {
+      const featureRequest = await prisma.featureRequest.create({
+        data: { title: 'A', description: 'A desc', workspaceId, authorId },
+      });
+
+      await authed(method, `/feature-requests/${featureRequest.id}/votes${suffix}`).expect(404);
     });
   });
 });
