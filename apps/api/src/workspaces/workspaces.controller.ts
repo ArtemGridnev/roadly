@@ -13,6 +13,8 @@ import { WorkspacesService } from './workspaces.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { WorkspaceResponseDto } from './dto/workspace-response.dto';
+import { CurrentAgent } from '../auth/decorators/current-agent.decorator';
+import { AccessTokenPayload } from '../auth/dto/access-token-payload.dto';
 
 @Controller('workspaces')
 export class WorkspacesController {
@@ -20,14 +22,17 @@ export class WorkspacesController {
 
   @Post()
   create(
+    @CurrentAgent() agent: AccessTokenPayload,
     @Body() createWorkspaceDto: CreateWorkspaceDto,
   ): Promise<WorkspaceResponseDto> {
-    return this.workspacesService.create(createWorkspaceDto);
+    return this.workspacesService.create(agent.sub, createWorkspaceDto);
   }
 
   @Get()
-  findAll(): Promise<WorkspaceResponseDto[]> {
-    return this.workspacesService.findAll();
+  findAll(
+    @CurrentAgent() agent: AccessTokenPayload,
+  ): Promise<WorkspaceResponseDto[]> {
+    return this.workspacesService.findAllForAgent(agent.sub);
   }
 
   @Get(':id')

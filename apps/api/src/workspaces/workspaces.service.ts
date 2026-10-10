@@ -14,11 +14,12 @@ export class WorkspacesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(
+    agentId: string,
     createWorkspaceDto: CreateWorkspaceDto,
   ): Promise<WorkspaceResponseDto> {
     try {
       const workspace = await this.prisma.workspace.create({
-        data: createWorkspaceDto,
+        data: { ...createWorkspaceDto, members: { create: { agentId } } },
       });
 
       return WorkspaceResponseDto.fromEntity(workspace);
@@ -27,8 +28,9 @@ export class WorkspacesService {
     }
   }
 
-  async findAll(): Promise<WorkspaceResponseDto[]> {
+  async findAllForAgent(agentId: string): Promise<WorkspaceResponseDto[]> {
     const workspaces = await this.prisma.workspace.findMany({
+      where: { members: { some: { agentId } } },
       orderBy: { createdAt: 'desc' },
     });
 
