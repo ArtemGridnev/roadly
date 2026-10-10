@@ -12,12 +12,22 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Dashboard prerequisite APIs (`feat/dashbaord-api-slice`)**:
+  - API: `POST /auth/signup`, `GET /auth/me`, `POST /auth/logout` (see `dashboard-pages.md` § API work). New `@CurrentAgent()` param decorator.
+  - `GET /workspaces` scoped to the Agent's memberships; `POST /workspaces` creates the creator's `WorkspaceMember` in the same nested create and validates the slug (kebab-case, 3–40, not reserved — `RESERVED_WORKSPACE_SLUGS` in the DTO).
+  - Dashboard slice: `signup` → `/auth/signup`, new `getMe` and `logout` (logout resets the RTK Query cache).
+  - Admin-side gap fixes: admin `POST /feature-requests` no longer takes `authorId` (column now nullable, migration `optional_feature_request_author`; shared `FeatureRequest.authorId` is `string | null`); admin votes controller removed; `/workspace-members` POST/DELETE removed; `Vote.request` cascades on delete (migration `cascade_votes_on_feature_request_delete`) — deleting any widget-submitted request used to 500.
+  - Signup: strong password (8+, lower, upper, digit) in `CreateAgentDto` and shared `createAgentSchema`; `@nestjs/throttler` on login (5/min per IP+email, `LoginThrottlerGuard`) and signup (10/h per IP). Auth e2e spec builds a fresh app per test so throttle counters don't leak between tests.
+  - Swagger removed from the API (`main.ts`, nest-cli plugin, `@nestjs/swagger` + `swagger-ui-express`).
+  - e2e: 131/131.
+  - Closed a cross-tenant hole: `GET/PATCH/DELETE /workspaces/:id` and every `/agents` route let any signed-in Agent read/change any workspace or agent. All removed (unused by the dashboard); `AgentsService` keeps only what auth needs. e2e asserts they 404.
+
 - **Dashboard API slice (`feat/dashbaord-api-slice`)**:
   - `apps/dashboard/src/api/api.ts` holds the empty base `createApi` (base query, tag types); each feature injects its endpoints from its own folder (`src/features/<feature>/<feature>-api.ts`) via `injectEndpoints`. Layout documented in `apps/dashboard/README.md`. Store in `src/store.ts`. Only RTK/React deps installed — no Vite app scaffold yet.
   - `baseQueryWithReauth` sends cookies; on a 401 it calls `POST /auth/refresh` once (shared across concurrent 401s, since the refresh token rotates) and retries.
   - Active workspace id lives in `workspaceSlice` (mirrored from the URL); `prepareHeaders` sends it as `x-workspace-id`. Endpoints take no `workspaceId`, so switching workspace resets the RTK Query cache via a listener in `store.ts`.
-  - Endpoints: login, signup (`POST /agents`), get/create workspaces, list/update/delete feature requests. `updateFeatureRequest` patches every cached list optimistically (dropping/inserting by status filter) and undoes on error.
-  - Not covered yet: `/auth/me` and logout (API endpoints don't exist). No tests — rollback test lands with the dashboard test stack.
+  - Endpoints: login, signup, get/create workspaces, list/update/delete feature requests. `updateFeatureRequest` patches every cached list optimistically (dropping/inserting by status filter) and undoes on error.
+  - No tests — rollback test lands with the dashboard test stack.
 
 - **Widget upvote (`feat/widget-upvote`)**:
   - API: `GET /widget/feature-requests` returns a widget-only `WidgetFeatureRequestResponseDto` (`FeatureRequestResponseDto & { hasVoted }`), mirrored in `packages/shared` as `WidgetFeatureRequest`. `hasVoted` comes from one `vote.findMany` over the listed ids (`VotesService.findVotedRequestIds`), so the shared feature-request query stays contact-agnostic.
@@ -56,7 +66,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 - **Agent-side access scoping (case 3: `access-token` + `x-workspace-id` header; case 4: `access-token` only)**:
   - New `WorkspaceMembershipGuard` (`apps/api/src/auth/guards/workspace-membership.guard.ts`), applied via `@UseGuards()` — reads `x-workspace-id`, verifies a `WorkspaceMember` row exists for the authenticated Agent (`request.user.sub`, set by the existing Passport strategy), attaches `request.workspace`. 400 if the header is missing, 403 if the agent isn't a member — deliberately not 404, to avoid leaking workspace existence to a non-member.
-  - Applied to `contacts`, `feature-requests`, `votes`, `workspace-members` controllers (all four now flat routes — `:workspaceId` path segments dropped in favor of the header, matching the widget pattern). `agents` and `workspaces` stay case 4 (access-token only, no workspace scoping) — global admin actions, per explicit scope decision.
+  - Applied to `contacts`, `feature-requests`, `votes`, `workspace-members` controllers (all four now flat routes — `:workspaceId` path segments dropped in favor of the header, matching the widget pattern). `agents` and `workspaces` stay case 4 (access-token only, no workspace scoping) — later narrowed: `/agents` and `/workspaces/:id` removed, `/workspaces` filtered by membership.
   - `FeatureRequestsController`/`VotesController` now scope every by-id operation (`findOne`/`update`/`remove`/nested votes) through `FeatureRequestsService.findOneForWorkspace`, closing a real cross-tenant gap: previously an authenticated agent could read/mutate another workspace's feature requests or votes by guessing an id.
   - `CreateFeatureRequestDto`/`FindFeatureRequestsQueryDto` had `workspaceId` removed (guard-resolved now, not client-supplied); `FeatureRequestsService.create`/`findAll` take `workspaceId` as an explicit param instead.
   - Renamed `auth/types/widget-context.ts` → `auth/types/auth-context.ts`, `WidgetAuthenticatedRequest` → `AuthenticatedRequest` (now also carries `user?: AccessTokenPayload`) — one shared request-context type across both the widget and agent auth paths.
@@ -71,6 +81,9 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Open Questions
 
+- **Widget API branch (next):** `GET /widget/feature-requests` returns `authorId` (other contacts' ids), and `x-contact-id` is the widget's only credential — replace with `isMine`. `POST /widget/contacts` overwrites name/email of any `externalId` — decided: make it create-only (never overwrite an existing contact) until signed identity lands.
+- `nest build` emits `dist/src/main.js`, but `start:prod` runs `node dist/main` — pre-existing mismatch, `start:prod` won't boot.
+- Rate limiting keys on `req.ip`; behind a proxy in production, Express needs `trust proxy` set or every request shares the proxy's IP.
 - Shared `findFeatureRequestsQuerySchema` lacks `sort`, though the admin API accepts it. The dashboard slice adds it locally for now; extend the shared schema (protected) to remove that.
 - Zod costs the widget ~23 kB gzipped (a quarter of the bundle) because the shared schemas use zod classic, which doesn't tree-shake. Options: accept it; migrate `packages/shared` schemas to `zod/mini` (tree-shakeable, same runtime, different API — touches every consumer); or validate the widget form with react-hook-form's built-in rules instead of the shared schema (diverges from `architecture.md`).
 - The launcher uses `rounded-full`, which breaks the `ui-context.md` hard rule (`rounded-lg` everywhere, except status badges). Either square it off or add launchers to the documented exceptions.

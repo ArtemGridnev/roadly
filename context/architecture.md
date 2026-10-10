@@ -74,8 +74,8 @@ Multi-tenant: one shared deployment serves many customer businesses. See `docs/a
 - `WorkspaceMember` — links an `Agent` to a `Workspace` it administers, `@@unique([workspaceId, agentId])`. A join table, not a direct FK, so one `Agent` can belong to multiple Workspaces.
 - `Agent` — id, name, email (globally unique), password credential. Admin dashboard-only; signs in; global identity, not scoped to a single Workspace.
 - `Contact` — id, workspaceId, externalId (host-supplied id, upserted via `POST /widget/contacts` at widget init, unique per `(workspaceId, externalId)` — not globally, since two Workspaces' host apps can send the same externalId), name, email. Widget-only; no credentials.
-- `FeatureRequest` — id, workspaceId (denormalized for query/index simplicity), title, description, status, category (optional free-text string, no predefined list), authorId (→ `Contact`), createdAt
-- `Vote` — contactId (→ `Contact`) + requestId, with a **unique constraint on (contactId, requestId)** to enforce one vote per Contact per request at the database level. No `workspaceId` of its own — see ADR 0003 for why. The service-layer check ADR 0003 calls for is implemented: every vote operation first resolves the target `FeatureRequest` through `FeatureRequestsService.findOneForWorkspace`, so a vote can't be read/written against a feature request outside the caller's resolved Workspace.
+- `FeatureRequest` — id, workspaceId (denormalized for query/index simplicity), title, description, status, category (optional free-text string, no predefined list), authorId (→ `Contact`; null when an Agent created it from the dashboard), createdAt
+- `Vote` — contactId (→ `Contact`) + requestId (deleted with its `FeatureRequest`), with a **unique constraint on (contactId, requestId)** to enforce one vote per Contact per request at the database level. No `workspaceId` of its own — see ADR 0003 for why. The service-layer check ADR 0003 calls for is implemented: every vote operation first resolves the target `FeatureRequest` through `FeatureRequestsService.findOneForWorkspace`, so a vote can't be read/written against a feature request outside the caller's resolved Workspace.
 - `Comment` — requestId, contactId (→ `Contact`), body, createdAt *(future — will need workspaceId too when built)*
 
 Status is an enum: `BACKLOG | PLANNED | IN_PROGRESS | SHIPPED`.
@@ -89,7 +89,7 @@ Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never
 | Public + workspace | Widget, read-only | `x-widget-key` header → `Workspace` | `AccessTokenAuthGuard` (`@WidgetAuth()` branch) |
 | Public + workspace + contact | Widget, write | `x-widget-key` + `x-contact-id` headers → `Workspace` + `Contact` | same guard (`@WidgetAuth()` + `@RequireContact()`) |
 | Agent + workspace | Dashboard, workspace-scoped resources | access-token cookie (`Agent`) + `x-workspace-id` header, checked against `WorkspaceMember` | `WorkspaceMembershipGuard`, applied via `@UseGuards()` per controller |
-| Agent only | Dashboard, global resources (`agents`, `workspaces`) | access-token cookie only | `AccessTokenAuthGuard` default path |
+| Agent only | Dashboard, agent-scoped resources (`/auth/me`, `/workspaces` — results filtered by the Agent's memberships) | access-token cookie only | `AccessTokenAuthGuard` default path |
 
 ### Workspace resolution
 
@@ -106,7 +106,7 @@ Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never
 ### Admin dashboard auth (Agent)
 
 - Self-built: JWT access tokens + refresh tokens, httpOnly cookies.
-- **MVP:** a single role. Beyond authentication, `WorkspaceMembershipGuard` enforces workspace membership on workspace-scoped resources — an `Agent` can only view/change data within a `Workspace` they belong to; `agents`/`workspaces` management stays global (any signed-in `Agent`, no workspace scoping).
+- **MVP:** a single role. Beyond authentication, `WorkspaceMembershipGuard` enforces workspace membership on workspace-scoped resources — an `Agent` can only view/change data within a `Workspace` they belong to. There are no global management routes: agents are created only via `POST /auth/signup`, and `/workspaces` only lists the Agent's own and creates new ones.
 - **Future:** role-based guards (admin vs. regular) restrict admin-only actions once multiple roles exist.
 
 ## Widget Embedding Model
