@@ -107,4 +107,118 @@ describe('AuthController (e2e)', () => {
       await request(app.getHttpServer()).post('/auth/refresh').expect(401);
     });
   });
+
+  describe('POST /auth/signup', () => {
+    it('creates the agent and signs them in', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'super-secret' })
+        .expect(201);
+
+      const cookies = getCookies(response);
+      expect(cookies.some((c) => c.startsWith('access_token='))).toBe(true);
+      expect(cookies.some((c) => c.startsWith('refresh_token='))).toBe(true);
+      expect(response.body.agent).toMatchObject({ name: 'Jane Doe', email: 'jane@example.com' });
+      expect(response.body.agent.passwordHash).toBeUndefined();
+    });
+
+    it('rejects an already registered email with 409', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'super-secret' })
+        .expect(409);
+    });
+
+    it('rejects a password shorter than 8 characters', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'short' })
+        .expect(400);
+    });
+
+
+  });
+
+  describe('GET /auth/me', () => {
+    it('returns the current agent', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(201);
+      const accessCookie = getCookies(login).find((c) => c.startsWith('access_token='))!;
+
+      const response = await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Cookie', [accessCookie])
+        .expect(200);
+
+      expect(response.body).toMatchObject({ email: 'jane@example.com' });
+      expect(response.body.passwordHash).toBeUndefined();
+    });
+
+    it('rejects a request with no access token', async () => {
+      await request(app.getHttpServer()).get('/auth/me').expect(401);
+    });
+
+    it('returns 401 when the agent no longer exists', async () => {
+      const agent = await createAgent('jane@example.com', 'super-secret');
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(201);
+      const accessCookie = getCookies(login).find((c) => c.startsWith('access_token='))!;
+
+      await prisma.refreshToken.deleteMany({ where: { agentId: agent.id } });
+      await prisma.agent.delete({ where: { id: agent.id } });
+
+      await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Cookie', [accessCookie])
+        .expect(401);
+    });
+  });
+
+  describe('POST /auth/logout', () => {
+    it('revokes the refresh token and clears both cookies', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(201);
+      const refreshCookie = getCookies(login).find((c) => c.startsWith('refresh_token='))!;
+
+      const response = await request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Cookie', [refreshCookie])
+        .expect(204);
+
+      const cookies = getCookies(response);
+      expect(cookies.some((c) => c.startsWith('access_token=;'))).toBe(true);
+      expect(cookies.some((c) => c.startsWith('refresh_token=;'))).toBe(true);
+
+      await request(app.getHttpServer())
+        .post('/auth/refresh')
+        .set('Cookie', [refreshCookie])
+        .expect(401);
+    });
+
+    it('returns 204 with no session', async () => {
+      await request(app.getHttpServer()).post('/auth/logout').expect(204);
+    });
+
+    it('returns 204 with an already revoked refresh token', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(201);
+      const refreshCookie = getCookies(login).find((c) => c.startsWith('refresh_token='))!;
+
+      await request(app.getHttpServer()).post('/auth/logout').set('Cookie', [refreshCookie]).expect(204);
+      await request(app.getHttpServer()).post('/auth/logout').set('Cookie', [refreshCookie]).expect(204);
+    });
+  });
 });

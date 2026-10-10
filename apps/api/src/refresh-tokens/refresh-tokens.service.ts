@@ -38,4 +38,11 @@ export class RefreshTokensService {
             data: { revokedAt: new Date() },
         });
     }
+
+    async revokeByTokenHash(tokenHash: string): Promise<void> {
+        await this.prisma.refreshToken.updateMany({
+            where: { tokenHash, revokedAt: null },
+            data: { revokedAt: new Date() },
+        });
+    }
 }

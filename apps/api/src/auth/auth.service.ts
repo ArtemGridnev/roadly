@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcryptjs';
@@ -6,6 +6,7 @@ import { createHash, randomUUID } from 'crypto';
 import { Agent } from '@prisma/client';
 import { AgentsService } from 'src/agents/agents.service';
 import { AgentResponseDto } from 'src/agents/dto/agent-response.dto';
+import { CreateAgentDto } from 'src/agents/dto/create-agent.dto';
 import { AccessTokenPayload } from './dto/access-token-payload.dto';
 import { RefreshTokensService } from 'src/refresh-tokens/refresh-tokens.service';
 import { RefreshTokenPayload } from './dto/refresh-token-payload.dto';
@@ -42,6 +43,28 @@ export class AuthService {
 
     async login(agent: AgentResponseDto): Promise<{ accessToken: string, refreshToken: string, agent: AgentResponseDto }> {
         return this.issueTokenPair(agent);
+    }
+
+    async signup(createAgentDto: CreateAgentDto): Promise<{ accessToken: string, refreshToken: string, agent: AgentResponseDto }> {
+        const agent = await this.agentsService.create(createAgentDto);
+
+        return this.issueTokenPair(agent);
+    }
+
+    async getCurrentAgent(agentId: string): Promise<AgentResponseDto> {
+        try {
+            return await this.agentsService.findOne(agentId);
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw new UnauthorizedException();
+            }
+
+            throw error;
+        }
+    }
+
+    async logout(refreshToken: string): Promise<void> {
+        await this.refreshTokensService.revokeByTokenHash(this.hashRefreshToken(refreshToken));
     }
 
     async validateRefreshToken(refreshToken: string): Promise<void> {
