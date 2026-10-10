@@ -62,7 +62,7 @@ roadly/
 
 Diverges by app: the widget ships its own React into host pages, where bundle size matters more than for the dashboard (precedent: widget already skips shadcn/ui too, see Stack above).
 
-- **Dashboard:** RTK Query owns server state. Redux Toolkit slices own non-server client state (`boardSlice` — column order and drag state).
+- **Dashboard:** RTK Query owns server state. Redux Toolkit slices own non-server client state (`boardSlice` — column order and drag state; `workspaceSlice` — active workspace id, mirrored from the `/:slug` URL and sent as `x-workspace-id` by `prepareHeaders`).
 - **Widget:** TanStack Query owns server state. No Redux — no non-server client state to justify it.
 - Optimistic updates on upvote, so the count reflects immediately and rolls back on failure (both apps).
 

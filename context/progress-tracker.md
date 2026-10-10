@@ -12,6 +12,13 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Dashboard API slice (`feat/dashbaord-api-slice`)**:
+  - `apps/dashboard/src/api/api.ts` holds the empty base `createApi` (base query, tag types); each feature injects its endpoints from its own folder (`src/features/<feature>/<feature>-api.ts`) via `injectEndpoints`. Layout documented in `apps/dashboard/README.md`. Store in `src/store.ts`. Only RTK/React deps installed — no Vite app scaffold yet.
+  - `baseQueryWithReauth` sends cookies; on a 401 it calls `POST /auth/refresh` once (shared across concurrent 401s, since the refresh token rotates) and retries.
+  - Active workspace id lives in `workspaceSlice` (mirrored from the URL); `prepareHeaders` sends it as `x-workspace-id`. Endpoints take no `workspaceId`, so switching workspace resets the RTK Query cache via a listener in `store.ts`.
+  - Endpoints: login, signup (`POST /agents`), get/create workspaces, list/update/delete feature requests. `updateFeatureRequest` patches every cached list optimistically (dropping/inserting by status filter) and undoes on error.
+  - Not covered yet: `/auth/me` and logout (API endpoints don't exist). No tests — rollback test lands with the dashboard test stack.
+
 - **Widget upvote (`feat/widget-upvote`)**:
   - API: `GET /widget/feature-requests` returns a widget-only `WidgetFeatureRequestResponseDto` (`FeatureRequestResponseDto & { hasVoted }`), mirrored in `packages/shared` as `WidgetFeatureRequest`. `hasVoted` comes from one `vote.findMany` over the listed ids (`VotesService.findVotedRequestIds`), so the shared feature-request query stays contact-agnostic.
   - `AccessTokenAuthGuard` now resolves `x-contact-id` on any `@WidgetAuth()` route when the header is present (an invalid id still 401s); `@RequireContact()` only makes it mandatory. New `@OptionalContact()` param decorator. 4 new e2e tests (130/130).
@@ -64,6 +71,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Open Questions
 
+- Shared `findFeatureRequestsQuerySchema` lacks `sort`, though the admin API accepts it. The dashboard slice adds it locally for now; extend the shared schema (protected) to remove that.
 - Zod costs the widget ~23 kB gzipped (a quarter of the bundle) because the shared schemas use zod classic, which doesn't tree-shake. Options: accept it; migrate `packages/shared` schemas to `zod/mini` (tree-shakeable, same runtime, different API — touches every consumer); or validate the widget form with react-hook-form's built-in rules instead of the shared schema (diverges from `architecture.md`).
 - The launcher uses `rounded-full`, which breaks the `ui-context.md` hard rule (`rounded-lg` everywhere, except status badges). Either square it off or add launchers to the documented exceptions.
 - The widget launcher is `position: fixed` bottom-right rather than flowing inside the host-provided container. That matches how the sketch and every comparable widget behaves, but it means a host container with a `transform`/`filter`/`contain` ancestor will re-parent the containing block and misplace the launcher. Worth deciding whether placement becomes an `init` option.
