@@ -24,7 +24,7 @@ Conventions for all UI in this project. **Read before adding or changing UI.** T
 | Primitives | Radix UI | Ships under shadcn; source of a11y (focus, ARIA) |
 | Styling | Tailwind CSS | Utilities only. No CSS-in-JS, no styled-components |
 | Icons | lucide-react | Single icon set |
-| Animation | Framer Motion + tailwindcss-animate | Framer for orchestrated (drawer, modal); tailwindcss-animate for simple enter/exit (dropdown, accordion) |
+| Animation | Framer Motion + tw-animate-css | Framer for orchestrated (drawer, modal); tw-animate-css (Tailwind v4 successor to tailwindcss-animate) for simple enter/exit (dropdown, accordion) |
 | Toasts | sonner | Bottom-right |
 
 ---
@@ -80,7 +80,7 @@ Implemented once, in OKLCH, in `packages/shared/src/styles/tokens.css` (exported
 ```
 > On Tailwind v4 / newest shadcn the format is OKLCH instead of HSL — convert from the hex in the comments if so. Meaning of each variable is unchanged.
 
-**Toggle:** Tailwind `darkMode: 'class'` in config; toggle the `.dark` class on `<html>`. Use a small theme provider that persists the choice to `localStorage` and falls back to `prefers-color-scheme` on first load. (No `next-themes` — this is a Vite SPA, not Next.) Offer three states — light / dark / system — not a bare two-way switch.
+**Toggle:** `@custom-variant dark (&:where(.dark, .dark *))` (Tailwind v4, CSS-first); toggle the `.dark` class on `<html>`. Use a small theme provider that persists the choice to `localStorage` and falls back to `prefers-color-scheme` on first load. (No `next-themes` — this is a Vite SPA, not Next.) Offer three states — light / dark / system — not a bare two-way switch.
 
 ### Status colors
 Render as pill: `rounded-full` + the Tailwind class pair below. Don't hand-roll hexes.

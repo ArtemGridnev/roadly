@@ -4,11 +4,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Widget frontend, on `feat/widget-upvote`. Backend access-scoping and `packages/shared` are done; the widget's read-only shell (launcher, tab navigation, feature request list) is built. Dashboard is still an empty package.
+- Admin Dashboard foundation, on `feat/dashboard-foundation`. Widget feature set is complete. Dashboard has a toolchain scaffold, theme provider, Redux store and RTK Query API slice; no routes, guards or pages yet.
 
 ## Current Goal
 
-- Widget feature set is complete (list, sort, submit, upvote). Next: widget test stack, then the Admin Dashboard.
+- Dashboard foundation per `dashboard-pages.md`. The auth/workspace APIs it needs are done. Next: wire the store into the app, then routing, guards and shells.
 
 ## Completed
 
@@ -28,11 +28,16 @@ Update this file whenever the current phase, active feature, or implementation s
   - Closed a cross-tenant hole: `GET/PATCH/DELETE /workspaces/:id` and every `/agents` route let any signed-in Agent read/change any workspace or agent. All removed (unused by the dashboard); `AgentsService` keeps only what auth needs. e2e asserts they 404.
 
 - **Dashboard API slice (`feat/dashbaord-api-slice`)**:
-  - `apps/dashboard/src/api/api.ts` holds the empty base `createApi` (base query, tag types); each feature injects its endpoints from its own folder (`src/features/<feature>/<feature>-api.ts`) via `injectEndpoints`. Layout documented in `apps/dashboard/README.md`. Store in `src/store.ts`. Only RTK/React deps installed — no Vite app scaffold yet.
+  - `apps/dashboard/src/api/api.ts` holds the empty base `createApi` (base query, tag types); each feature injects its endpoints from its own folder (`src/features/<feature>/<feature>-api.ts`) via `injectEndpoints`. Layout documented in `apps/dashboard/README.md`. Store in `src/store.ts`.
   - `baseQueryWithReauth` sends cookies; on a 401 it calls `POST /auth/refresh` once (shared across concurrent 401s, since the refresh token rotates) and retries.
   - Active workspace id lives in `workspaceSlice` (mirrored from the URL); `prepareHeaders` sends it as `x-workspace-id`. Endpoints take no `workspaceId`, so switching workspace resets the RTK Query cache via a listener in `store.ts`.
   - Endpoints: login, signup, get/create workspaces, list/update/delete feature requests. `updateFeatureRequest` patches every cached list optimistically (dropping/inserting by status filter) and undoes on error.
   - No tests — rollback test lands with the dashboard test stack.
+
+- **Dashboard scaffold + theme (`feat/dashboard-foundation`)**:
+  - `apps/dashboard`: Vite 8 + React 19 (React Compiler) + TS, Tailwind v4 via `@tailwindcss/vite` importing `@roadly/shared/tokens.css`, `tw-animate-css`, Inter via `@fontsource/inter` (400/500/600). oxlint, Vitest + jsdom + RTL. shadcn configured by hand (`components.json`, `@/` alias, `cn` in `src/lib/utils.ts`) rather than `shadcn init`, which would have written its own token block over the shared one; no components added yet.
+  - `ThemeProvider` / `useTheme` (`src/theme/`): light / dark / system, toggles `.dark` on `<html>`, persists explicit choices to `localStorage` (`roadly-theme`; system = key removed), follows `prefers-color-scheme` live via `useSyncExternalStore`. An inline script in `index.html` applies the theme before first paint and must stay in sync with `theme-storage.ts`. 6 tests.
+  - Not visually verified in a browser — Playwright's Chrome crashed on launch in this environment; checked via build output and dev server instead.
 
 - **Shared design tokens (`feat/dashboard-foundation`)**:
   - Color, radius and font tokens moved from `apps/widget/src/index.css` to `packages/shared/src/styles/tokens.css`, exported as `@roadly/shared/tokens.css` (new `exports` map on `@roadly/shared`). Light set in `@theme`; dark set under `.dark, [data-roadly-theme='dark']` so each app keeps its own toggle.
@@ -84,8 +89,8 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
+- Dashboard: wrap the app in the Redux `Provider` (store + RTK Query API slice already exist), then routes + guards, app shell / standalone layouts, then pages one unit at a time. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
-- Decide how a multi-workspace `Agent` selects their active workspace in the dashboard (open question, not yet resolved — the `x-workspace-id` header now makes this concrete: the dashboard needs a workspace switcher that sets it).
 
 ## Open Questions
 

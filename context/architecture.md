@@ -45,7 +45,7 @@ roadly/
 - dnd-kit for the drag-and-drop Roadmap Board
 - @tanstack/react-table for request tables
 - react-hook-form + zod for forms
-- Framer Motion + tailwindcss-animate for motion, sonner for toasts
+- Framer Motion + tw-animate-css (the Tailwind v4 replacement for tailwindcss-animate) for motion, sonner for toasts
 
 ### Backend (`apps/api`)
 
