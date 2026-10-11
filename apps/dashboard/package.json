@@ -4,15 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "echo \"@roadly/dashboard: build not yet configured\" && exit 0",
-    "dev": "echo \"@roadly/dashboard: dev not yet configured\" && exit 0",
-    "lint": "echo \"@roadly/dashboard: lint not yet configured\" && exit 0",
+    "dev": "vite",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "test": "echo \"@roadly/dashboard: no tests yet\" && exit 0"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
+    "oxlint": "^1.81.0",
     "vite": "^8.2.2"
   },
   "dependencies": {

@@ -187,6 +187,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.7
         version: 19.2.7(@types/react@19.2.18)
+      oxlint:
+        specifier: ^1.81.0
+        version: 1.81.0
       vite:
         specifier: ^8.2.2
         version: 8.2.2(@types/node@24.13.3)(jiti@2.7.0)(terser@5.49.0)
