@@ -47,10 +47,7 @@ export class ContactsService {
           externalId: identifyContactDto.externalId,
         },
       },
-      update: {
-        name: identifyContactDto.name,
-        email: identifyContactDto.email,
-      },
+      update: {},
       create: { ...identifyContactDto, workspaceId },
     });
 

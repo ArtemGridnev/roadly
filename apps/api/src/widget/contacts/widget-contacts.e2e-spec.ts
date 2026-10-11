@@ -46,7 +46,7 @@ describe('WidgetContactsController (e2e)', () => {
       expect(body.id).toEqual(expect.any(String));
     });
 
-    it('returns the existing contact and refreshes its data when the externalId already exists', async () => {
+    it('returns the existing contact without overwriting its data when the externalId already exists', async () => {
       const existing = await prisma.contact.create({
         data: {
           workspaceId,
@@ -65,8 +65,8 @@ describe('WidgetContactsController (e2e)', () => {
       const body = response.body as ContactResponseDto;
 
       expect(body.id).toBe(existing.id);
-      expect(body.name).toBe('Jane Updated');
-      expect(body.email).toBe('jane2@example.com');
+      expect(body.name).toBe('Jane Doe');
+      expect(body.email).toBe('jane@example.com');
 
       expect(await prisma.contact.count({ where: { workspaceId } })).toBe(1);
     });
