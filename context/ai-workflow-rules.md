@@ -71,6 +71,10 @@ Before writing new code:
 4. Update `progress-tracker.md` to reflect completed work.
 5. Summarize changed files and mention risks, assumptions, or incomplete areas.
 
+## Commits
+
+- Every commit needs explicit approval from the user, even when the task itself was approved. Approving the work is not approving the commit — show what will be committed and wait for a yes.
+
 ## Before Moving to the Next Unit
 
 1. The current unit works end to end within its defined scope.
