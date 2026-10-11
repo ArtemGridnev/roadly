@@ -12,6 +12,7 @@ export interface FeatureRequest {
   createdAt: string;
 }
 
-export interface WidgetFeatureRequest extends FeatureRequest {
+export interface WidgetFeatureRequest extends Omit<FeatureRequest, 'authorId'> {
   hasVoted: boolean;
+  isMine: boolean;
 }

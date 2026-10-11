@@ -15,7 +15,7 @@ export function MyRequestsView({ onSelectRequest }: MyRequestsViewProps) {
   const { data, isPending, error, refetch } = useFeatureRequests(widgetKey, contact?.id, sort)
 
   const myRequests = contact
-    ? data?.filter((request) => request.authorId === contact.id)
+    ? data?.filter((request) => request.isMine)
     : undefined
 
   return (

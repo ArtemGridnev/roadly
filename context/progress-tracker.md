@@ -12,6 +12,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Widget API fixes (`fix/widget-contact-impersonation`)**:
+  - `GET /widget/feature-requests` no longer returns `authorId` — it leaked every contact's id, and `x-contact-id` is the widget's only credential, so anyone could vote or submit as another user. Replaced with `isMine` (shared `WidgetFeatureRequest` omits `authorId`); "My requests" filters on it.
+  - `POST /widget/contacts` is find-or-create: an existing contact's name/email are never overwritten, so the public widget key can't rename other users. Profile changes in the host app no longer sync — revisit with signed identity.
+  - e2e: 134/134.
+
 - **Dashboard prerequisite APIs (`feat/dashbaord-api-slice`)**:
   - API: `POST /auth/signup`, `GET /auth/me`, `POST /auth/logout` (see `dashboard-pages.md` § API work). New `@CurrentAgent()` param decorator.
   - `GET /workspaces` scoped to the Agent's memberships; `POST /workspaces` creates the creator's `WorkspaceMember` in the same nested create and validates the slug (kebab-case, 3–40, not reserved — `RESERVED_WORKSPACE_SLUGS` in the DTO).
@@ -81,7 +86,6 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Open Questions
 
-- **Widget API branch (next):** `GET /widget/feature-requests` returns `authorId` (other contacts' ids), and `x-contact-id` is the widget's only credential — replace with `isMine`. `POST /widget/contacts` overwrites name/email of any `externalId` — decided: make it create-only (never overwrite an existing contact) until signed identity lands.
 - `nest build` emits `dist/src/main.js`, but `start:prod` runs `node dist/main` — pre-existing mismatch, `start:prod` won't boot.
 - Rate limiting keys on `req.ip`; behind a proxy in production, Express needs `trust proxy` set or every request shares the proxy's IP.
 - Shared `findFeatureRequestsQuerySchema` lacks `sort`, though the admin API accepts it. The dashboard slice adds it locally for now; extend the shared schema (protected) to remove that.
