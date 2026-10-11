@@ -227,6 +227,84 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       });
     });
 
+    describe('isMine', () => {
+      let mineId: string;
+      let othersId: string;
+      let otherContactId: string;
+
+      beforeEach(async () => {
+        const otherContact = await prisma.contact.create({
+          data: {
+            workspaceId,
+            externalId: 'ext-2',
+            name: 'John Roe',
+            email: 'john@example.com',
+          },
+        });
+        otherContactId = otherContact.id;
+
+        const mine = await prisma.featureRequest.create({
+          data: {
+            title: 'Mine',
+            description: 'Mine',
+            workspaceId,
+            authorId: contactId,
+          },
+        });
+        const others = await prisma.featureRequest.create({
+          data: {
+            title: 'Others',
+            description: 'Others',
+            workspaceId,
+            authorId: otherContactId,
+          },
+        });
+        mineId = mine.id;
+        othersId = others.id;
+      });
+
+      const isMineById = (body: WidgetFeatureRequestResponseDto[]) =>
+        Object.fromEntries(
+          body.map((featureRequest) => [
+            featureRequest.id,
+            featureRequest.isMine,
+          ]),
+        );
+
+      it("marks only the identified contact's requests", async () => {
+        const response = await request(app.getHttpServer())
+          .get('/widget/feature-requests')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set(CONTACT_ID_HEADER, contactId)
+          .expect(200);
+
+        expect(
+          isMineById(response.body as WidgetFeatureRequestResponseDto[]),
+        ).toEqual({ [mineId]: true, [othersId]: false });
+      });
+
+      it('is false everywhere without a contact id header', async () => {
+        const response = await request(app.getHttpServer())
+          .get('/widget/feature-requests')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .expect(200);
+
+        expect(
+          isMineById(response.body as WidgetFeatureRequestResponseDto[]),
+        ).toEqual({ [mineId]: false, [othersId]: false });
+      });
+
+      it("never exposes another contact's id", async () => {
+        const response = await request(app.getHttpServer())
+          .get('/widget/feature-requests')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set(CONTACT_ID_HEADER, contactId)
+          .expect(200);
+
+        expect(JSON.stringify(response.body)).not.toContain(otherContactId);
+      });
+    });
+
     describe('sorting', () => {
       let oldPopularId: string;
       let newUnpopularId: string;
