@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router'
 import { getErrorStatus } from '@/api/errors'
 import { LoadError } from '@/components/LoadError'
+import { StandaloneLayout } from '@/components/StandaloneLayout'
 import { useGetMeQuery } from './auth-api'
 
 export function RequireAgent() {
@@ -18,5 +19,9 @@ export function RequireAgent() {
     return <Navigate to="/login" replace />
   }
 
-  return <LoadError onRetry={refetch} />
+  return (
+    <StandaloneLayout>
+      <LoadError onRetry={refetch} />
+    </StandaloneLayout>
+  )
 }

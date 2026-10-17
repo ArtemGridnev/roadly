@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link, Outlet, useParams } from 'react-router'
 import { LoadError } from '@/components/LoadError'
+import { StandaloneLayout } from '@/components/StandaloneLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import type { AppDispatch, RootState } from '@/store'
@@ -24,18 +25,18 @@ export function WorkspaceRoute() {
   }, [dispatch, workspace])
 
   if (workspace) {
-    return activeWorkspaceId === workspace.id ? <Outlet /> : null
+    return activeWorkspaceId === workspace.id ? <Outlet context={workspace} /> : null
   }
 
   if (isFetching) {
     return null
   }
 
-  if (workspaces) {
-    return <WorkspaceNotFound />
-  }
-
-  return <LoadError onRetry={refetch} />
+  return (
+    <StandaloneLayout>
+      {workspaces ? <WorkspaceNotFound /> : <LoadError onRetry={refetch} />}
+    </StandaloneLayout>
+  )
 }
 
 function WorkspaceNotFound() {
