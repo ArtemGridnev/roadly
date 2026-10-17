@@ -12,6 +12,9 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Dashboard session expiry (`feat/dashboard-auth`)**:
+  - When a refresh fails on any request except `/auth/me`, the base query dispatches `sessionExpired`; a store listener resets the RTK Query cache, so `RequireAgent` rechecks and lands on `/login`. Before, the cached agent kept the page up and the failed query showed "We couldn't reach Roadly" (also hit after signing out in another tab). `/auth/me` is excluded — its 401 already reaches the guards, and resetting on it would refetch forever. Regression test in `routes.test.tsx` (25/25).
+
 - **Dashboard sign-in + temporary sign-out (`feat/dashboard-auth`)**:
   - `/login`: email + password over the shared `agentLoginSchema`, link to sign up. 401 → "That email and password don't match"; 429 → rate-limit message (login is 5/min per IP+email); other failures → generic form error. The `login` mutation seeds `getMe`, so `GuestOnly` redirects on success, same as sign up.
   - `/onboarding` has a "Sign out" button calling `logout`, which resets the RTK Query cache; `RequireAgent` refetches `getMe`, gets a 401 and lands on `/login`. Temporary until the sidebar user menu exists.

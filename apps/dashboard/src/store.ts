@@ -3,6 +3,7 @@ import {
   createListenerMiddleware,
 } from '@reduxjs/toolkit';
 import { api } from './api/api';
+import { sessionExpired } from './api/session-expired';
 import {
   setActiveWorkspace,
   workspaceSlice,
@@ -21,6 +22,13 @@ export function makeStore() {
       if (previous && previous !== action.payload) {
         dispatch(api.util.resetApiState());
       }
+    },
+  });
+
+  listenerMiddleware.startListening({
+    actionCreator: sessionExpired,
+    effect: (_, { dispatch }) => {
+      dispatch(api.util.resetApiState());
     },
   });
 

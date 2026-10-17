@@ -27,4 +27,5 @@ In progress — see `context/architecture.md` for the intended stack (React + Re
 - Each feature adds its endpoints with `api.injectEndpoints` and exports its own hooks. Import hooks from the feature's `-api.ts` file; there is no barrel.
 - The active workspace id lives in `workspaceSlice`, mirrored from the `/:slug` URL. `prepareHeaders` sends it as `x-workspace-id` on every request, so endpoints never take a `workspaceId` arg.
 - Login and signup seed the `getMe` cache with the returned agent, so the guards redirect off `/login` / `/signup` on their own — pages don't navigate after auth.
+- A failed refresh (outside `/auth/me`) dispatches `sessionExpired`, which resets the cache so the guards send the agent to `/login`.
 - Cache keys therefore don't include the workspace: changing the active workspace resets the whole RTK Query cache (listener in `store.ts`). Workspace-scoped queries must `skip` until an active workspace is set, or the API answers 400.
