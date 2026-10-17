@@ -4,13 +4,27 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Admin Dashboard foundation, on `feat/dashboard-foundation`. Widget feature set is complete. Dashboard has a toolchain scaffold, theme provider, Redux store and RTK Query API slice; no routes, guards or pages yet.
+- Admin Dashboard, on `feat/dashboard-auth`. Widget feature set is complete. Dashboard has routing, guards 1–2, the standalone shell, sign up and sign in; `/onboarding` is a placeholder with a temporary sign-out button.
 
 ## Current Goal
 
-- Dashboard foundation per `dashboard-pages.md`. The auth/workspace APIs it needs are done. Next: wire the store into the app, then routing, guards and shells.
+- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: onboarding + create-workspace form.
 
 ## Completed
+
+- **Dashboard sign-in + temporary sign-out (`feat/dashboard-auth`)**:
+  - `/login`: email + password over the shared `agentLoginSchema`, link to sign up. 401 → "That email and password don't match"; 429 → rate-limit message (login is 5/min per IP+email); other failures → generic form error. The `login` mutation seeds `getMe`, so `GuestOnly` redirects on success, same as sign up.
+  - `/onboarding` has a "Sign out" button calling `logout`, which resets the RTK Query cache; `RequireAgent` refetches `getMe`, gets a 401 and lands on `/login`. Temporary until the sidebar user menu exists.
+  - 5 new tests (24/24).
+
+- **Dashboard sign-up flow (`feat/dashboard-auth`)**:
+  - React Router 8 (`createBrowserRouter`, routes in `src/routes.tsx`), added to `architecture.md`. Redux `Provider` wired in `main.tsx`; `store.ts` now exports `makeStore()` so tests get a fresh store.
+  - Guards as layout routes: `GuestOnly` (`/login`, `/signup` — signed in → `/`), `RequireAgent` (guard 1 — 401 from `getMe` after the refresh attempt → `/login`; any other failure → `LoadError` with retry), `WorkspaceRedirect` on `/` (guard 2 — zero workspaces → `/onboarding`). Guards 3–4 not built: `/` with ≥1 workspace shows a placeholder, and `/onboarding` doesn't redirect away yet.
+  - `StandaloneLayout` (centered card). `/signup`: name, email, password over the shared `createAgentSchema`; password rule shown as a hint up front, error names what's still missing. 409 → email error with "Sign in instead" link; 429 → rate-limit message; other failures → generic form error.
+  - `login`/`signup` mutations seed the `getMe` cache with the returned agent (and no longer invalidate `Agent`), so `GuestOnly` redirects on success and guard 2 lands the agent on `/onboarding` — no navigate in the page.
+  - shadcn `button`, `input`, `label`, `card` added (`radix-ui` dep). Edited to the `ui-context.md` hard rules: `rounded-lg`, card has border not shadow. Root `tsconfig.json` got the `@/*` path — without it `shadcn add` writes to a literal `@/` folder and installs an npm package named `cn`.
+  - 13 new tests (`routes.test.tsx`, `SignupPage.test.tsx`) over a `fetch` stub (`src/test/mock-api.ts`) and the real route tree (`src/test/render-app.tsx`); 19/19. Checked that breaking the 401 redirect, the 409 handling and input trimming each fails a test.
+  - Not visually verified — Playwright's Chrome still crashes on launch here.
 
 - **Widget API fixes (`fix/widget-contact-impersonation`)**:
   - `GET /widget/feature-requests` no longer returns `authorId` — it leaked every contact's id, and `x-contact-id` is the widget's only credential, so anyone could vote or submit as another user. Replaced with `isMine` (shared `WidgetFeatureRequest` omits `authorId`); "My requests" filters on it.
@@ -89,11 +103,12 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Dashboard: wrap the app in the Redux `Provider` (store + RTK Query API slice already exist), then routes + guards, app shell / standalone layouts, then pages one unit at a time. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Dashboard: onboarding + create-workspace form (drop the temporary sign-out button once the user menu exists), then guards 3–4 with the app shell. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions
 
+- Dashboard bundle is one 521 kB chunk (165 kB gzipped) and Vite warns past 500 kB. Route-level code splitting once more pages land?
 - `nest build` emits `dist/src/main.js`, but `start:prod` runs `node dist/main` — pre-existing mismatch, `start:prod` won't boot.
 - Rate limiting keys on `req.ip`; behind a proxy in production, Express needs `trust proxy` set or every request shares the proxy's IP.
 - Shared `findFeatureRequestsQuerySchema` lacks `sort`, though the admin API accepts it. The dashboard slice adds it locally for now; extend the shared schema (protected) to remove that.

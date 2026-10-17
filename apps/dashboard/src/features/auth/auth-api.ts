@@ -11,13 +11,31 @@ const authApi = api.injectEndpoints({
     login: builder.mutation<AgentLoginResponse, AgentLoginInput>({
       query: (body) => ({ url: '/auth/login', method: 'POST', body }),
       invalidatesTags: (result) =>
-        result ? ['Agent', 'Workspace', 'FeatureRequest'] : [],
+        result ? ['Workspace', 'FeatureRequest'] : [],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        const result = await queryFulfilled.catch(() => null);
+
+        if (result) {
+          dispatch(
+            authApi.util.upsertQueryData('getMe', undefined, result.data.agent),
+          );
+        }
+      },
     }),
 
     signup: builder.mutation<AgentLoginResponse, CreateAgentInput>({
       query: (body) => ({ url: '/auth/signup', method: 'POST', body }),
       invalidatesTags: (result) =>
-        result ? ['Agent', 'Workspace', 'FeatureRequest'] : [],
+        result ? ['Workspace', 'FeatureRequest'] : [],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        const result = await queryFulfilled.catch(() => null);
+
+        if (result) {
+          dispatch(
+            authApi.util.upsertQueryData('getMe', undefined, result.data.agent),
+          );
+        }
+      },
     }),
 
     getMe: builder.query<Agent, void>({
