@@ -23,6 +23,12 @@ export const routes: RouteObject[] = [
         children: [
           { path: '/', element: <WorkspaceRedirect /> },
           { path: '/onboarding', element: <OnboardingPage /> },
+          {
+            path: '/:slug/install',
+            element: (
+              <p className="text-sm text-muted-foreground">The Install page isn't built yet.</p>
+            ),
+          },
         ],
       },
     ],

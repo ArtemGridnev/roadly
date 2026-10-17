@@ -44,7 +44,7 @@ test.each(['/', '/signup', '/login'])(
     signedIn([])
     const router = renderApp(path)
 
-    expect(await screen.findByText(/You're not in a workspace yet/)).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Create your first workspace' })).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/onboarding')
   },
 )

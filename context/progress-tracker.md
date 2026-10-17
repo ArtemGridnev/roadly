@@ -4,13 +4,19 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Admin Dashboard, on `feat/dashboard-auth`. Widget feature set is complete. Dashboard has routing, guards 1–2, the standalone shell, sign up and sign in; `/onboarding` is a placeholder with a temporary sign-out button.
+- Admin Dashboard, on `feat/dashboard-workspaces`. Widget feature set is complete. Dashboard has routing, guards 1–2, the standalone shell, sign up, sign in, and onboarding with the create-workspace form; `/onboarding` keeps a temporary sign-out button.
 
 ## Current Goal
 
-- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: onboarding + create-workspace form.
+- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: guards 3–4 with the app shell.
 
 ## Completed
+
+- **Dashboard onboarding + create-workspace form (`feat/dashboard-workspaces`)**:
+  - `/onboarding` opens straight on `CreateWorkspaceForm` ("Create your first workspace") — no intro step. The form is standalone so the switcher's dialog can reuse it.
+  - Name + URL (slug) over the shared `createWorkspaceSchema`. The slug follows the name (`slugify` in `features/workspaces/slug.ts`) until edited by hand. 409 → "That URL is taken. Try acme-2." (`nextSlug` — a guess, not checked for availability); 400 → slug rules message; other failures → generic form error. On success → `/:slug/install`, replacing the history entry so Back doesn't return to the form.
+  - `/:slug/install` is a placeholder route until the Install page and app shell exist.
+  - 9 new tests in `OnboardingPage.test.tsx` (34/34); sign-up/sign-in/routing tests now look for the form heading. Checked that dropping the hand-edit check fails a test. Not visually verified.
 
 - **Dashboard session expiry + API URL check (`feat/dashboard-auth`)**:
   - When a refresh fails on any request except `/auth/me`, the base query dispatches `sessionExpired`; a store listener resets the RTK Query cache, so `RequireAgent` rechecks and lands on `/login`. Before, the cached agent kept the page up and the failed query showed "We couldn't reach Roadly" (also hit after signing out in another tab). `/auth/me` is excluded — its 401 already reaches the guards, and resetting on it would refetch forever. Regression test in `routes.test.tsx` (25/25).
@@ -107,11 +113,12 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Dashboard: onboarding + create-workspace form (drop the temporary sign-out button once the user menu exists), then guards 3–4 with the app shell. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Dashboard: guards 3–4 with the app shell (drop the temporary sign-out button once the user menu exists), then the Install page. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions
 
+- Shared `createWorkspaceSchema` only requires a non-empty slug; format, length and reserved words live only in the API DTO, so the dashboard learns about a bad slug from a 400. Move the rules into the shared schema (protected) so the form checks them before sending?
 - Dashboard bundle is one 521 kB chunk (165 kB gzipped) and Vite warns past 500 kB. Route-level code splitting once more pages land?
 - `nest build` emits `dist/src/main.js`, but `start:prod` runs `node dist/main` — pre-existing mismatch, `start:prod` won't boot.
 - Rate limiting keys on `req.ip`; behind a proxy in production, Express needs `trust proxy` set or every request shares the proxy's IP.

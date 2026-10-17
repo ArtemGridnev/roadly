@@ -57,7 +57,7 @@ test('signs in and lands on onboarding', async () => {
 
   await signIn(user)
 
-  expect(await screen.findByText(/You're not in a workspace yet/)).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Create your first workspace' })).toBeInTheDocument()
   expect(router.state.location.pathname).toBe('/onboarding')
   expect(login).toHaveBeenCalledWith({ email: 'ada@example.com', password: 'Analytical1' })
 })

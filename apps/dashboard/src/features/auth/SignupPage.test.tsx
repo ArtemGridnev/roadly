@@ -77,7 +77,7 @@ test('creates the account with trimmed details and lands on onboarding', async (
 
   await fillForm(user, { name: '  Ada Lovelace ', email: ' ada@example.com ' })
 
-  expect(await screen.findByText(/You're not in a workspace yet/)).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Create your first workspace' })).toBeInTheDocument()
   expect(router.state.location.pathname).toBe('/onboarding')
   expect(signup).toHaveBeenCalledWith({
     name: 'Ada Lovelace',
