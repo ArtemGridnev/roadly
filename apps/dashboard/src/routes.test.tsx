@@ -56,3 +56,19 @@ test('offers a retry when the session check fails for a reason other than auth',
   expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't reach Roadly")
   expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
 })
+
+test('sends the agent to sign in when the session ends mid-use', async () => {
+  let sessionValid = true
+  mockApi({
+    'GET /auth/me': () => (sessionValid ? { status: 200, body: agent } : unauthorized()),
+    'POST /auth/refresh': unauthorized,
+    'GET /workspaces': () => {
+      sessionValid = false
+      return unauthorized()
+    },
+  })
+  const router = renderApp('/')
+
+  expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
+  expect(router.state.location.pathname).toBe('/login')
+})
