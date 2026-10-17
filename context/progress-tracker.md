@@ -4,13 +4,18 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Admin Dashboard, on `feat/dashboard-auth`. Widget feature set is complete. Dashboard has routing, guards 1–2, the standalone shell and the sign-up page; `/login` and `/onboarding` are placeholders.
+- Admin Dashboard, on `feat/dashboard-auth`. Widget feature set is complete. Dashboard has routing, guards 1–2, the standalone shell, sign up and sign in; `/onboarding` is a placeholder with a temporary sign-out button.
 
 ## Current Goal
 
-- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: the sign-in page.
+- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: onboarding + create-workspace form.
 
 ## Completed
+
+- **Dashboard sign-in + temporary sign-out (`feat/dashboard-auth`)**:
+  - `/login`: email + password over the shared `agentLoginSchema`, link to sign up. 401 → "That email and password don't match"; 429 → rate-limit message (login is 5/min per IP+email); other failures → generic form error. The `login` mutation seeds `getMe`, so `GuestOnly` redirects on success, same as sign up.
+  - `/onboarding` has a "Sign out" button calling `logout`, which resets the RTK Query cache; `RequireAgent` refetches `getMe`, gets a 401 and lands on `/login`. Temporary until the sidebar user menu exists.
+  - 5 new tests (24/24).
 
 - **Dashboard sign-up flow (`feat/dashboard-auth`)**:
   - React Router 8 (`createBrowserRouter`, routes in `src/routes.tsx`), added to `architecture.md`. Redux `Provider` wired in `main.tsx`; `store.ts` now exports `makeStore()` so tests get a fresh store.
@@ -98,7 +103,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Dashboard: sign-in page (replace the `/login` placeholder), then onboarding + create-workspace form, then guards 3–4 with the app shell. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Dashboard: onboarding + create-workspace form (drop the temporary sign-out button once the user menu exists), then guards 3–4 with the app shell. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions
