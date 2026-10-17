@@ -7,8 +7,16 @@ import {
 import type { RootState } from '../store';
 import { sessionExpired } from './session-expired';
 
+const baseUrl = import.meta.env.VITE_API_URL;
+
+if (!baseUrl) {
+  throw new Error(
+    'VITE_API_URL is not set. Add it to apps/dashboard/.env (see .env.example).',
+  );
+}
+
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_URL,
+  baseUrl,
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const { activeWorkspaceId } = (getState() as RootState).workspace;

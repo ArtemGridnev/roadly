@@ -12,8 +12,9 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
-- **Dashboard session expiry (`feat/dashboard-auth`)**:
+- **Dashboard session expiry + API URL check (`feat/dashboard-auth`)**:
   - When a refresh fails on any request except `/auth/me`, the base query dispatches `sessionExpired`; a store listener resets the RTK Query cache, so `RequireAgent` rechecks and lands on `/login`. Before, the cached agent kept the page up and the failed query showed "We couldn't reach Roadly" (also hit after signing out in another tab). `/auth/me` is excluded — its 401 already reaches the guards, and resetting on it would refetch forever. Regression test in `routes.test.tsx` (25/25).
+  - `base-query.ts` throws at startup if `VITE_API_URL` is unset — without it, requests silently went to the dashboard's own origin and 404'd.
 
 - **Dashboard sign-in + temporary sign-out (`feat/dashboard-auth`)**:
   - `/login`: email + password over the shared `agentLoginSchema`, link to sign up. 401 → "That email and password don't match"; 429 → rate-limit message (login is 5/min per IP+email); other failures → generic form error. The `login` mutation seeds `getMe`, so `GuestOnly` redirects on success, same as sign up.
