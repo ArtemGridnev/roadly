@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router'
 import { LoadError } from '@/components/LoadError'
+import { readLastWorkspace } from './last-workspace'
 import { useGetWorkspacesQuery } from './workspaces-api'
 
 export function WorkspaceRedirect() {
@@ -10,9 +11,10 @@ export function WorkspaceRedirect() {
   }
 
   if (workspaces) {
-    return (
-      <p className="text-sm text-muted-foreground">The Roadmap Board isn't built yet.</p>
-    )
+    const lastSlug = readLastWorkspace()
+    const target = workspaces.find((workspace) => workspace.slug === lastSlug) ?? workspaces[0]
+
+    return <Navigate to={`/${target.slug}/roadmap`} replace />
   }
 
   if (isFetching) {

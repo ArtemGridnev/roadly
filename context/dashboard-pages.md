@@ -58,12 +58,11 @@ Email + password. Link to sign up. On success, guards decide where to go.
 Name, email, password. Link to sign in. On success → signed in → `/onboarding` (via guard 2).
 
 ### No-workspace screen (`/onboarding`)
-- One line of direction, one primary CTA (`ui-context.md` §3):
-  > You're not in a workspace yet. Create one for your product to start collecting requests.
-  >
-  > **[ Create workspace ]**
-- Create opens the workspace form.
-- Future: joining (pending invites / invite links) appears here, above the CTA.
+- Opens straight on the workspace form — no intro step, since creating is the only action:
+  > **Create your first workspace**
+  > Create one for your product to start collecting requests.
+- Sign out in the footer (temporary, until the sidebar user menu exists).
+- Future: joining (pending invites / invite links) appears here, above the form.
 
 ### Roadmap Board (`/:slug/roadmap`)
 - Kanban (Backlog / Planned / In Progress / Shipped) and table views of the same data, toggle top-right (`ui-context.md` §3).
