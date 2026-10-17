@@ -31,7 +31,14 @@ test.each(['/', '/onboarding'])('sends a signed-out visitor from %s to sign in',
   expect(router.state.location.pathname).toBe('/login')
 })
 
-test.each(['/', '/login'])(
+test('lets a signed-out visitor open sign up', async () => {
+  signedOut()
+  renderApp('/signup')
+
+  expect(await screen.findByRole('heading', { name: 'Create your account' })).toBeInTheDocument()
+})
+
+test.each(['/', '/signup', '/login'])(
   'sends a signed-in agent with no workspaces from %s to onboarding',
   async (path) => {
     signedIn([])
