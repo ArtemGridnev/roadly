@@ -113,11 +113,20 @@ Matches the canonical `Status` enum in `CONTEXT.md` — do not add, rename, or r
 
 ## 3. Layout — admin dashboard
 
-- Fixed left sidebar (~240px) + main content.
+- Fixed left sidebar (~240px), flat on the page background, + main content as one inset card beside it (`Sidebar variant="inset"`: `bg-card`, border, `rounded-lg`, 8px gap from the viewport edges). Below `md` the sidebar collapses behind a menu button at the left of the top bar and opens as a sheet (shadcn `Sidebar`).
 - Top bar inside main content: search · filter dropdown · primary CTA (top-right).
 - Single feature request opens in a **right slide-in drawer**, not a full-page route — keeps the list in context behind it.
 - Roadmap Board offers **kanban and table views** of the same data; toggle top-right of the board.
 - Empty states: one line of direction + one primary CTA. Never bare "No data".
+
+---
+
+## 3a. Logo
+
+- `RoadlyMark` (tile only) and `RoadlyLogo` (tile + "Roadly" wordmark) in `apps/dashboard/src/components/RoadlyLogo.tsx`. The tile is `fill-foreground` and the road `fill-background`, so it inverts with the theme — black tile in light, white in dark. Never hardcode its colors.
+- Wordmark is live Inter text at `font-semibold` (the source SVG uses 700, which breaks the weight rule).
+- Favicon: `apps/dashboard/public/roadly-icon.svg`, the original black tile.
+- Where: the full logo above the card on standalone pages; the mark beside the workspace name in the sidebar header.
 
 ---
 

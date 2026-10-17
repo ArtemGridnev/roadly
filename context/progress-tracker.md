@@ -4,13 +4,22 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Admin Dashboard, on `feat/dashboard-workspaces`. Widget feature set is complete. Dashboard has routing, guards 1–4, the standalone shell, sign up, sign in, and onboarding with the create-workspace form; `/onboarding` keeps a temporary sign-out button. Workspace pages are placeholders.
+- Admin Dashboard, on `feat/dashboard-shell`. Widget feature set is complete. Dashboard has routing, guards 1–4, the standalone shell, sign up, sign in, and onboarding with the create-workspace form; `/onboarding` has its own sign-out button. Workspace pages sit in the app shell (sidebar + top bar) and are still placeholders.
 
 ## Current Goal
 
-- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: the app shell.
+- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: the workspace switcher.
 
 ## Completed
+
+- **Dashboard app shell (`feat/dashboard-shell`)**:
+  - shadcn `sidebar` (+ `sheet`, `tooltip`, `separator`, `skeleton`, `use-mobile`) and `dropdown-menu` added, edited to the `ui-context.md` hard rules (`rounded-lg`, `shadow-sm` on floating surfaces, 15rem sidebar, pointer cursor on menu items). The CLI again added an npm package named `cn` and imported from it — removed, imports pointed at `@/lib/utils`. Its hardcoded `--sidebar-*` colors replaced by `@theme inline` aliases onto the shared tokens in `index.css`.
+  - Inset layout (`variant="inset"`): flat sidebar, main content as a bordered `bg-card` card — shadcn's inset shadow swapped for a border per the static-card rule.
+  - `AppLayout` wraps the `/:slug` pages: `AppSidebar` (workspace name, Roadmap / Install nav, footer with a `ThemeToggle` row (light/dark/system) above `UserMenu` (name/email, sign out)) and a top bar with the page title from the route's `handle`. Below `md` the sidebar is a sheet behind an "Open menu" button and closes after navigating.
+  - Logo (`RoadlyLogo.tsx`, theme-aware, `ui-context.md` §3a): full logo above standalone pages, mark in the sidebar header, `public/roadly-icon.svg` as favicon.
+  - `WorkspaceRoute` passes the resolved workspace as outlet context (`useCurrentWorkspace()`). Routes split so the shell isn't inside the centered `StandaloneLayout`; `StandaloneLayout` takes optional children so `RequireAgent` / `WorkspaceRoute` keep their error and not-found states centered.
+  - Tests: `matchMedia` stub in `test/setup.ts`, `renderApp` wraps `ThemeProvider`. 5 new tests in `AppLayout.test.tsx` (47/47). Checked that dropping the close-on-navigate fails the mobile test.
+  - Not visually verified — Playwright's Chrome still crashes on launch. Bundle now 655 kB (207 kB gzipped).
 
 - **Dashboard guards 3–4 (`feat/dashboard-workspaces`)**:
   - Guard 3: `WorkspaceRedirect` on `/` sends an Agent with workspaces to `/:slug/roadmap` of the last-used workspace (slug in `localStorage`, `last-workspace.ts`), falling back to the first. `/login` and `/signup` reach it through `GuestOnly`; `/onboarding` through the new `RequireNoWorkspace` layout guard.
@@ -30,7 +39,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 - **Dashboard sign-in + temporary sign-out (`feat/dashboard-auth`)**:
   - `/login`: email + password over the shared `agentLoginSchema`, link to sign up. 401 → "That email and password don't match"; 429 → rate-limit message (login is 5/min per IP+email); other failures → generic form error. The `login` mutation seeds `getMe`, so `GuestOnly` redirects on success, same as sign up.
-  - `/onboarding` has a "Sign out" button calling `logout`, which resets the RTK Query cache; `RequireAgent` refetches `getMe`, gets a 401 and lands on `/login`. Temporary until the sidebar user menu exists.
+  - `/onboarding` has a "Sign out" button calling `logout`, which resets the RTK Query cache; `RequireAgent` refetches `getMe`, gets a 401 and lands on `/login`. Kept for good — onboarding has no sidebar (`dashboard-pages.md`).
   - 5 new tests (24/24).
 
 - **Dashboard sign-up flow (`feat/dashboard-auth`)**:
@@ -119,7 +128,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Dashboard: the app shell with the workspace switcher (drop the temporary sign-out button once the user menu exists), then the Install page. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Dashboard: the workspace switcher with the New workspace dialog (and stop a switch from resetting `getMe`), then the Install page. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions

@@ -3,13 +3,16 @@ import { Provider } from 'react-redux'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { routes } from '@/routes'
 import { makeStore } from '@/store'
+import { ThemeProvider } from '@/theme/ThemeProvider'
 
 export function renderApp(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
 
   render(
     <Provider store={makeStore()}>
-      <RouterProvider router={router} />
+      <ThemeProvider>
+        <RouterProvider router={router} />
+      </ThemeProvider>
     </Provider>,
   )
 

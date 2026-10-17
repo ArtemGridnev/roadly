@@ -61,7 +61,7 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 - Opens straight on the workspace form — no intro step, since creating is the only action:
   > **Create your first workspace**
   > Create one for your product to start collecting requests.
-- Sign out in the footer (temporary, until the sidebar user menu exists).
+- Sign out in the footer — permanent: this page has no sidebar, so the user menu isn't reachable from here.
 - Future: joining (pending invites / invite links) appears here, above the form.
 
 ### Roadmap Board (`/:slug/roadmap`)
@@ -88,7 +88,11 @@ Top to bottom:
 1. **Workspace switcher** — current workspace name; dropdown lists the Agent's workspaces (checkmark on the active one) and a **New workspace** item.
 2. **Roadmap**
 3. **Install**
-4. *(footer)* **User menu** — Agent name/email, theme toggle (light / dark / system), sign out.
+4. *(footer)* **User menu** — Agent name/email, sign out. Account only — no app preferences here.
+
+A **Theme** row (light / dark / system) sits in the sidebar footer above the user menu — not inside it; it moves to a Settings page once one exists.
+
+Built on shadcn/ui's `Sidebar`. On mobile it's hidden behind a menu button in the top bar and slides in as a sheet; on desktop it's fixed.
 
 ---
 
