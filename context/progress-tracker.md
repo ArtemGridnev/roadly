@@ -4,13 +4,19 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Admin Dashboard, on `feat/dashboard-workspaces`. Widget feature set is complete. Dashboard has routing, guards 1–2, the standalone shell, sign up, sign in, and onboarding with the create-workspace form; `/onboarding` keeps a temporary sign-out button.
+- Admin Dashboard, on `feat/dashboard-workspaces`. Widget feature set is complete. Dashboard has routing, guards 1–4, the standalone shell, sign up, sign in, and onboarding with the create-workspace form; `/onboarding` keeps a temporary sign-out button. Workspace pages are placeholders.
 
 ## Current Goal
 
-- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: guards 3–4 with the app shell.
+- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: the app shell.
 
 ## Completed
+
+- **Dashboard guards 3–4 (`feat/dashboard-workspaces`)**:
+  - Guard 3: `WorkspaceRedirect` on `/` sends an Agent with workspaces to `/:slug/roadmap` of the last-used workspace (slug in `localStorage`, `last-workspace.ts`), falling back to the first. `/login` and `/signup` reach it through `GuestOnly`; `/onboarding` through the new `RequireNoWorkspace` layout guard.
+  - Guard 4: `WorkspaceRoute` layout on `/:slug` resolves the slug against `GET /workspaces`. Unknown slug → "Workspace not found" with a link to `/`. Known slug → sets `activeWorkspaceId` (so `x-workspace-id` goes out) and remembers it as last used; children render only once the active id matches, so their first requests carry the right header.
+  - `/:slug` redirects to `/:slug/roadmap`. `roadmap` and `install` are placeholders until the app shell and pages exist.
+  - 8 new tests in `routes.test.tsx` (42/42). Checked that dropping the last-used write and the onboarding redirect each fails a test. The header gating has no test yet — nothing under `/:slug` calls a workspace-scoped endpoint until the board lands.
 
 - **Dashboard onboarding + create-workspace form (`feat/dashboard-workspaces`)**:
   - `/onboarding` opens straight on `CreateWorkspaceForm` ("Create your first workspace") — no intro step. The form is standalone so the switcher's dialog can reuse it.
@@ -113,7 +119,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Dashboard: guards 3–4 with the app shell (drop the temporary sign-out button once the user menu exists), then the Install page. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Dashboard: the app shell with the workspace switcher (drop the temporary sign-out button once the user menu exists), then the Install page. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions

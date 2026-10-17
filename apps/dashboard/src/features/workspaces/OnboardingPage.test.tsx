@@ -20,13 +20,19 @@ const unauthorized = () => ({ status: 401, body: { message: 'Unauthorized' } })
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  localStorage.clear()
 })
 
 function setup(createResponse: () => MockResponse = () => ({ status: 201, body: workspace })) {
-  const createWorkspace = vi.fn((_body: unknown) => createResponse())
+  let workspaces: unknown[] = []
+  const createWorkspace = vi.fn((_body: unknown) => {
+    const response = createResponse()
+    if (response.status === 201) workspaces = [response.body]
+    return response
+  })
   mockApi({
     'GET /auth/me': () => ({ status: 200, body: agent }),
-    'GET /workspaces': () => ({ status: 200, body: [] }),
+    'GET /workspaces': () => ({ status: 200, body: workspaces }),
     'POST /workspaces': createWorkspace,
   })
   const router = renderApp('/onboarding')

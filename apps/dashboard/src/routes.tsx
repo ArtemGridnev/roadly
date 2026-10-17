@@ -1,11 +1,13 @@
-import type { RouteObject } from 'react-router'
+import { Navigate, type RouteObject } from 'react-router'
 import { StandaloneLayout } from './components/StandaloneLayout'
 import { GuestOnly } from './features/auth/GuestOnly'
 import { LoginPage } from './features/auth/LoginPage'
 import { RequireAgent } from './features/auth/RequireAgent'
 import { SignupPage } from './features/auth/SignupPage'
 import { OnboardingPage } from './features/workspaces/OnboardingPage'
+import { RequireNoWorkspace } from './features/workspaces/RequireNoWorkspace'
 import { WorkspaceRedirect } from './features/workspaces/WorkspaceRedirect'
+import { WorkspaceRoute } from './features/workspaces/WorkspaceRoute'
 
 export const routes: RouteObject[] = [
   {
@@ -22,12 +24,30 @@ export const routes: RouteObject[] = [
         element: <RequireAgent />,
         children: [
           { path: '/', element: <WorkspaceRedirect /> },
-          { path: '/onboarding', element: <OnboardingPage /> },
           {
-            path: '/:slug/install',
-            element: (
-              <p className="text-sm text-muted-foreground">The Install page isn't built yet.</p>
-            ),
+            element: <RequireNoWorkspace />,
+            children: [{ path: '/onboarding', element: <OnboardingPage /> }],
+          },
+          {
+            path: '/:slug',
+            element: <WorkspaceRoute />,
+            children: [
+              { index: true, element: <Navigate to="roadmap" replace /> },
+              {
+                path: 'roadmap',
+                element: (
+                  <p className="text-sm text-muted-foreground">
+                    The Roadmap Board isn't built yet.
+                  </p>
+                ),
+              },
+              {
+                path: 'install',
+                element: (
+                  <p className="text-sm text-muted-foreground">The Install page isn't built yet.</p>
+                ),
+              },
+            ],
           },
         ],
       },

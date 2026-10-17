@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { cleanup, screen } from '@testing-library/react'
 import { mockApi } from '@/test/mock-api'
 import { renderApp } from '@/test/render-app'
 
@@ -7,6 +7,7 @@ const unauthorized = () => ({ status: 401, body: { message: 'Unauthorized' } })
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  localStorage.clear()
 })
 
 function signedOut() {
@@ -71,4 +72,60 @@ test('sends the agent to sign in when the session ends mid-use', async () => {
 
   expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   expect(router.state.location.pathname).toBe('/login')
+})
+
+const acme = { id: 'ws-acme', name: 'Acme', slug: 'acme', widgetKey: 'wk_acme', createdAt: '2026-10-17T00:00:00.000Z' }
+const beta = { id: 'ws-beta', name: 'Beta', slug: 'beta', widgetKey: 'wk_beta', createdAt: '2026-10-17T00:00:00.000Z' }
+
+test.each(['/', '/login', '/signup', '/onboarding'])(
+  'sends a signed-in agent with workspaces from %s to the first workspace',
+  async (path) => {
+    signedIn([acme, beta])
+    const router = renderApp(path)
+
+    expect(await screen.findByText(/Roadmap Board isn't built yet/)).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/acme/roadmap')
+  },
+)
+
+test('returns the agent to the workspace they used last', async () => {
+  signedIn([acme, beta])
+  renderApp('/beta/install')
+  await screen.findByText(/Install page isn't built yet/)
+  cleanup()
+
+  const router = renderApp('/')
+
+  expect(await screen.findByText(/Roadmap Board isn't built yet/)).toBeInTheDocument()
+  expect(router.state.location.pathname).toBe('/beta/roadmap')
+})
+
+test('falls back to the first workspace when the last one is gone', async () => {
+  signedIn([beta])
+  renderApp('/beta/install')
+  await screen.findByText(/Install page isn't built yet/)
+  cleanup()
+  vi.unstubAllGlobals()
+
+  signedIn([acme])
+  const router = renderApp('/')
+
+  expect(await screen.findByText(/Roadmap Board isn't built yet/)).toBeInTheDocument()
+  expect(router.state.location.pathname).toBe('/acme/roadmap')
+})
+
+test('opens the board for a bare workspace URL', async () => {
+  signedIn([acme])
+  const router = renderApp('/acme')
+
+  expect(await screen.findByText(/Roadmap Board isn't built yet/)).toBeInTheDocument()
+  expect(router.state.location.pathname).toBe('/acme/roadmap')
+})
+
+test("says a workspace isn't found when the agent isn't in it", async () => {
+  signedIn([acme])
+  renderApp('/other/roadmap')
+
+  expect(await screen.findByRole('heading', { name: 'Workspace not found' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Go to your workspaces' })).toHaveAttribute('href', '/')
 })
