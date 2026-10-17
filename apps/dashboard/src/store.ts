@@ -8,31 +8,36 @@ import {
   workspaceSlice,
 } from './features/workspaces/workspace-slice';
 
-const listenerMiddleware = createListenerMiddleware();
+export function makeStore() {
+  const listenerMiddleware = createListenerMiddleware();
 
-// Cache keys don't include the workspace (it travels in a header), so a switch must drop the cache.
-listenerMiddleware.startListening({
-  actionCreator: setActiveWorkspace,
-  effect: (action, { dispatch, getOriginalState }) => {
-    const previous = (getOriginalState() as RootState).workspace
-      .activeWorkspaceId;
+  // Cache keys don't include the workspace (it travels in a header), so a switch must drop the cache.
+  listenerMiddleware.startListening({
+    actionCreator: setActiveWorkspace,
+    effect: (action, { dispatch, getOriginalState }) => {
+      const previous = (getOriginalState() as RootState).workspace
+        .activeWorkspaceId;
 
-    if (previous && previous !== action.payload) {
-      dispatch(api.util.resetApiState());
-    }
-  },
-});
+      if (previous && previous !== action.payload) {
+        dispatch(api.util.resetApiState());
+      }
+    },
+  });
 
-export const store = configureStore({
-  reducer: {
-    [api.reducerPath]: api.reducer,
-    [workspaceSlice.reducerPath]: workspaceSlice.reducer,
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware()
-      .prepend(listenerMiddleware.middleware)
-      .concat(api.middleware),
-});
+  return configureStore({
+    reducer: {
+      [api.reducerPath]: api.reducer,
+      [workspaceSlice.reducerPath]: workspaceSlice.reducer,
+    },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware()
+        .prepend(listenerMiddleware.middleware)
+        .concat(api.middleware),
+  });
+}
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+export const store = makeStore();
+
+export type AppStore = ReturnType<typeof makeStore>;
+export type RootState = ReturnType<AppStore['getState']>;
+export type AppDispatch = AppStore['dispatch'];

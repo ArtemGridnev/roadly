@@ -40,6 +40,7 @@ roadly/
 
 - React + TypeScript
 - **Vite SPA** (client-side routing, no SSR)
+- React Router (declarative routes via `createBrowserRouter`; guards are layout routes)
 - Redux Toolkit + RTK Query
 - shadcn/ui + Radix + Tailwind CSS, lucide-react icons
 - dnd-kit for the drag-and-drop Roadmap Board
