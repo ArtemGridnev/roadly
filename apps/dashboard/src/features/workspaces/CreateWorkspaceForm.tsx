@@ -1,8 +1,7 @@
 import { useId, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router'
-import { createWorkspaceSchema, type CreateWorkspaceInput } from '@roadly/shared'
+import { createWorkspaceSchema, type CreateWorkspaceInput, type Workspace } from '@roadly/shared'
 import { getErrorStatus } from '@/api/errors'
 import { FormField } from '@/components/FormField'
 import { Button } from '@/components/ui/button'
@@ -15,9 +14,12 @@ const SLUG_HINT = "Lowercase letters, numbers, and hyphens. Can't be changed lat
 
 const trim = (value: string) => value.trim()
 
-export function CreateWorkspaceForm() {
+interface CreateWorkspaceFormProps {
+  onCreated: (workspace: Workspace) => void
+}
+
+export function CreateWorkspaceForm({ onCreated }: CreateWorkspaceFormProps) {
   const [createWorkspace, { error: createError, isLoading }] = useCreateWorkspaceMutation()
-  const navigate = useNavigate()
   const [slugEdited, setSlugEdited] = useState(false)
   const formId = useId()
   const ids = { name: `${formId}-name`, slug: `${formId}-slug` }
@@ -37,7 +39,7 @@ export function CreateWorkspaceForm() {
     const result = await createWorkspace(input)
 
     if (result.data) {
-      navigate(`/${result.data.slug}/install`, { replace: true })
+      onCreated(result.data)
       return
     }
 

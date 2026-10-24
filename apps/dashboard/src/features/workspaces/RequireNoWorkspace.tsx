@@ -1,15 +1,21 @@
+import { useState } from 'react'
 import { Navigate, Outlet } from 'react-router'
 import { LoadError } from '@/components/LoadError'
 import { useGetWorkspacesQuery } from './workspaces-api'
 
 export function RequireNoWorkspace() {
   const { data: workspaces, isFetching, refetch } = useGetWorkspacesQuery()
+  const [arrivedWithoutWorkspace, setArrivedWithoutWorkspace] = useState<boolean>()
 
-  if (workspaces?.length === 0) {
+  if (workspaces && arrivedWithoutWorkspace === undefined) {
+    setArrivedWithoutWorkspace(workspaces.length === 0)
+  }
+
+  if (arrivedWithoutWorkspace) {
     return <Outlet />
   }
 
-  if (workspaces) {
+  if (arrivedWithoutWorkspace === false) {
     return <Navigate to="/" replace />
   }
 

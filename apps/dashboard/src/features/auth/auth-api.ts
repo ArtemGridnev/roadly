@@ -6,7 +6,7 @@ import type {
 } from '@roadly/shared';
 import { api } from '../../api/api';
 
-const authApi = api.injectEndpoints({
+export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<AgentLoginResponse, AgentLoginInput>({
       query: (body) => ({ url: '/auth/login', method: 'POST', body }),

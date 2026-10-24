@@ -4,13 +4,21 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Admin Dashboard, on `feat/dashboard-shell`. Widget feature set is complete. Dashboard has routing, guards 1–4, the standalone shell, sign up, sign in, and onboarding with the create-workspace form; `/onboarding` has its own sign-out button. Workspace pages sit in the app shell (sidebar + top bar) and are still placeholders.
+- Admin Dashboard, on `feat/dashboard-workspace-switcher`. Widget feature set is complete. Dashboard has routing, guards 1–4, the standalone shell, sign up, sign in, and onboarding with the create-workspace form; `/onboarding` has its own sign-out button. Workspace pages sit in the app shell (sidebar + top bar) and are still placeholders.
 
 ## Current Goal
 
-- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: the workspace switcher.
+- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: the Install page.
 
 ## Completed
+
+- **Dashboard workspace switcher (`feat/dashboard-workspace-switcher`)**:
+  - `WorkspaceSwitcher` in the sidebar header, in one row to the right of the Roadly mark: workspaces as checkbox items (checked = current), picking one navigates to its roadmap; **New workspace** opens a shadcn `Dialog` (added; `cn` package and styles fixed again) with `CreateWorkspaceForm`. Dialog state lives outside the dropdown (`modal={false}`) — the Radix dropdown→dialog combo otherwise leaves the page unclickable.
+  - `CreateWorkspaceForm` no longer navigates; it takes `onCreated(workspace)`. Onboarding replaces history, the dialog closes and pushes.
+  - Switching no longer blanks the app: the store listener still resets the API cache on a workspace change but re-seeds `getMe` and `getWorkspaces` with `upsertQueryEntries` (sync), so the guards keep rendering. `authApi` / `workspacesApi` are exported for it.
+  - The "wait for the active workspace" gate moved from `WorkspaceRoute` to a new `RequireActiveWorkspace` layout below `AppLayout`, so the shell stays mounted and only the page area waits.
+  - Fixed a race: after creating on onboarding, the workspace refetch made `RequireNoWorkspace` redirect to `/` (→ roadmap) while the form navigated to install. The guard now decides once, from the list on arrival.
+  - 4 new tests in `WorkspaceSwitcher.test.tsx` (51/51). Checked that dropping the re-seed fails the no-remount test.
 
 - **Dashboard app shell (`feat/dashboard-shell`)**:
   - shadcn `sidebar` (+ `sheet`, `tooltip`, `separator`, `skeleton`, `use-mobile`) and `dropdown-menu` added, edited to the `ui-context.md` hard rules (`rounded-lg`, `shadow-sm` on floating surfaces, 15rem sidebar, pointer cursor on menu items). The CLI again added an npm package named `cn` and imported from it — removed, imports pointed at `@/lib/utils`. Its hardcoded `--sidebar-*` colors replaced by `@theme inline` aliases onto the shared tokens in `index.css`.
@@ -128,7 +136,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Dashboard: the workspace switcher with the New workspace dialog (and stop a switch from resetting `getMe`), then the Install page. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Dashboard: the Install page (`widgetKey` + copyable `Roadly.init` snippet), then the Roadmap Board. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions
