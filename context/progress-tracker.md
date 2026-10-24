@@ -12,10 +12,14 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Pages own their top bar (`feat/dashboard-roadmap-board`)**:
+  - Replaced the layout-owned header (title from route `handle`, actions through a context + portal slot) with `PageContent` (`title`, optional `actions`, optional body `className`) rendered by each page. `AppLayout` is now only sidebar + inset; `PageHandle`, `PageActions` and `page-actions-context` are gone.
+  - While `RequireActiveWorkspace` waits for the active workspace, the top bar no longer shows (it used to show the title over an empty body).
+  - Tests unchanged (58/58). Checked that dropping `actions` in `PageContent` fails the sort test.
+
 - **Roadmap Board, step 1 — read-only kanban (`feat/dashboard-roadmap-board`, stacked on `feat/dashboard-install`)**:
   - `/:slug/roadmap` → `features/roadmap/RoadmapPage`: one `GET /feature-requests?sort=` grouped client-side into Backlog / Planned / In progress / Shipped columns (count, "No requests" when empty). `BoardCard`: read-only votes, title, 2-line description, category, date — no status badge.
   - Sort (Most voted default / Newest) is a `SortMenu` dropdown in the top bar, state in `roadmapSlice`; the API sorts. Skeleton columns while loading, `LoadError` + retry on failure, empty board → "Install the widget".
-  - Top-bar slot: `AppLayout` exposes an actions node through `PageActionsContext`; pages portal into it with `PageActions`.
   - Columns are fixed 18rem and scroll sideways below `lg`, share the width from `lg`.
   - `mockApi` handlers now also get the request `URL` (for query params); three tests asserting exact handler args take `expect.anything()` for it. The routing/switcher tests that waited for the roadmap placeholder now stub an empty list and wait for the empty state.
   - 4 new tests in `RoadmapPage.test.tsx` (58/58). Checked that dropping the sort arg and dropping the status filter each fail a test. Not visually verified. Bundle 692 kB (220 kB gzipped).

@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router'
 import { LoadError } from '@/components/LoadError'
-import { PageActions } from '@/components/PageActions'
+import { PageContent } from '@/components/PageContent'
 import { Button } from '@/components/ui/button'
 import type { RootState } from '@/store'
 import { useGetFeatureRequestsQuery } from '../feature-requests/feature-requests-api'
@@ -19,11 +19,10 @@ export function RoadmapPage() {
   const { data: requests, isLoading, isError, refetch } = useGetFeatureRequestsQuery({ sort })
 
   return (
-    <>
-      <PageActions>
-        <SortMenu value={sort} onChange={(next) => dispatch(setSort(next))} />
-      </PageActions>
-
+    <PageContent
+      title="Roadmap"
+      actions={<SortMenu value={sort} onChange={(next) => dispatch(setSort(next))} />}
+    >
       {isError ? (
         <div className="py-12">
           <LoadError onRetry={refetch} />
@@ -50,6 +49,6 @@ export function RoadmapPage() {
           ))}
         </div>
       )}
-    </>
+    </PageContent>
   )
 }

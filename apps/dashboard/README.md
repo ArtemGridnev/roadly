@@ -10,7 +10,7 @@ In progress — see `context/architecture.md` for the intended stack (React + Re
 |---|---|
 | `src/main.tsx`, `src/App.tsx` | Entry point and app root (Redux `Provider`, `RouterProvider`) |
 | `src/routes.tsx` | Route tree; guards are layout routes |
-| `src/components/` | App-level components (`StandaloneLayout`, `AppLayout`, `PageActions`, `FormField`, `LoadError`); shadcn source in `ui/` |
+| `src/components/` | App-level components (`StandaloneLayout`, `AppLayout`, `PageContent`, `FormField`, `LoadError`); shadcn source in `ui/` |
 | `src/index.css` | Tailwind entry; imports `@roadly/shared/tokens.css` |
 | `src/theme/` | `ThemeProvider` / `useTheme` — light, dark, system |
 | `src/lib/` | Small shared helpers (`cn`, field ids) |
@@ -26,7 +26,7 @@ In progress — see `context/architecture.md` for the intended stack (React + Re
 
 ## Conventions
 
-- Pages put their controls in the top bar with `<PageActions>`, which portals into a slot `AppLayout` provides.
+- `AppLayout` is only the shell (sidebar + inset card). Every `/:slug` page renders its own top bar and body through `<PageContent title actions? className?>` — it carries the mobile "Open menu" button, so a page without it has no menu on mobile. Page layout decisions (padding, width) stay in the page via `className`.
 - Each feature adds its endpoints with `api.injectEndpoints` and exports its own hooks. Import hooks from the feature's `-api.ts` file; there is no barrel.
 - The active workspace id lives in `workspaceSlice`, mirrored from the `/:slug` URL. `prepareHeaders` sends it as `x-workspace-id` on every request, so endpoints never take a `workspaceId` arg.
 - Login and signup seed the `getMe` cache with the returned agent, so the guards redirect off `/login` / `/signup` on their own — pages don't navigate after auth.

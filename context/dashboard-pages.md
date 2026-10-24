@@ -68,7 +68,7 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 - Kanban (Backlog / Planned / In Progress / Shipped) and table views of the same data, toggle top-right (`ui-context.md` §3).
 - Drag a card between columns to change status.
 - **Card** mirrors the widget's `RequestCard`: vote count, title, 2-line description preview, then category and created date. No status badge on kanban cards — the column already says it; the table view carries a status column. The vote count is read-only — Agents don't vote.
-- **Top bar (MVP):** page controls sit top-right of the app shell's top bar (pages fill it through `PageActions`). Only what `GET /feature-requests` supports — sort (Most voted / Newest) and, in table view, a status filter (kanban columns already split by status). No search and no category filter until the API supports them; this narrows the `ui-context.md` §3 top bar for the MVP.
+- **Top bar (MVP):** page controls go in `PageContent`'s `actions`, top-right of the page's top bar. Only what `GET /feature-requests` supports — sort (Most voted / Newest) and, in table view, a status filter (kanban columns already split by status). No search and no category filter until the API supports them; this narrows the `ui-context.md` §3 top bar for the MVP.
 - **Drawer:** clicking a request opens the right slide-in drawer over the board. It isn't addressable by URL in the MVP — a reload closes it. In the drawer the Agent can:
   - edit title, description and category;
   - change status (the non-drag path);

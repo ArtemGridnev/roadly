@@ -1,5 +1,5 @@
 import { Navigate, type RouteObject } from 'react-router'
-import { AppLayout, type PageHandle } from './components/AppLayout'
+import { AppLayout } from './components/AppLayout'
 import { StandaloneLayout } from './components/StandaloneLayout'
 import { GuestOnly } from './features/auth/GuestOnly'
 import { LoginPage } from './features/auth/LoginPage'
@@ -52,12 +52,10 @@ export const routes: RouteObject[] = [
                   { index: true, element: <Navigate to="roadmap" replace /> },
                   {
                     path: 'roadmap',
-                    handle: { title: 'Roadmap' } satisfies PageHandle,
                     element: <RoadmapPage />,
                   },
                   {
                     path: 'install',
-                    handle: { title: 'Install' } satisfies PageHandle,
                     element: <InstallPage />,
                   },
                 ],
