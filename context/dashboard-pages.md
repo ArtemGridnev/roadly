@@ -67,13 +67,14 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 ### Roadmap Board (`/:slug/roadmap`)
 - Kanban (Backlog / Planned / In Progress / Shipped) and table views of the same data, toggle top-right (`ui-context.md` §3).
 - Drag a card between columns to change status.
-- **Card** mirrors the widget's `RequestCard`: vote count, title, 2-line description preview, then status badge, category and created date. The vote count is read-only — Agents don't vote. Table columns carry the same fields.
-- **Top bar (MVP):** only what `GET /feature-requests` supports — sort (Most voted / Newest) and, in table view, a status filter (kanban columns already split by status). No search and no category filter until the API supports them; this narrows the `ui-context.md` §3 top bar for the MVP.
+- **Card** mirrors the widget's `RequestCard`: vote count, title, 2-line description preview, then category and created date. No status badge on kanban cards — the column already says it; the table view carries a status column. The vote count is read-only — Agents don't vote.
+- **Top bar (MVP):** page controls sit top-right of the app shell's top bar (pages fill it through `PageActions`). Only what `GET /feature-requests` supports — sort (Most voted / Newest) and, in table view, a status filter (kanban columns already split by status). No search and no category filter until the API supports them; this narrows the `ui-context.md` §3 top bar for the MVP.
 - **Drawer:** clicking a request opens the right slide-in drawer over the board. It isn't addressable by URL in the MVP — a reload closes it. In the drawer the Agent can:
   - edit title, description and category;
   - change status (the non-drag path);
   - delete the request, behind a confirmation. Author and votes are read-only.
-- Empty state points to `/:slug/install`.
+- Empty board (no requests at all) → one line + **Install the widget** to `/:slug/install`. An empty column shows "No requests".
+- Sort defaults to Most voted and lives in `roadmapSlice`, so it survives leaving and coming back.
 
 ### Install widget (`/:slug/install`)
 - Shows a copyable snippet carrying the workspace's `widgetKey`: a `#roadly` container, the `<script>` loading the widget bundle (`VITE_WIDGET_URL`), and `Roadly.init({ ... })` with the real key, `currentUser.*` placeholders for the host's signed-in user, and `theme: 'auto'`.

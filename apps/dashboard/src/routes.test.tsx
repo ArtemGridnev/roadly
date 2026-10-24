@@ -21,6 +21,7 @@ function signedIn(workspaces: unknown[]) {
   return mockApi({
     'GET /auth/me': () => ({ status: 200, body: agent }),
     'GET /workspaces': () => ({ status: 200, body: workspaces }),
+    'GET /feature-requests': () => ({ status: 200, body: [] }),
   })
 }
 
@@ -83,7 +84,7 @@ test.each(['/', '/login', '/signup', '/onboarding'])(
     signedIn([acme, beta])
     const router = renderApp(path)
 
-    expect(await screen.findByText(/Roadmap Board isn't built yet/)).toBeInTheDocument()
+    expect(await screen.findByText(/No requests yet/)).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/acme/roadmap')
   },
 )
@@ -96,7 +97,7 @@ test('returns the agent to the workspace they used last', async () => {
 
   const router = renderApp('/')
 
-  expect(await screen.findByText(/Roadmap Board isn't built yet/)).toBeInTheDocument()
+  expect(await screen.findByText(/No requests yet/)).toBeInTheDocument()
   expect(router.state.location.pathname).toBe('/beta/roadmap')
 })
 
@@ -110,7 +111,7 @@ test('falls back to the first workspace when the last one is gone', async () => 
   signedIn([acme])
   const router = renderApp('/')
 
-  expect(await screen.findByText(/Roadmap Board isn't built yet/)).toBeInTheDocument()
+  expect(await screen.findByText(/No requests yet/)).toBeInTheDocument()
   expect(router.state.location.pathname).toBe('/acme/roadmap')
 })
 
@@ -118,7 +119,7 @@ test('opens the board for a bare workspace URL', async () => {
   signedIn([acme])
   const router = renderApp('/acme')
 
-  expect(await screen.findByText(/Roadmap Board isn't built yet/)).toBeInTheDocument()
+  expect(await screen.findByText(/No requests yet/)).toBeInTheDocument()
   expect(router.state.location.pathname).toBe('/acme/roadmap')
 })
 

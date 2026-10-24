@@ -5,6 +5,7 @@ import {
 import { api } from './api/api';
 import { sessionExpired } from './api/session-expired';
 import { authApi } from './features/auth/auth-api';
+import { roadmapSlice } from './features/roadmap/roadmap-slice';
 import {
   setActiveWorkspace,
   workspaceSlice,
@@ -58,6 +59,7 @@ export function makeStore() {
     reducer: {
       [api.reducerPath]: api.reducer,
       [workspaceSlice.reducerPath]: workspaceSlice.reducer,
+      [roadmapSlice.reducerPath]: roadmapSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware()

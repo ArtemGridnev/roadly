@@ -5,14 +5,13 @@ import { GuestOnly } from './features/auth/GuestOnly'
 import { LoginPage } from './features/auth/LoginPage'
 import { RequireAgent } from './features/auth/RequireAgent'
 import { InstallPage } from './features/install/InstallPage'
+import { RoadmapPage } from './features/roadmap/RoadmapPage'
 import { SignupPage } from './features/auth/SignupPage'
 import { OnboardingPage } from './features/workspaces/OnboardingPage'
 import { RequireActiveWorkspace } from './features/workspaces/RequireActiveWorkspace'
 import { RequireNoWorkspace } from './features/workspaces/RequireNoWorkspace'
 import { WorkspaceRedirect } from './features/workspaces/WorkspaceRedirect'
 import { WorkspaceRoute } from './features/workspaces/WorkspaceRoute'
-
-const placeholder = (text: string) => <p className="text-sm text-muted-foreground">{text}</p>
 
 export const routes: RouteObject[] = [
   {
@@ -54,7 +53,7 @@ export const routes: RouteObject[] = [
                   {
                     path: 'roadmap',
                     handle: { title: 'Roadmap' } satisfies PageHandle,
-                    element: placeholder("The Roadmap Board isn't built yet."),
+                    element: <RoadmapPage />,
                   },
                   {
                     path: 'install',

@@ -8,9 +8,17 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: the Roadmap Board.
+- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status, 3 table view + view toggle + status filter, 4 drawer (edit, status, delete).
 
 ## Completed
+
+- **Roadmap Board, step 1 — read-only kanban (`feat/dashboard-roadmap-board`, stacked on `feat/dashboard-install`)**:
+  - `/:slug/roadmap` → `features/roadmap/RoadmapPage`: one `GET /feature-requests?sort=` grouped client-side into Backlog / Planned / In progress / Shipped columns (count, "No requests" when empty). `BoardCard`: read-only votes, title, 2-line description, category, date — no status badge.
+  - Sort (Most voted default / Newest) is a `SortMenu` dropdown in the top bar, state in `roadmapSlice`; the API sorts. Skeleton columns while loading, `LoadError` + retry on failure, empty board → "Install the widget".
+  - Top-bar slot: `AppLayout` exposes an actions node through `PageActionsContext`; pages portal into it with `PageActions`.
+  - Columns are fixed 18rem and scroll sideways below `lg`, share the width from `lg`.
+  - `mockApi` handlers now also get the request `URL` (for query params); three tests asserting exact handler args take `expect.anything()` for it. The routing/switcher tests that waited for the roadmap placeholder now stub an empty list and wait for the empty state.
+  - 4 new tests in `RoadmapPage.test.tsx` (58/58). Checked that dropping the sort arg and dropping the status filter each fail a test. Not visually verified. Bundle 692 kB (220 kB gzipped).
 
 - **Dashboard Install page (`feat/dashboard-workspace-switcher`)**:
   - `/:slug/install` → `features/install/InstallPage`: a full HTML snippet (`#roadly` div, `<script src>`, `Roadly.init` with the real key and `currentUser.*` placeholders) with a `CopyButton` (clipboard, "Copied" / "Couldn't copy" for 2s, no toast), plus three steps ending in a Roadmap link. No separate widget key section — the snippet already carries it.
@@ -142,7 +150,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Dashboard: the Roadmap Board. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Roadmap Board step 2: drag a card between columns (dnd-kit) through the existing optimistic `updateFeatureRequest`. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions
