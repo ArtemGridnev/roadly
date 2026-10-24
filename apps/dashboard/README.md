@@ -20,6 +20,7 @@ In progress — see `context/architecture.md` for the intended stack (React + Re
 | `src/features/<feature>/` | Everything for one feature; its endpoints live in `<feature>-api.ts` |
 | `src/features/auth/` | Login, signup, `getMe`; `RequireAgent` and `GuestOnly` guards |
 | `src/features/workspaces/` | List and create workspaces; `workspace-slice.ts` holds the active workspace id; `WorkspaceRedirect` (zero workspaces → `/onboarding`) |
+| `src/features/install/` | Install page: embed snippet, `CopyButton` |
 | `src/features/feature-requests/` | List, update (optimistic), delete feature requests |
 
 ## Conventions
@@ -28,5 +29,5 @@ In progress — see `context/architecture.md` for the intended stack (React + Re
 - The active workspace id lives in `workspaceSlice`, mirrored from the `/:slug` URL. `prepareHeaders` sends it as `x-workspace-id` on every request, so endpoints never take a `workspaceId` arg.
 - Login and signup seed the `getMe` cache with the returned agent, so the guards redirect off `/login` / `/signup` on their own — pages don't navigate after auth.
 - A failed refresh (outside `/auth/me`) dispatches `sessionExpired`, which resets the cache so the guards send the agent to `/login`.
-- `VITE_API_URL` is required (`.env.example`); the base query throws at startup without it.
+- `VITE_API_URL` is required (`.env.example`); the base query throws at startup without it. `VITE_WIDGET_URL` (the hosted widget bundle, shown in the Install snippet) is required the same way.
 - Cache keys therefore don't include the workspace: changing the active workspace resets the whole RTK Query cache (listener in `store.ts`). Workspace-scoped queries must `skip` until an active workspace is set, or the API answers 400.

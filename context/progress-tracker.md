@@ -8,9 +8,15 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: the Install page.
+- Dashboard pages per `dashboard-pages.md`, one unit at a time. Next: the Roadmap Board.
 
 ## Completed
+
+- **Dashboard Install page (`feat/dashboard-workspace-switcher`)**:
+  - `/:slug/install` → `features/install/InstallPage`: a full HTML snippet (`#roadly` div, `<script src>`, `Roadly.init` with the real key and `currentUser.*` placeholders) with a `CopyButton` (clipboard, "Copied" / "Couldn't copy" for 2s, no toast), plus three steps ending in a Roadmap link. No separate widget key section — the snippet already carries it.
+  - New required `VITE_WIDGET_URL` (the hosted `widget.js`); `install-snippet.ts` throws at startup without it, like `VITE_API_URL`. Dev default `http://localhost:4173/widget.js` = widget `pnpm build && pnpm preview`.
+  - 3 new tests in `InstallPage.test.tsx` (54/54); placeholder assertions in the routing/onboarding/switcher tests now wait for the page heading. Checked that a hardcoded key in the snippet fails 2 tests.
+  - Not visually verified. Bundle now 684 kB (218 kB gzipped).
 
 - **Dashboard workspace switcher (`feat/dashboard-workspace-switcher`)**:
   - `WorkspaceSwitcher` in the sidebar header, in one row to the right of the Roadly mark: workspaces as checkbox items (checked = current), picking one navigates to its roadmap; **New workspace** opens a shadcn `Dialog` (added; `cn` package and styles fixed again) with `CreateWorkspaceForm`. Dialog state lives outside the dropdown (`modal={false}`) — the Radix dropdown→dialog combo otherwise leaves the page unclickable.
@@ -136,7 +142,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Dashboard: the Install page (`widgetKey` + copyable `Roadly.init` snippet), then the Roadmap Board. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Dashboard: the Roadmap Board. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions
