@@ -7,8 +7,8 @@ import { FormField } from '@/components/FormField'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { fieldDescriptionId } from '@/lib/field-ids'
-import { nextSlug, slugify } from './slug'
-import { useCreateWorkspaceMutation } from './workspaces-api'
+import { nextSlug, slugify } from '../utils/slug'
+import { useCreateWorkspaceMutation } from '../api/workspaces-api'
 
 const SLUG_HINT = "Lowercase letters, numbers, and hyphens. Can't be changed later."
 

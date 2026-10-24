@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router'
 import { LoadError } from '@/components/LoadError'
-import { readLastWorkspace } from './last-workspace'
-import { useGetWorkspacesQuery } from './workspaces-api'
+import { readLastWorkspace } from '../utils/last-workspace'
+import { useGetWorkspacesQuery } from '../api/workspaces-api'
 
 export function WorkspaceRedirect() {
   const { data: workspaces, isFetching, refetch } = useGetWorkspacesQuery()

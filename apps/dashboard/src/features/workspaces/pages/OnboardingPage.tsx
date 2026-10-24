@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card'
-import { useLogoutMutation } from '../auth/auth-api'
-import { CreateWorkspaceForm } from './CreateWorkspaceForm'
+import { useLogoutMutation } from '../../auth/api/auth-api'
+import { CreateWorkspaceForm } from '../components/CreateWorkspaceForm'
 
 export function OnboardingPage() {
   const [logout, { isLoading }] = useLogoutMutation()

@@ -114,7 +114,7 @@ Matches the canonical `Status` enum in `CONTEXT.md` — do not add, rename, or r
 ## 3. Layout — admin dashboard
 
 - Fixed left sidebar (~240px), flat on the page background, + main content as one inset card beside it (`Sidebar variant="inset"`: `bg-card`, border, `rounded-lg`, 8px gap from the viewport edges). Below `md` the sidebar collapses behind a menu button at the left of the top bar and opens as a sheet (shadcn `Sidebar`).
-- Top bar inside main content: search · filter dropdown · primary CTA (top-right).
+- Top bar inside main content: search · filter dropdown · primary CTA (top-right). Each page renders it through `PageContent` (title left, page `actions` right, mobile menu button); the shell has no header of its own.
 - Single feature request opens in a **right slide-in drawer**, not a full-page route — keeps the list in context behind it.
 - Roadmap Board offers **kanban and table views** of the same data; toggle top-right of the board.
 - Empty states: one line of direction + one primary CTA. Never bare "No data".

@@ -29,6 +29,7 @@ function setup(createResponse?: (body: { name: string; slug: string }) => MockRe
   mockApi({
     'GET /auth/me': () => ({ status: 200, body: agent }),
     'GET /workspaces': () => ({ status: 200, body: workspaces }),
+    'GET /feature-requests': () => ({ status: 200, body: [] }),
     'POST /workspaces': (body) => {
       const input = body as { name: string; slug: string }
       const response = createResponse?.(input) ?? {
@@ -64,7 +65,7 @@ test('switches workspace without remounting the shell', async () => {
 
   expect(await screen.findByRole('button', { name: /Beta/ })).toBeInTheDocument()
   expect(router.state.location.pathname).toBe('/beta/roadmap')
-  expect(await screen.findByText(/Roadmap Board isn't built yet/)).toBeInTheDocument()
+  expect(await screen.findByText(/No requests yet/)).toBeInTheDocument()
   expect(nav).toBeInTheDocument()
 })
 

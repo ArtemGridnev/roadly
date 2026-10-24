@@ -83,7 +83,7 @@ test('creates the account with trimmed details and lands on onboarding', async (
     name: 'Ada Lovelace',
     email: 'ada@example.com',
     password: 'Analytical1',
-  })
+  }, expect.anything())
 })
 
 test('points a registered email to sign in', async () => {

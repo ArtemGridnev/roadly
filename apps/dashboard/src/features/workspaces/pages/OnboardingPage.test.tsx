@@ -83,7 +83,7 @@ test('creates the workspace with trimmed details and lands on install', async ()
 
   expect(await screen.findByRole('heading', { name: 'Snippet' })).toBeInTheDocument()
   expect(router.state.location.pathname).toBe('/acme-inc/install')
-  expect(createWorkspace).toHaveBeenCalledWith({ name: 'Acme Inc', slug: 'acme-inc' })
+  expect(createWorkspace).toHaveBeenCalledWith({ name: 'Acme Inc', slug: 'acme-inc' }, expect.anything())
 })
 
 test('leaves the form out of history once the workspace is created', async () => {

@@ -3,11 +3,12 @@ export interface MockResponse {
   body?: unknown
 }
 
-type Handler = (body: unknown) => MockResponse
+type Handler = (body: unknown, url: URL) => MockResponse
 
 export function mockApi(handlers: Record<string, Handler>) {
   const fetchMock = vi.fn(async (request: Request) => {
-    const route = `${request.method} ${new URL(request.url).pathname}`
+    const url = new URL(request.url)
+    const route = `${request.method} ${url.pathname}`
     const handler = handlers[route]
 
     if (!handler) {
@@ -15,7 +16,7 @@ export function mockApi(handlers: Record<string, Handler>) {
     }
 
     const text = await request.text()
-    const { status, body } = handler(text ? JSON.parse(text) : undefined)
+    const { status, body } = handler(text ? JSON.parse(text) : undefined, url)
 
     return new Response(body === undefined ? null : JSON.stringify(body), {
       status,

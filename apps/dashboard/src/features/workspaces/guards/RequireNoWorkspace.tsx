@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Navigate, Outlet } from 'react-router'
 import { LoadError } from '@/components/LoadError'
-import { useGetWorkspacesQuery } from './workspaces-api'
+import { useGetWorkspacesQuery } from '../api/workspaces-api'
 
 export function RequireNoWorkspace() {
   const { data: workspaces, isFetching, refetch } = useGetWorkspacesQuery()

@@ -6,9 +6,9 @@ import { StandaloneLayout } from '@/components/StandaloneLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import type { AppDispatch } from '@/store'
-import { writeLastWorkspace } from './last-workspace'
-import { setActiveWorkspace } from './workspace-slice'
-import { useGetWorkspacesQuery } from './workspaces-api'
+import { writeLastWorkspace } from '../utils/last-workspace'
+import { setActiveWorkspace } from '../store/workspace-slice'
+import { useGetWorkspacesQuery } from '../api/workspaces-api'
 
 export function WorkspaceRoute() {
   const { slug } = useParams()

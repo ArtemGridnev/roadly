@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux'
 import { Outlet } from 'react-router'
 import type { RootState } from '@/store'
-import { useCurrentWorkspace } from './current-workspace'
+import { useCurrentWorkspace } from '../hooks/use-current-workspace'
 
 export function RequireActiveWorkspace() {
   const workspace = useCurrentWorkspace()

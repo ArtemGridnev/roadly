@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
-import { useGetMeQuery, useLogoutMutation } from '@/features/auth/auth-api'
+import { useGetMeQuery, useLogoutMutation } from '@/features/auth/api/auth-api'
 
 export function UserMenu() {
   const { data: agent } = useGetMeQuery()
