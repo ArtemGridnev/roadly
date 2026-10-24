@@ -91,7 +91,7 @@ test.each(['/', '/login', '/signup', '/onboarding'])(
 test('returns the agent to the workspace they used last', async () => {
   signedIn([acme, beta])
   renderApp('/beta/install')
-  await screen.findByText(/Install page isn't built yet/)
+  await screen.findByRole('heading', { name: 'Snippet' })
   cleanup()
 
   const router = renderApp('/')
@@ -103,7 +103,7 @@ test('returns the agent to the workspace they used last', async () => {
 test('falls back to the first workspace when the last one is gone', async () => {
   signedIn([beta])
   renderApp('/beta/install')
-  await screen.findByText(/Install page isn't built yet/)
+  await screen.findByRole('heading', { name: 'Snippet' })
   cleanup()
   vi.unstubAllGlobals()
 

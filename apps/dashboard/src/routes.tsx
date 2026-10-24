@@ -4,6 +4,7 @@ import { StandaloneLayout } from './components/StandaloneLayout'
 import { GuestOnly } from './features/auth/GuestOnly'
 import { LoginPage } from './features/auth/LoginPage'
 import { RequireAgent } from './features/auth/RequireAgent'
+import { InstallPage } from './features/install/InstallPage'
 import { SignupPage } from './features/auth/SignupPage'
 import { OnboardingPage } from './features/workspaces/OnboardingPage'
 import { RequireActiveWorkspace } from './features/workspaces/RequireActiveWorkspace'
@@ -58,7 +59,7 @@ export const routes: RouteObject[] = [
                   {
                     path: 'install',
                     handle: { title: 'Install' } satisfies PageHandle,
-                    element: placeholder("The Install page isn't built yet."),
+                    element: <InstallPage />,
                   },
                 ],
               },
