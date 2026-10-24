@@ -1,5 +1,5 @@
 import type { FeatureRequest, RequestStatus } from '@roadly/shared'
-import { STATUS_LABELS } from '../feature-requests/request-status'
+import { STATUS_LABELS } from '../../feature-requests/constants/request-status'
 import { BoardCard } from './BoardCard'
 
 interface BoardColumnProps {

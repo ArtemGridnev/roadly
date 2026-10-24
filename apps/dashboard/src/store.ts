@@ -4,13 +4,13 @@ import {
 } from '@reduxjs/toolkit';
 import { api } from './api/api';
 import { sessionExpired } from './api/session-expired';
-import { authApi } from './features/auth/auth-api';
-import { roadmapSlice } from './features/roadmap/roadmap-slice';
+import { authApi } from './features/auth/api/auth-api';
+import { roadmapSlice } from './features/roadmap/store/roadmap-slice';
 import {
   setActiveWorkspace,
   workspaceSlice,
-} from './features/workspaces/workspace-slice';
-import { workspacesApi } from './features/workspaces/workspaces-api';
+} from './features/workspaces/store/workspace-slice';
+import { workspacesApi } from './features/workspaces/api/workspaces-api';
 
 export function makeStore() {
   const listenerMiddleware = createListenerMiddleware();

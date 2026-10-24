@@ -1,5 +1,5 @@
 import type { CreateWorkspaceInput, Workspace } from '@roadly/shared';
-import { api } from '../../api/api';
+import { api } from '../../../api/api';
 
 export const workspacesApi = api.injectEndpoints({
   endpoints: (builder) => ({

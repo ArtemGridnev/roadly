@@ -1,8 +1,8 @@
 import { Link } from 'react-router'
 import { PageContent } from '@/components/PageContent'
-import { useCurrentWorkspace } from '../workspaces/current-workspace'
-import { CopyButton } from './CopyButton'
-import { installSnippet } from './install-snippet'
+import { useCurrentWorkspace } from '../../workspaces/hooks/use-current-workspace'
+import { CopyButton } from '../components/CopyButton'
+import { installSnippet } from '../utils/install-snippet'
 
 export function InstallPage() {
   const workspace = useCurrentWorkspace()

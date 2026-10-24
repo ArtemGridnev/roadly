@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { fieldDescriptionId } from '@/lib/field-ids'
-import { useLoginMutation } from './auth-api'
+import { useLoginMutation } from '../api/auth-api'
 
 const trim = (value: string) => value.trim()
 

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { fieldDescriptionId } from '@/lib/field-ids'
-import { useSignupMutation } from './auth-api'
+import { useSignupMutation } from '../api/auth-api'
 
 const PASSWORD_HINT =
   'At least 8 characters, with a lowercase letter, an uppercase letter, and a number.'

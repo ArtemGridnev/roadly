@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from 'react-router'
-import { useGetMeQuery } from './auth-api'
+import { useGetMeQuery } from '../api/auth-api'
 
 export function GuestOnly() {
   const { data: agent, isLoading } = useGetMeQuery()

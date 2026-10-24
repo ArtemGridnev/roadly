@@ -15,7 +15,7 @@ import {
 import { RoadlyMark } from './RoadlyLogo'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
-import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
+import { WorkspaceSwitcher } from '@/features/workspaces/components/WorkspaceSwitcher'
 
 export function AppSidebar({ workspace }: { workspace: Workspace }) {
   return (

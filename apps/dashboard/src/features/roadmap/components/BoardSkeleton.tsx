@@ -1,5 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { REQUEST_STATUSES } from '../feature-requests/request-status'
+import { REQUEST_STATUSES } from '../../feature-requests/constants/request-status'
 
 export function BoardSkeleton() {
   return (

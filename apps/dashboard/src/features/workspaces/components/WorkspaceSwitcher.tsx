@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import { CreateWorkspaceForm } from './CreateWorkspaceForm'
-import { useGetWorkspacesQuery } from './workspaces-api'
+import { useGetWorkspacesQuery } from '../api/workspaces-api'
 
 export function WorkspaceSwitcher({ workspace }: { workspace: Workspace }) {
   const { data: workspaces = [] } = useGetWorkspacesQuery()

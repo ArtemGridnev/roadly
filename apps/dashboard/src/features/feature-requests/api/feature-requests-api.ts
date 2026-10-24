@@ -4,7 +4,7 @@ import type {
   UpdateFeatureRequestInput,
   WidgetFeatureRequestSort,
 } from '@roadly/shared';
-import { api } from '../../api/api';
+import { api } from '../../../api/api';
 
 // TODO: drop the local `sort` once the shared admin query schema carries it.
 export interface FeatureRequestListArgs extends FindFeatureRequestsQuery {

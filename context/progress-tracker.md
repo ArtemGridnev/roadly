@@ -12,6 +12,10 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Feature folders split by kind (`feat/dashboard-roadmap-board`)**:
+  - Each `src/features/<feature>/` now has `api/`, `pages/`, `guards/`, `components/`, `hooks/`, `store/`, `utils/`, `constants/` as needed (table in the dashboard README). Files moved with `git mv`; imports rewritten, `@/` and relative style kept as they were. `current-workspace.ts` renamed `hooks/use-current-workspace.ts`.
+  - No behaviour change; 58/58, type-check, lint and build clean.
+
 - **Pages own their top bar (`feat/dashboard-roadmap-board`)**:
   - Replaced the layout-owned header (title from route `handle`, actions through a context + portal slot) with `PageContent` (`title`, optional `actions`, optional body `className`) rendered by each page. `AppLayout` is now only sidebar + inset; `PageHandle`, `PageActions` and `page-actions-context` are gone.
   - While `RequireActiveWorkspace` waits for the active workspace, the top bar no longer shows (it used to show the title over an empty body).
