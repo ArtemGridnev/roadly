@@ -25,7 +25,7 @@ export function SortMenu({ value, onChange }: SortMenuProps) {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" aria-label={`Sort: ${SORT_LABELS[value]}`}>
           <ArrowDownUp />
-          {SORT_LABELS[value]}
+          <span className="hidden sm:inline">{SORT_LABELS[value]}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

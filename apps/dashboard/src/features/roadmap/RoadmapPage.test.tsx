@@ -171,3 +171,60 @@ test('leaves a request alone when it is dropped in its own column', async () => 
   expect(await screen.findByText('SSO moved to In progress.')).toBeInTheDocument()
   expect(update).not.toHaveBeenCalled()
 })
+
+const rowTitles = () =>
+  screen.getAllByRole('row').slice(1).map((row) => within(row).getAllByRole('cell')[1].querySelector('p')?.textContent)
+
+test('shows the requests as a table with their status', async () => {
+  const { user } = setup(() => ({ status: 200, body: [csvExport, sso, darkMode] }))
+  await column('Backlog')
+
+  await user.click(screen.getByRole('button', { name: 'Table' }))
+
+  expect(screen.getByRole('button', { name: 'Table' })).toHaveAttribute('aria-pressed', 'true')
+  expect(screen.queryByRole('region', { name: 'Backlog' })).not.toBeInTheDocument()
+  expect(rowTitles()).toEqual(['CSV export', 'SSO', 'Dark mode'])
+  const ssoRow = screen.getAllByRole('row')[2]
+  expect(within(ssoRow).getByText('In progress')).toBeInTheDocument()
+  expect(within(ssoRow).getByText('5')).toBeInTheDocument()
+})
+
+test('filters the table by status', async () => {
+  const { user } = setup(() => ({ status: 200, body: [csvExport, sso, darkMode] }))
+  await column('Backlog')
+  await user.click(screen.getByRole('button', { name: 'Table' }))
+
+  await user.click(screen.getByRole('button', { name: 'Status filter: All statuses' }))
+  await user.click(screen.getByRole('menuitemcheckbox', { name: 'Backlog' }))
+  await user.keyboard('{Escape}')
+
+  expect(rowTitles()).toEqual(['SSO'])
+  expect(screen.getByRole('button', { name: 'Status filter: 3 statuses' })).toBeInTheDocument()
+})
+
+test('offers to clear a filter that hides every request', async () => {
+  const { user } = setup(() => ({ status: 200, body: [sso] }))
+  await column('In progress')
+  await user.click(screen.getByRole('button', { name: 'Table' }))
+
+  await user.click(screen.getByRole('button', { name: /Status filter/ }))
+  await user.click(screen.getByRole('menuitemcheckbox', { name: 'In progress' }))
+  await user.keyboard('{Escape}')
+
+  expect(screen.getByText('No requests with these statuses.')).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Show all statuses' }))
+  expect(rowTitles()).toEqual(['SSO'])
+})
+
+test('keeps the table view after leaving the roadmap and coming back', async () => {
+  const { router, user } = setup(() => ({ status: 200, body: [sso] }))
+  await column('In progress')
+  await user.click(screen.getByRole('button', { name: 'Table' }))
+
+  await router.navigate('/acme/install')
+  await screen.findByRole('heading', { name: 'Snippet' })
+  await router.navigate('/acme/roadmap')
+
+  expect(await screen.findByRole('button', { name: 'Table' })).toHaveAttribute('aria-pressed', 'true')
+  expect(rowTitles()).toEqual(['SSO'])
+})

@@ -19,7 +19,7 @@ export function BoardColumn({ status, requests }: BoardColumnProps) {
       ref={setNodeRef}
       aria-labelledby={headingId}
       className={cn(
-        'flex w-72 shrink-0 flex-col gap-3 rounded-lg p-3 ring-inset transition-shadow lg:w-auto lg:min-w-0 lg:flex-1',
+        'flex w-[calc(100vw-5rem)] shrink-0 snap-start flex-col md:w-72 gap-3 rounded-lg p-3 ring-inset transition-shadow lg:w-auto lg:min-w-0 lg:flex-1',
         meta.columnClassName,
         meta.dropRingClassName,
         isOver && 'ring-2',

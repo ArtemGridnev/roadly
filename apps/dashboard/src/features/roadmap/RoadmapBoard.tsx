@@ -44,7 +44,10 @@ export function RoadmapBoard({ requests }: { requests: FeatureRequest[] }) {
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveId(null)}
     >
-      <div className="flex min-w-max items-start gap-4 lg:min-w-0">
+      <div
+        data-dragging={activeId ? '' : undefined}
+        className="flex min-w-max items-start gap-4 lg:min-w-0"
+      >
         {REQUEST_STATUSES.map((status) => (
           <BoardColumn
             key={status}

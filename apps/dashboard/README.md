@@ -20,7 +20,7 @@ In progress — see `context/architecture.md` for the intended stack (React + Re
 | `src/features/<feature>/` | Everything for one feature; its endpoints live in `<feature>-api.ts` |
 | `src/features/auth/` | Login, signup, `getMe`; `RequireAgent` and `GuestOnly` guards |
 | `src/features/workspaces/` | List and create workspaces; `workspace-slice.ts` holds the active workspace id; `WorkspaceRedirect` (zero workspaces → `/onboarding`) |
-| `src/features/roadmap/` | Roadmap Board: columns, cards, sort menu, drag to change status (`RoadmapBoard`, dnd-kit); `roadmap-slice.ts` holds the sort |
+| `src/features/roadmap/` | Roadmap Board: kanban (`RoadmapBoard`, dnd-kit drag to change status) and table (`RequestTable`, TanStack Table) views, view toggle, status filter, sort menu; `roadmap-slice.ts` holds sort, view and status filter |
 | `src/features/install/` | Install page: embed snippet, `CopyButton` |
 | `src/features/feature-requests/` | List, update (optimistic), delete feature requests |
 

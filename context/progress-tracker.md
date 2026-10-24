@@ -8,9 +8,16 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status (done), 3 table view + view toggle + status filter, 4 drawer (edit, status, delete).
+- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status (done), 3 table view + view toggle + status filter (done), 4 drawer (edit, status, delete).
 
 ## Completed
+
+- **Roadmap Board, step 3 — table view (`feat/dashboard-roadmap-board`)**:
+  - `@tanstack/react-table` v9 (`useTable`, core features only — filtering and sorting happen before the table) and shadcn `table`. The CLI again added the npm `cn` package; removed, import pointed at `@/lib/utils`. Its `overflow-x-auto` wrapper dropped so the page card stays the only scroll area.
+  - `RequestTable`: votes, title + one-line description (truncated), status pill (`STATUS_META.pillClassName` is back), category, created; category and date hidden below `md` so a phone shows votes / title / status without sideways scrolling.
+  - Top bar, left to right: `StatusFilterMenu` (multi-select checkboxes, "All statuses" / one label / "N statuses") in table view only, `SortMenu` shared, `ViewToggle` (Board / Table) last so it never moves when the filter appears or its label changes. Below `sm` all three are icon-only. View and filter live in `roadmapSlice` next to sort. Filter hides everything → empty state with **Show all statuses**.
+  - Board on narrow screens: body snaps column by column below `lg`; below `md` columns are `100vw - 5rem` so the next one peeks in. `data-dragging` on the board row turns snapping off during a drag (`has-[[data-dragging]]:snap-none`) so edge auto-scroll isn't pulled back.
+  - 4 new tests (65/65): table rows and status, filtering, the clear-filter empty state, view kept across navigation. Checked that ignoring the filter fails two. Browser-checked at 390/954/1440px: table and header fit a phone, a swipe lands exactly on the next column, dragging at 954px auto-scrolls Planned → Shipped with snapping off and back on after.
 
 - **Roadmap Board, step 2 — drag to change status (`feat/dashboard-roadmap-board`)**:
   - `@dnd-kit/core` added. `RoadmapBoard` owns the `DndContext`: columns are droppables (id = status, ring while hovered), cards are draggables via `DraggableCard`, and a `DragOverlay` copy follows the pointer so the horizontal scroll container doesn't clip it.
@@ -167,7 +174,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Roadmap Board step 3: table view (`@tanstack/react-table`), kanban ⇄ table toggle, status filter in table view; plus snap-scrolling ~85vw columns below `lg` (`dashboard-pages.md` → Narrow screens). Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Roadmap Board step 4: the drawer — click a card or table row; edit title, description, category; change status; delete behind a confirmation. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions

@@ -66,7 +66,9 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 
 ### Roadmap Board (`/:slug/roadmap`)
 - Kanban (Backlog / Planned / In Progress / Shipped; each column in its status color, `ui-context.md` → Status colors; columns are as tall as their content, not equal height) and table views of the same data, toggle top-right (`ui-context.md` §3).
-- **Narrow screens:** only the page card's body scrolls (sideways and down), never the page. Below `lg` columns snap into place and are ~85% of the viewport wide so the next one peeks in (planned with step 3). On phones drag is a bonus, not the path — status changes through the drawer.
+- **Table view:** one row per request — votes, title with a one-line description, status pill, category, created date (category and date hidden below `md`). Read-only; clicking a row opens the drawer (step 4). Same data and sort as the board; the status filter is multi-select (all on by default) and filters on the client. A filter that hides everything shows "No requests with these statuses." + **Show all statuses**.
+- View, sort and status filter live in `roadmapSlice`: they survive leaving and coming back, not a full reload.
+- **Narrow screens:** only the page card's body scrolls (sideways and down), never the page. Below `lg` the board snaps column by column; below `md` each column is the viewport width minus 5rem so the next one peeks in. Snapping is off while a card is dragged so edge auto-scroll works. Below `sm` the top-bar controls are icon-only. On phones drag is a bonus, not the path — status changes through the drawer.
 - Drag a card between columns to change status (mouse, touch after a 250ms press, or keyboard: space to pick up, ←/→ between columns, space to drop, escape to cancel; screen reader announcements use the request title and column name). Only the status changes: the card lands where the current sort puts it, and there's no manual order within a column (no position field).
 - The move shows at once; if the API rejects it the card returns to its column and an error toast says `Couldn't move "<title>" to <column>` — no retry button; dragging again is the retry.
 - **Card** mirrors the widget's `RequestCard`: vote count, title, 2-line description preview, then category and created date. No status badge on kanban cards — the column already says it; the table view carries a status column. The vote count is read-only — Agents don't vote.
@@ -76,7 +78,7 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
   - change status (the non-drag path);
   - delete the request, behind a confirmation. Author and votes are read-only.
 - Empty board (no requests at all) → one line + **Install the widget** to `/:slug/install`. An empty column shows "No requests".
-- Sort defaults to Most voted and lives in `roadmapSlice`, so it survives leaving and coming back.
+- Sort defaults to Most voted.
 
 ### Install widget (`/:slug/install`)
 - Shows a copyable snippet carrying the workspace's `widgetKey`: a `#roadly` container, the `<script>` loading the widget bundle (`VITE_WIDGET_URL`), and `Roadly.init({ ... })` with the real key, `currentUser.*` placeholders for the host's signed-in user, and `theme: 'auto'`.
