@@ -5,10 +5,9 @@ import { PageContent } from '@/components/PageContent'
 import { Button } from '@/components/ui/button'
 import type { RootState } from '@/store'
 import { useGetFeatureRequestsQuery } from '../feature-requests/feature-requests-api'
-import { REQUEST_STATUSES } from '../feature-requests/request-status'
 import { useCurrentWorkspace } from '../workspaces/current-workspace'
-import { BoardColumn } from './BoardColumn'
 import { BoardSkeleton } from './BoardSkeleton'
+import { RoadmapBoard } from './RoadmapBoard'
 import { setSort } from './roadmap-slice'
 import { SortMenu } from './SortMenu'
 
@@ -39,15 +38,7 @@ export function RoadmapPage() {
           </Button>
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto">
-          {REQUEST_STATUSES.map((status) => (
-            <BoardColumn
-              key={status}
-              status={status}
-              requests={requests.filter((request) => request.status === status)}
-            />
-          ))}
-        </div>
+        <RoadmapBoard requests={requests} />
       )}
     </PageContent>
   )

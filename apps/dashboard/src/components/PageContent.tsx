@@ -17,7 +17,7 @@ export function PageContent({ title, actions, className, children }: PageContent
         <h1 className="text-xl font-semibold">{title}</h1>
         {actions ? <div className="ml-auto flex items-center gap-2">{actions}</div> : null}
       </header>
-      <div className={cn('min-w-0 flex-1 p-4 md:p-6', className)}>{children}</div>
+      <div className={cn('min-h-0 min-w-0 flex-1 overflow-auto p-4 md:p-6', className)}>{children}</div>
     </>
   )
 }

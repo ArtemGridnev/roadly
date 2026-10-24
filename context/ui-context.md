@@ -94,6 +94,8 @@ Matches the canonical `Status` enum in `CONTEXT.md` — do not add, rename, or r
 | In Progress | `bg-indigo-500/10 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300` |
 | Shipped | `bg-green-500/10 text-green-700 dark:bg-green-500/15 dark:text-green-300` |
 
+On the Roadmap Board each column takes its status color too: the header title uses the pill's text color (no pill), the column background is the same hue at `/5` (`/10` in dark), and the drop-target ring is the `-500` shade. The dashboard keeps all of it per status in `STATUS_META` (`features/feature-requests/request-status.ts`).
+
 ### Typography
 - Font: **Inter** (`@fontsource/inter` or self-hosted), fallback `system-ui`.
 - Scale — use only these: **12 / 14 / 16 / 20 / 24 / 32px.**
@@ -115,6 +117,8 @@ Matches the canonical `Status` enum in `CONTEXT.md` — do not add, rename, or r
 
 - Fixed left sidebar (~240px), flat on the page background, + main content as one inset card beside it (`Sidebar variant="inset"`: `bg-card`, border, `rounded-lg`, 8px gap from the viewport edges). Below `md` the sidebar collapses behind a menu button at the left of the top bar and opens as a sheet (shadcn `Sidebar`).
 - Top bar inside main content: search · filter dropdown · primary CTA (top-right). Each page renders it through `PageContent` (title left, page `actions` right, mobile menu button); the shell has no header of its own.
+- The page never scrolls. The inset card is exactly viewport height; inside it the top bar stays put and `PageContent`'s body is the only scroll area, both axes — so a wide board's horizontal scrollbar sits on the card's bottom edge, always in view.
+- **Notifications are toasts** (shadcn `sonner`, one `<Toaster />` at the app root): bottom-right, top-center below `md`; `rounded-lg`, `shadow-sm`, popover colors. Use them for the outcome of something that already happened (a move, save or delete that failed or succeeded). Add a **Try again** action only when redoing the action by hand is costly (e.g. a filled-in form) — not for a drag the user can simply repeat. Validation and errors tied to a form or field stay inline next to it, never in a toast.
 - Single feature request opens in a **right slide-in drawer**, not a full-page route — keeps the list in context behind it.
 - Roadmap Board offers **kanban and table views** of the same data; toggle top-right of the board.
 - Empty states: one line of direction + one primary CTA. Never bare "No data".

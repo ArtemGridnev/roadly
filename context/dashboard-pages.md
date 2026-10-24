@@ -65,8 +65,10 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 - Future: joining (pending invites / invite links) appears here, above the form.
 
 ### Roadmap Board (`/:slug/roadmap`)
-- Kanban (Backlog / Planned / In Progress / Shipped) and table views of the same data, toggle top-right (`ui-context.md` §3).
-- Drag a card between columns to change status.
+- Kanban (Backlog / Planned / In Progress / Shipped; each column in its status color, `ui-context.md` → Status colors; columns are as tall as their content, not equal height) and table views of the same data, toggle top-right (`ui-context.md` §3).
+- **Narrow screens:** only the page card's body scrolls (sideways and down), never the page. Below `lg` columns snap into place and are ~85% of the viewport wide so the next one peeks in (planned with step 3). On phones drag is a bonus, not the path — status changes through the drawer.
+- Drag a card between columns to change status (mouse, touch after a 250ms press, or keyboard: space to pick up, ←/→ between columns, space to drop, escape to cancel; screen reader announcements use the request title and column name). Only the status changes: the card lands where the current sort puts it, and there's no manual order within a column (no position field).
+- The move shows at once; if the API rejects it the card returns to its column and an error toast says `Couldn't move "<title>" to <column>` — no retry button; dragging again is the retry.
 - **Card** mirrors the widget's `RequestCard`: vote count, title, 2-line description preview, then category and created date. No status badge on kanban cards — the column already says it; the table view carries a status column. The vote count is read-only — Agents don't vote.
 - **Top bar (MVP):** page controls go in `PageContent`'s `actions`, top-right of the page's top bar. Only what `GET /feature-requests` supports — sort (Most voted / Newest) and, in table view, a status filter (kanban columns already split by status). No search and no category filter until the API supports them; this narrows the `ui-context.md` §3 top bar for the MVP.
 - **Drawer:** clicking a request opens the right slide-in drawer over the board. It isn't addressable by URL in the MVP — a reload closes it. In the drawer the Agent can:

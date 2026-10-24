@@ -8,9 +8,22 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status, 3 table view + view toggle + status filter, 4 drawer (edit, status, delete).
+- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status (done), 3 table view + view toggle + status filter, 4 drawer (edit, status, delete).
 
 ## Completed
+
+- **Roadmap Board, step 2 — drag to change status (`feat/dashboard-roadmap-board`)**:
+  - `@dnd-kit/core` added. `RoadmapBoard` owns the `DndContext`: columns are droppables (id = status, ring while hovered), cards are draggables via `DraggableCard`, and a `DragOverlay` copy follows the pointer so the horizontal scroll container doesn't clip it.
+  - Sensors: mouse (5px), touch (250ms press so sideways scrolling still works), keyboard with a custom coordinate getter that jumps ←/→ a whole column. Collision: `pointerWithin`, falling back to `rectIntersection` for the keyboard. Announcements and instructions name the request and column instead of ids.
+  - A drop calls the existing optimistic `updateFeatureRequest`; same-column drops send nothing. On failure the mutation's rollback returns the card and an inline alert names it; dismiss button, cleared by the next successful move.
+  - `BoardCard` is now a plain card body (no `li`) so the overlay can reuse it.
+  - Seen in a real browser (Playwright, bundled Chromium): the overlay's default drop animation flew back to the card's old slot after the optimistic move had already put it in the new column. Now skipped when the card lands in another column; kept for cancels and same-column drops. The hover ring is `ring-inset` — the scroll container clipped an outer ring top and bottom.
+  - Status colors: `STATUS_LABELS` became `STATUS_META` (label + title, column and drop-ring classes per status, from the `ui-context.md` table). Columns tint with their status, the header title takes the status text color, and the drop ring is the status color. Columns now size to their content (`items-start`).
+  - Fixed the whole page scrolling sideways on narrow screens (sort button cut off, two horizontal scrollbars): `SidebarInset` needed `min-w-0`, otherwise it never shrank below the board's ~1200px row. Checked at 390/600/954/1280px — page width = viewport, only the board scrolls.
+  - Toasts: shadcn `sonner` added; its `next-themes` import swapped for our `useTheme` (dependency removed) and its `--popover`/`--radius` vars pointed at our `--color-*`/`--radius-lg` tokens. `<Toaster />` in `App` and `renderApp`. The inline move-failure alert became `toast.error('Couldn't move "<title>" to <column>')` (one toast per request; no retry button — a drag is cheap to redo, and a retry could resend a stale move). Test setup stubs `setPointerCapture` (sonner's swipe).
+  - Scroll lives in the page card: the shell is `h-svh`, `SidebarInset` clips, `PageContent`'s body is `overflow-auto` — the page never scrolls, the top bar stays put, and the board's scrollbar sits on the card's bottom edge. The board row dropped its own `overflow-x-auto`; `min-w-max` below `lg` keeps the trailing padding when scrolled to the end. Browser-checked at 390/600/954/1100/1440px, the Install page included; dragging a card to the edge auto-scrolls the card (Backlog → Shipped at 954px).
+  - `RoadmapBoard` only renders and wires drag events; dnd-kit setup (sensors, collision, keyboard steps, announcements) lives in `board-dnd.ts` (`useBoardDnd`), the move + failure state in `useMoveRequest`.
+  - 3 new tests in `RoadmapPage.test.tsx` (61/61), driven through the keyboard sensor with a `getBoundingClientRect` stub laying out the columns. Checked that dropping the failure alert and dropping the same-column guard each fail a test. Mouse drag checked in the browser; touch still untested. Bundle 737 kB (236 kB gzipped).
 
 - **Pages own their top bar (`feat/dashboard-roadmap-board`)**:
   - Replaced the layout-owned header (title from route `handle`, actions through a context + portal slot) with `PageContent` (`title`, optional `actions`, optional body `className`) rendered by each page. `AppLayout` is now only sidebar + inset; `PageHandle`, `PageActions` and `page-actions-context` are gone.
@@ -154,7 +167,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Roadmap Board step 2: drag a card between columns (dnd-kit) through the existing optimistic `updateFeatureRequest`. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Roadmap Board step 3: table view (`@tanstack/react-table`), kanban ⇄ table toggle, status filter in table view; plus snap-scrolling ~85vw columns below `lg` (`dashboard-pages.md` → Narrow screens). Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions

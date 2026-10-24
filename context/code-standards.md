@@ -26,6 +26,7 @@
 - Client-only state (filters, sort, board/drag) goes in Redux slices, or local `useState` when truly local.
 - Define RTK Query endpoints in the API slice, never inline in components.
 - Optimistic-update logic (upvote) stays in the API slice, not in components.
+- Notify about an action's outcome with `toast` from `sonner` (see `ui-context.md` §3), called where the action runs (hook or handler) — no notification state in components or slices. Form and field errors stay inline.
 
 ## Styling
 
