@@ -126,7 +126,7 @@ Matches the canonical `Status` enum in `CONTEXT.md` — do not add, rename, or r
 - `RoadlyMark` (tile only) and `RoadlyLogo` (tile + "Roadly" wordmark) in `apps/dashboard/src/components/RoadlyLogo.tsx`. The tile is `fill-foreground` and the road `fill-background`, so it inverts with the theme — black tile in light, white in dark. Never hardcode its colors.
 - Wordmark is live Inter text at `font-semibold` (the source SVG uses 700, which breaks the weight rule).
 - Favicon: `apps/dashboard/public/roadly-icon.svg`, the original black tile.
-- Where: the full logo above the card on standalone pages; the mark beside the workspace name in the sidebar header.
+- Where: the full logo above the card on standalone pages; the mark alone at the top of the sidebar, in one row to the left of (not inside) the workspace switcher.
 
 ---
 

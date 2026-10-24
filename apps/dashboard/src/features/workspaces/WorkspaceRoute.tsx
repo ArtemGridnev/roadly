@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { Link, Outlet, useParams } from 'react-router'
 import { LoadError } from '@/components/LoadError'
 import { StandaloneLayout } from '@/components/StandaloneLayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import type { AppDispatch, RootState } from '@/store'
+import type { AppDispatch } from '@/store'
 import { writeLastWorkspace } from './last-workspace'
 import { setActiveWorkspace } from './workspace-slice'
 import { useGetWorkspacesQuery } from './workspaces-api'
@@ -13,7 +13,6 @@ import { useGetWorkspacesQuery } from './workspaces-api'
 export function WorkspaceRoute() {
   const { slug } = useParams()
   const { data: workspaces, isFetching, refetch } = useGetWorkspacesQuery()
-  const activeWorkspaceId = useSelector((state: RootState) => state.workspace.activeWorkspaceId)
   const dispatch = useDispatch<AppDispatch>()
   const workspace = workspaces?.find((candidate) => candidate.slug === slug)
 
@@ -25,7 +24,7 @@ export function WorkspaceRoute() {
   }, [dispatch, workspace])
 
   if (workspace) {
-    return activeWorkspaceId === workspace.id ? <Outlet context={workspace} /> : null
+    return <Outlet context={workspace} />
   }
 
   if (isFetching) {

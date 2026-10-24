@@ -4,10 +4,12 @@ import {
 } from '@reduxjs/toolkit';
 import { api } from './api/api';
 import { sessionExpired } from './api/session-expired';
+import { authApi } from './features/auth/auth-api';
 import {
   setActiveWorkspace,
   workspaceSlice,
 } from './features/workspaces/workspace-slice';
+import { workspacesApi } from './features/workspaces/workspaces-api';
 
 export function makeStore() {
   const listenerMiddleware = createListenerMiddleware();
@@ -16,11 +18,31 @@ export function makeStore() {
   listenerMiddleware.startListening({
     actionCreator: setActiveWorkspace,
     effect: (action, { dispatch, getOriginalState }) => {
-      const previous = (getOriginalState() as RootState).workspace
-        .activeWorkspaceId;
+      const state = getOriginalState() as RootState;
+      const previous = state.workspace.activeWorkspaceId;
 
-      if (previous && previous !== action.payload) {
-        dispatch(api.util.resetApiState());
+      if (!previous || previous === action.payload) {
+        return;
+      }
+
+      const agent = authApi.endpoints.getMe.select()(state).data;
+      const workspaces =
+        workspacesApi.endpoints.getWorkspaces.select()(state).data;
+
+      dispatch(api.util.resetApiState());
+      if (agent) {
+        dispatch(
+          authApi.util.upsertQueryEntries([
+            { endpointName: 'getMe', arg: undefined, value: agent },
+          ]),
+        );
+      }
+      if (workspaces) {
+        dispatch(
+          workspacesApi.util.upsertQueryEntries([
+            { endpointName: 'getWorkspaces', arg: undefined, value: workspaces },
+          ]),
+        );
       }
     },
   });

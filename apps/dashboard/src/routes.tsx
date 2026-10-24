@@ -6,6 +6,7 @@ import { LoginPage } from './features/auth/LoginPage'
 import { RequireAgent } from './features/auth/RequireAgent'
 import { SignupPage } from './features/auth/SignupPage'
 import { OnboardingPage } from './features/workspaces/OnboardingPage'
+import { RequireActiveWorkspace } from './features/workspaces/RequireActiveWorkspace'
 import { RequireNoWorkspace } from './features/workspaces/RequireNoWorkspace'
 import { WorkspaceRedirect } from './features/workspaces/WorkspaceRedirect'
 import { WorkspaceRoute } from './features/workspaces/WorkspaceRoute'
@@ -45,16 +46,21 @@ export const routes: RouteObject[] = [
           {
             element: <AppLayout />,
             children: [
-              { index: true, element: <Navigate to="roadmap" replace /> },
               {
-                path: 'roadmap',
-                handle: { title: 'Roadmap' } satisfies PageHandle,
-                element: placeholder("The Roadmap Board isn't built yet."),
-              },
-              {
-                path: 'install',
-                handle: { title: 'Install' } satisfies PageHandle,
-                element: placeholder("The Install page isn't built yet."),
+                element: <RequireActiveWorkspace />,
+                children: [
+                  { index: true, element: <Navigate to="roadmap" replace /> },
+                  {
+                    path: 'roadmap',
+                    handle: { title: 'Roadmap' } satisfies PageHandle,
+                    element: placeholder("The Roadmap Board isn't built yet."),
+                  },
+                  {
+                    path: 'install',
+                    handle: { title: 'Install' } satisfies PageHandle,
+                    element: placeholder("The Install page isn't built yet."),
+                  },
+                ],
               },
             ],
           },

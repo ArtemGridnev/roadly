@@ -15,15 +15,14 @@ import {
 import { RoadlyMark } from './RoadlyLogo'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
+import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 
 export function AppSidebar({ workspace }: { workspace: Workspace }) {
   return (
     <Sidebar variant="inset">
-      <SidebarHeader>
-        <div className="flex items-center gap-2">
-          <RoadlyMark className="size-7" />
-          <p className="truncate text-sm font-semibold">{workspace.name}</p>
-        </div>
+      <SidebarHeader className="flex-row items-center">
+        <RoadlyMark className="ml-1 size-7" />
+        <WorkspaceSwitcher workspace={workspace} />
       </SidebarHeader>
 
       <SidebarContent>

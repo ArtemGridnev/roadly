@@ -85,7 +85,11 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 
 Top to bottom:
 
-1. **Workspace switcher** — current workspace name; dropdown lists the Agent's workspaces (checkmark on the active one) and a **New workspace** item.
+0. **Roadly mark** (tile only, no wordmark) — on the same row as the switcher, to its left; not inside it.
+1. **Workspace switcher** — current workspace name; dropdown lists the Agent's workspaces in API (creation) order, checkmark on the active one, and a **New workspace** item.
+   - Picking one → its `/:slug/roadmap`; on mobile the sheet closes.
+   - **New workspace** opens a dialog with the same create form as onboarding. Success closes the dialog and goes to `/:slug/install` (a normal history entry, unlike onboarding's replace). Errors stay inside the dialog.
+   - Switching keeps the shell mounted: only the page area waits for the new workspace.
 2. **Roadmap**
 3. **Install**
 4. *(footer)* **User menu** — Agent name/email, sign out. Account only — no app preferences here.
