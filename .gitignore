@@ -37,3 +37,6 @@ apps/api/prisma/*.db
 .agents/
 .claude/
 .windsurf/
+
+# Playwright
+.playwright-mcp/
