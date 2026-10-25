@@ -173,7 +173,7 @@ test('leaves a request alone when it is dropped in its own column', async () => 
 })
 
 const rowTitles = () =>
-  screen.getAllByRole('row').slice(1).map((row) => within(row).getAllByRole('cell')[1].querySelector('p')?.textContent)
+  screen.getAllByRole('row').slice(1).map((row) => within(row).getAllByRole('cell')[1].querySelector('button')?.textContent)
 
 test('shows the requests as a table with their status', async () => {
   const { user } = setup(() => ({ status: 200, body: [csvExport, sso, darkMode] }))

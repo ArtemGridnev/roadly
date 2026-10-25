@@ -10,7 +10,7 @@ In progress — see `context/architecture.md` for the intended stack (React + Re
 |---|---|
 | `src/main.tsx`, `src/App.tsx` | Entry point and app root (Redux `Provider`, `RouterProvider`) |
 | `src/routes.tsx` | Route tree; guards are layout routes |
-| `src/components/` | App-level components (`StandaloneLayout`, `AppLayout`, `PageContent`, `FormField`, `LoadError`); shadcn source in `ui/` |
+| `src/components/` | App-level components (`StandaloneLayout`, `AppLayout`, `PageContent`, `Drawer`, `FormField`, `LoadError`); shadcn source in `ui/` |
 | `src/index.css` | Tailwind entry; imports `@roadly/shared/tokens.css` |
 | `src/theme/` | `ThemeProvider` / `useTheme` — light, dark, system |
 | `src/lib/` | Small shared helpers (`cn`, field ids) |
@@ -20,13 +20,14 @@ In progress — see `context/architecture.md` for the intended stack (React + Re
 | `src/features/<feature>/` | Everything for one feature; its endpoints live in `<feature>-api.ts` |
 | `src/features/auth/` | Login, signup, `getMe`; `RequireAgent` and `GuestOnly` guards |
 | `src/features/workspaces/` | List and create workspaces; `workspace-slice.ts` holds the active workspace id; `WorkspaceRedirect` (zero workspaces → `/onboarding`) |
-| `src/features/roadmap/` | Roadmap Board: kanban (`RoadmapBoard`, dnd-kit drag to change status) and table (`RequestTable`, TanStack Table) views, view toggle, status filter, sort menu; `roadmap-slice.ts` holds sort, view and status filter |
+| `src/features/roadmap/` | Roadmap Board: kanban (`RoadmapBoard`, dnd-kit drag to change status) and table (`RequestTable`, TanStack Table) views, view toggle, status filter, sort menu, request drawer (`RequestDrawer`, `RequestStatusSelect`, `RequestForm`, `DeleteRequestButton`); `roadmap-slice.ts` holds sort, view and status filter |
 | `src/features/install/` | Install page: embed snippet, `CopyButton` |
-| `src/features/feature-requests/` | List, update (optimistic), delete feature requests |
+| `src/features/feature-requests/` | List, update (optimistic), delete feature requests; `STATUS_META` and `StatusPill` |
 
 ## Conventions
 
 - `AppLayout` is only the shell (sidebar + inset card). Every `/:slug` page renders its own top bar and body through `<PageContent title actions? className?>` — it carries the mobile "Open menu" button, so a page without it has no menu on mobile. Page layout decisions (padding, width) stay in the page via `className`.
+- Side panels use `<Drawer open onClose title description hasUnsavedChanges?>` (shadcn `Sheet` underneath): header, scrolling body, full width on phones. Pass `hasUnsavedChanges` and closing asks "Discard changes?" when it returns true. Read dirty state at call time (a form ref), not from mirrored state.
 - Each feature adds its endpoints with `api.injectEndpoints` and exports its own hooks. Import hooks from the feature's `-api.ts` file; there is no barrel.
 - The active workspace id lives in `workspaceSlice`, mirrored from the `/:slug` URL. `prepareHeaders` sends it as `x-workspace-id` on every request, so endpoints never take a `workspaceId` arg.
 - Login and signup seed the `getMe` cache with the returned agent, so the guards redirect off `/login` / `/signup` on their own — pages don't navigate after auth.

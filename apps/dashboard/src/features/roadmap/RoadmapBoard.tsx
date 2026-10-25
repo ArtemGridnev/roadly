@@ -13,7 +13,12 @@ import { BoardColumn } from './BoardColumn'
 import { useBoardDnd } from './board-dnd'
 import { useMoveRequest } from './useMoveRequest'
 
-export function RoadmapBoard({ requests }: { requests: FeatureRequest[] }) {
+interface RoadmapBoardProps {
+  requests: FeatureRequest[]
+  onOpen: (id: string) => void
+}
+
+export function RoadmapBoard({ requests, onOpen }: RoadmapBoardProps) {
   const dnd = useBoardDnd(requests)
   const moveRequest = useMoveRequest()
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
@@ -53,6 +58,7 @@ export function RoadmapBoard({ requests }: { requests: FeatureRequest[] }) {
             key={status}
             status={status}
             requests={requests.filter((request) => request.status === status)}
+            onOpen={onOpen}
           />
         ))}
       </div>

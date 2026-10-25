@@ -9,8 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { formatRequestDate } from '@/lib/format-date'
-import { cn } from '@/lib/utils'
-import { STATUS_META } from '../feature-requests/request-status'
+import { StatusPill } from '../feature-requests/StatusPill'
 
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, FeatureRequest>()
@@ -23,23 +22,19 @@ const columns = helper.columns([
     header: 'Request',
     cell: (info) => (
       <div className="min-w-0">
-        <p className="truncate font-medium">{info.getValue()}</p>
+        <button
+          type="button"
+          className="block max-w-full cursor-pointer truncate rounded-lg text-left font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        >
+          {info.getValue()}
+        </button>
         <p className="truncate text-muted-foreground">{info.row.original.description}</p>
       </div>
     ),
   }),
   helper.accessor('status', {
     header: 'Status',
-    cell: (info) => (
-      <span
-        className={cn(
-          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-          STATUS_META[info.getValue()].pillClassName,
-        )}
-      >
-        {STATUS_META[info.getValue()].label}
-      </span>
-    ),
+    cell: (info) => <StatusPill status={info.getValue()} />,
   }),
   helper.accessor('category', {
     header: 'Category',
@@ -58,7 +53,12 @@ const COLUMN_CLASSES: Record<string, string> = {
   createdAt: 'hidden whitespace-nowrap md:table-cell',
 }
 
-export function RequestTable({ requests }: { requests: FeatureRequest[] }) {
+interface RequestTableProps {
+  requests: FeatureRequest[]
+  onOpen: (id: string) => void
+}
+
+export function RequestTable({ requests, onOpen }: RequestTableProps) {
   const table = useTable({ features, columns, data: requests, getRowId: (request) => request.id })
 
   return (
@@ -77,7 +77,7 @@ export function RequestTable({ requests }: { requests: FeatureRequest[] }) {
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
+            <TableRow key={row.id} className="cursor-pointer" onClick={() => onOpen(row.id)}>
               {row.getAllCells().map((cell) => (
                 <TableCell key={cell.id} className={COLUMN_CLASSES[cell.column.id]}>
                   <table.FlexRender cell={cell} />

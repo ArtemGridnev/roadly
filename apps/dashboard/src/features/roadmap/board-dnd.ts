@@ -37,7 +37,7 @@ const columnKeyboardCoordinates: KeyboardCoordinateGetter = (event, { context })
 
 const screenReaderInstructions = {
   draggable:
-    'Press space or enter to pick up the request. Use the left and right arrow keys to move it between columns, space or enter to drop it, and escape to cancel.',
+    'Press enter to open the request. Press space to pick it up, the left and right arrow keys to move it between columns, space to drop it, and escape to cancel.',
 }
 
 function boardAnnouncements(titleOf: (id: UniqueIdentifier) => string | undefined): Announcements {
@@ -57,7 +57,10 @@ export function useBoardDnd(requests: FeatureRequest[]) {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: columnKeyboardCoordinates }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: columnKeyboardCoordinates,
+      keyboardCodes: { start: ['Space'], cancel: ['Escape'], end: ['Space'] },
+    }),
   )
   const titleOf = (id: UniqueIdentifier) => requests.find((request) => request.id === id)?.title
 

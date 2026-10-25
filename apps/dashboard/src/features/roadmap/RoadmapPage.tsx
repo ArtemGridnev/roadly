@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router'
 import { LoadError } from '@/components/LoadError'
@@ -8,6 +9,7 @@ import { useGetFeatureRequestsQuery } from '../feature-requests/feature-requests
 import { REQUEST_STATUSES } from '../feature-requests/request-status'
 import { useCurrentWorkspace } from '../workspaces/current-workspace'
 import { BoardSkeleton } from './BoardSkeleton'
+import { RequestDrawer } from './RequestDrawer'
 import { RequestTable } from './RequestTable'
 import { RequestTableSkeleton } from './RequestTableSkeleton'
 import { RoadmapBoard } from './RoadmapBoard'
@@ -24,6 +26,8 @@ export function RoadmapPage() {
   const { sort, view, statusFilter } = useSelector((state: RootState) => state.roadmap)
   const dispatch = useDispatch()
   const { data: requests, isLoading, isError, refetch } = useGetFeatureRequestsQuery({ sort })
+  const [openId, setOpenId] = useState<string | null>(null)
+  const openRequest = requests?.find((request) => request.id === openId)
 
   const isTable = view === 'table'
   const filtered = requests?.filter((request) => statusFilter.includes(request.status))
@@ -58,7 +62,7 @@ export function RoadmapPage() {
           </Button>
         </div>
       ) : !isTable ? (
-        <RoadmapBoard requests={requests} />
+        <RoadmapBoard requests={requests} onOpen={setOpenId} />
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12 text-center">
           <p className="text-sm text-muted-foreground">No requests with these statuses.</p>
@@ -67,8 +71,9 @@ export function RoadmapPage() {
           </Button>
         </div>
       ) : (
-        <RequestTable requests={filtered} />
+        <RequestTable requests={filtered} onOpen={setOpenId} />
       )}
+      <RequestDrawer request={openRequest} onClose={() => setOpenId(null)} />
     </PageContent>
   )
 }

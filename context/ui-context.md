@@ -24,7 +24,7 @@ Conventions for all UI in this project. **Read before adding or changing UI.** T
 | Primitives | Radix UI | Ships under shadcn; source of a11y (focus, ARIA) |
 | Styling | Tailwind CSS | Utilities only. No CSS-in-JS, no styled-components |
 | Icons | lucide-react | Single icon set |
-| Animation | Framer Motion + tw-animate-css | Framer for orchestrated (drawer, modal); tw-animate-css (Tailwind v4 successor to tailwindcss-animate) for simple enter/exit (dropdown, accordion) |
+| Animation | tw-animate-css (Framer Motion only if something truly needs orchestration) | Drawers, modals, dropdowns use shadcn/Radix with tw-animate-css enter/exit (Tailwind v4 successor to tailwindcss-animate); drawers go through `components/Drawer.tsx` (shadcn `Sheet` underneath). Framer Motion isn't installed — add it only for orchestrated motion tw-animate-css can't do |
 | Toasts | sonner | Bottom-right |
 
 ---

@@ -8,9 +8,17 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status (done), 3 table view + view toggle + status filter (done), 4 drawer (edit, status, delete).
+- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status (done), 3 table view + view toggle + status filter (done), 4 drawer (done).
 
 ## Completed
+
+- **Roadmap Board, step 4 — request drawer (`feat/dashboard-roadmap-board`)**:
+  - `RequestDrawer` (shadcn `Sheet`, right, full width on phones) opens from a card click, Enter on a focused card, or a table row click (the row's title is a button for keyboard users). Open id is local `useState` in `RoadmapPage`; the drawer reads the request from the list, so optimistic updates show live, and keeps the last request rendered while it slides out.
+  - Shows votes and author (name + mailto email, or "Added by your team"). Status `Select` applies at once through `useMoveRequest`. `RequestForm` (react-hook-form + shared `updateFeatureRequestSchema`): title, description, category; Save disabled until dirty; sends only dirty fields; empty category → `null`; failed save → inline error, edits kept. `DeleteRequestButton`: alert-dialog confirm with title and vote count, success toast + close, failure toast.
+  - Unsaved edits: closing asks **Discard changes?** The drawer asks the form through a ref (`useImperativeHandle` → `formState.isDirty`) at close time — a first version mirrored `isDirty` up through an effect and lagged, so Escape right after undoing an edit still asked (seen in the browser, not in jsdom).
+  - Keyboard: dnd-kit's keyboard sensor now starts/ends a drag on Space only; Enter opens the drawer and is `preventDefault`ed — without that the same key press landed on the drawer's first control, opened the Status select, and left the drawer `aria-hidden` (found in jsdom, confirmed in the browser).
+  - shadcn `textarea`, `select`, `alert-dialog` added and edited to the hard rules (`rounded-lg`, `shadow-sm` on floating surfaces, pointer cursor on options). The CLI again added the npm `cn` package (removed) and prompted to overwrite `button.tsx` (declined). Test setup stubs `scrollIntoView` (Radix Select).
+  - 13 tests in `RequestDrawer.test.tsx` (78/78): opening (click, Enter, table row), author/no author, save only changed fields trimmed, clear category, empty title, failed save, status change, delete + cancel, discard prompt, undone edit closes without asking. Checked that removing the Enter fix, sending all fields, and dropping the discard guard each fail a test. Browser-checked at 1440 and 390px: a drag doesn't also open the drawer; status change moves the card behind it. Bundle 851 kB (267 kB gzipped).
 
 - **Feature-request author + clearable category (API + shared, `feat/dashboard-roadmap-board`)** — groundwork for the drawer:
   - Admin responses (`GET /feature-requests`, `/:id`, PATCH, POST) carry `author: { name, email } | null` via a Prisma `author` select. The widget no longer strips fields (a deny-list — how `authorId` once leaked): `WidgetFeatureRequestResponseDto` is now an allow-list class that copies each permitted field, used by list and create. Widget create now returns that same shape (`hasVoted`/`isMine: true`, no `authorId`); the widget client ignored the body anyway and is now typed `WidgetFeatureRequest`. Shared `FeatureRequestAuthor` added, `WidgetFeatureRequest` omits `authorId` and `author`.
@@ -180,7 +188,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Roadmap Board step 4: the drawer — click a card or table row; edit title, description, category; change status; delete behind a confirmation. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Roadmap Board is complete for the MVP. Candidates next: route-level code splitting (bundle 851 kB), widget tests, applying the two pending dev-DB migrations. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions

@@ -7,9 +7,10 @@ import { DraggableCard } from './DraggableCard'
 interface BoardColumnProps {
   status: RequestStatus
   requests: FeatureRequest[]
+  onOpen: (id: string) => void
 }
 
-export function BoardColumn({ status, requests }: BoardColumnProps) {
+export function BoardColumn({ status, requests, onOpen }: BoardColumnProps) {
   const headingId = `column-${status}`
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const meta = STATUS_META[status]
@@ -36,7 +37,7 @@ export function BoardColumn({ status, requests }: BoardColumnProps) {
         <ul className="flex flex-col gap-2">
           {requests.map((request) => (
             <li key={request.id}>
-              <DraggableCard request={request} />
+              <DraggableCard request={request} onOpen={onOpen} />
             </li>
           ))}
         </ul>
