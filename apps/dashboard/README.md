@@ -17,18 +17,31 @@ In progress — see `context/architecture.md` for the intended stack (React + Re
 | `src/test/` | Vitest setup, `mockApi` (stubs `fetch` by `METHOD /path`), `renderApp` (real routes in a memory router, fresh store) |
 | `src/store.ts` | `makeStore()` factory, app `store`, `RootState`, `AppDispatch` |
 | `src/api/` | Base `createApi` (no endpoints), reauth base query, `getErrorStatus` |
-| `src/features/<feature>/` | Everything for one feature; its endpoints live in `<feature>-api.ts` |
+| `src/features/<feature>/` | Everything for one feature, split by kind (see below) |
 | `src/features/auth/` | Login, signup, `getMe`; `RequireAgent` and `GuestOnly` guards |
-| `src/features/workspaces/` | List and create workspaces; `workspace-slice.ts` holds the active workspace id; `WorkspaceRedirect` (zero workspaces → `/onboarding`) |
-| `src/features/roadmap/` | Roadmap Board: kanban (`RoadmapBoard`, dnd-kit drag to change status) and table (`RequestTable`, TanStack Table) views, view toggle, status filter, sort menu, request drawer (`RequestDrawer`, `RequestStatusSelect`, `RequestForm`, `DeleteRequestButton`); `roadmap-slice.ts` holds sort, view and status filter |
+| `src/features/workspaces/` | List and create workspaces; `store/workspace-slice.ts` holds the active workspace id; `WorkspaceRedirect` (zero workspaces → `/onboarding`) |
+| `src/features/roadmap/` | Roadmap Board: kanban (`RoadmapBoard`, dnd-kit drag to change status) and table (`RequestTable`, TanStack Table) views, view toggle, status filter, sort menu, request drawer (`RequestDrawer`, `RequestStatusSelect`, `RequestForm`, `DeleteRequestButton`); `store/roadmap-slice.ts` holds sort, view and status filter |
 | `src/features/install/` | Install page: embed snippet, `CopyButton` |
 | `src/features/feature-requests/` | List, update (optimistic), delete feature requests; `STATUS_META` and `StatusPill` |
+
+Inside a feature, files go in a folder by kind. Only create a folder when the feature has a file for it; tests sit next to the file they test.
+
+| Folder | Holds |
+|---|---|
+| `api/` | `<feature>-api.ts` — the feature's `injectEndpoints` and hooks |
+| `pages/` | Route elements (`*Page.tsx`) |
+| `guards/` | Layout routes that redirect or gate (`Require*`, `GuestOnly`, `WorkspaceRoute`) |
+| `components/` | Everything else React that the feature's pages and guards use |
+| `hooks/` | `use-*.ts` |
+| `store/` | Redux slices (`*-slice.ts`) |
+| `utils/` | Pure helpers |
+| `constants/` | Fixed values and label maps |
 
 ## Conventions
 
 - `AppLayout` is only the shell (sidebar + inset card). Every `/:slug` page renders its own top bar and body through `<PageContent title actions? className?>` — it carries the mobile "Open menu" button, so a page without it has no menu on mobile. Page layout decisions (padding, width) stay in the page via `className`.
 - Side panels use `<Drawer open onClose title description hasUnsavedChanges?>` (shadcn `Sheet` underneath): header, scrolling body, full width on phones. Pass `hasUnsavedChanges` and closing asks "Discard changes?" when it returns true. Read dirty state at call time (a form ref), not from mirrored state.
-- Each feature adds its endpoints with `api.injectEndpoints` and exports its own hooks. Import hooks from the feature's `-api.ts` file; there is no barrel.
+- Each feature adds its endpoints with `api.injectEndpoints` and exports its own hooks. Import hooks from the feature's `api/<feature>-api.ts` file; there is no barrel.
 - The active workspace id lives in `workspaceSlice`, mirrored from the `/:slug` URL. `prepareHeaders` sends it as `x-workspace-id` on every request, so endpoints never take a `workspaceId` arg.
 - Login and signup seed the `getMe` cache with the returned agent, so the guards redirect off `/login` / `/signup` on their own — pages don't navigate after auth.
 - A failed refresh (outside `/auth/me`) dispatches `sessionExpired`, which resets the cache so the guards send the agent to `/login`.

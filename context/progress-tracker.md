@@ -12,6 +12,10 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Feature folders split by kind (`feat/dashboard-roadmap-board`)**:
+  - Each `src/features/<feature>/` now has `api/`, `pages/`, `guards/`, `components/`, `hooks/`, `store/`, `utils/`, `constants/` as needed (table in the dashboard README). Files moved with `git mv`; imports rewritten, `@/` and relative style kept as they were. `current-workspace.ts` renamed `hooks/use-current-workspace.ts`.
+  - No behaviour change; 58/58, type-check, lint and build clean.
+
 - **Roadmap Board, step 4 — request drawer (`feat/dashboard-roadmap-board`)**:
   - `RequestDrawer` (shadcn `Sheet`, right, full width on phones) opens from a card click, Enter on a focused card, or a table row click (the row's title is a button for keyboard users). Open id is local `useState` in `RoadmapPage`; the drawer reads the request from the list, so optimistic updates show live, and keeps the last request rendered while it slides out.
   - Shows votes and author (name + mailto email, or "Added by your team"). Status `Select` applies at once through `useMoveRequest`. `RequestForm` (react-hook-form + shared `updateFeatureRequestSchema`): title, description, category; Save disabled until dirty; sends only dirty fields; empty category → `null`; failed save → inline error, edits kept. `DeleteRequestButton`: alert-dialog confirm with title and vote count, success toast + close, failure toast.
