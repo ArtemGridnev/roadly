@@ -8,13 +8,47 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status, 3 table view + view toggle + status filter, 4 drawer (edit, status, delete).
+- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status (done), 3 table view + view toggle + status filter (done), 4 drawer (done).
 
 ## Completed
 
 - **Feature folders split by kind (`feat/dashboard-roadmap-board`)**:
   - Each `src/features/<feature>/` now has `api/`, `pages/`, `guards/`, `components/`, `hooks/`, `store/`, `utils/`, `constants/` as needed (table in the dashboard README). Files moved with `git mv`; imports rewritten, `@/` and relative style kept as they were. `current-workspace.ts` renamed `hooks/use-current-workspace.ts`.
   - No behaviour change; 58/58, type-check, lint and build clean.
+
+- **Roadmap Board, step 4 — request drawer (`feat/dashboard-roadmap-board`)**:
+  - `RequestDrawer` (shadcn `Sheet`, right, full width on phones) opens from a card click, Enter on a focused card, or a table row click (the row's title is a button for keyboard users). Open id is local `useState` in `RoadmapPage`; the drawer reads the request from the list, so optimistic updates show live, and keeps the last request rendered while it slides out.
+  - Shows votes and author (name + mailto email, or "Added by your team"). Status `Select` applies at once through `useMoveRequest`. `RequestForm` (react-hook-form + shared `updateFeatureRequestSchema`): title, description, category; Save disabled until dirty; sends only dirty fields; empty category → `null`; failed save → inline error, edits kept. `DeleteRequestButton`: alert-dialog confirm with title and vote count, success toast + close, failure toast.
+  - Unsaved edits: closing asks **Discard changes?** The drawer asks the form through a ref (`useImperativeHandle` → `formState.isDirty`) at close time — a first version mirrored `isDirty` up through an effect and lagged, so Escape right after undoing an edit still asked (seen in the browser, not in jsdom).
+  - Keyboard: dnd-kit's keyboard sensor now starts/ends a drag on Space only; Enter opens the drawer and is `preventDefault`ed — without that the same key press landed on the drawer's first control, opened the Status select, and left the drawer `aria-hidden` (found in jsdom, confirmed in the browser).
+  - shadcn `textarea`, `select`, `alert-dialog` added and edited to the hard rules (`rounded-lg`, `shadow-sm` on floating surfaces, pointer cursor on options). The CLI again added the npm `cn` package (removed) and prompted to overwrite `button.tsx` (declined). Test setup stubs `scrollIntoView` (Radix Select).
+  - 13 tests in `RequestDrawer.test.tsx` (78/78): opening (click, Enter, table row), author/no author, save only changed fields trimmed, clear category, empty title, failed save, status change, delete + cancel, discard prompt, undone edit closes without asking. Checked that removing the Enter fix, sending all fields, and dropping the discard guard each fail a test. Browser-checked at 1440 and 390px: a drag doesn't also open the drawer; status change moves the card behind it. Bundle 851 kB (267 kB gzipped).
+
+- **Feature-request author + clearable category (API + shared, `feat/dashboard-roadmap-board`)** — groundwork for the drawer:
+  - Admin responses (`GET /feature-requests`, `/:id`, PATCH, POST) carry `author: { name, email } | null` via a Prisma `author` select. The widget no longer strips fields (a deny-list — how `authorId` once leaked): `WidgetFeatureRequestResponseDto` is now an allow-list class that copies each permitted field, used by list and create. Widget create now returns that same shape (`hasVoted`/`isMine: true`, no `authorId`); the widget client ignored the body anyway and is now typed `WidgetFeatureRequest`. Shared `FeatureRequestAuthor` added, `WidgetFeatureRequest` omits `authorId` and `author`.
+  - Clearing a category already worked in the API (`@IsOptional` lets `null` through); only shared `updateFeatureRequestSchema` blocked it — now `category: string | null | undefined`.
+  - 3 new e2e tests (137/137): author on list (incl. null for agent-created) and single GET, category cleared to null, and the widget list never containing any contact's name or email (+ no `author`/`authorId` on widget create).
+  - Note: `pnpm lint` in `apps/api` runs `eslint --fix` and reformats ~16 unrelated files; reverted. Pre-existing lint errors remain (Prettier in `feature-requests.e2e-spec.ts`, `unbound-method` in the service, unsafe-any in several e2e specs).
+
+- **Roadmap Board, step 3 — table view (`feat/dashboard-roadmap-board`)**:
+  - `@tanstack/react-table` v9 (`useTable`, core features only — filtering and sorting happen before the table) and shadcn `table`. The CLI again added the npm `cn` package; removed, import pointed at `@/lib/utils`. Its `overflow-x-auto` wrapper dropped so the page card stays the only scroll area.
+  - `RequestTable`: votes, title + one-line description (truncated), status pill (`STATUS_META.pillClassName` is back), category, created; category and date hidden below `md` so a phone shows votes / title / status without sideways scrolling.
+  - Top bar, left to right: `StatusFilterMenu` (multi-select checkboxes, "All statuses" / one label / "N statuses") in table view only, `SortMenu` shared, `ViewToggle` (Board / Table) last so it never moves when the filter appears or its label changes. Below `sm` all three are icon-only. View and filter live in `roadmapSlice` next to sort. Filter hides everything → empty state with **Show all statuses**.
+  - Board on narrow screens: body snaps column by column below `lg`; below `md` columns are `100vw - 5rem` so the next one peeks in. `data-dragging` on the board row turns snapping off during a drag (`has-[[data-dragging]]:snap-none`) so edge auto-scroll isn't pulled back.
+  - 4 new tests (65/65): table rows and status, filtering, the clear-filter empty state, view kept across navigation. Checked that ignoring the filter fails two. Browser-checked at 390/954/1440px: table and header fit a phone, a swipe lands exactly on the next column, dragging at 954px auto-scrolls Planned → Shipped with snapping off and back on after.
+
+- **Roadmap Board, step 2 — drag to change status (`feat/dashboard-roadmap-board`)**:
+  - `@dnd-kit/core` added. `RoadmapBoard` owns the `DndContext`: columns are droppables (id = status, ring while hovered), cards are draggables via `DraggableCard`, and a `DragOverlay` copy follows the pointer so the horizontal scroll container doesn't clip it.
+  - Sensors: mouse (5px), touch (250ms press so sideways scrolling still works), keyboard with a custom coordinate getter that jumps ←/→ a whole column. Collision: `pointerWithin`, falling back to `rectIntersection` for the keyboard. Announcements and instructions name the request and column instead of ids.
+  - A drop calls the existing optimistic `updateFeatureRequest`; same-column drops send nothing. On failure the mutation's rollback returns the card and an inline alert names it; dismiss button, cleared by the next successful move.
+  - `BoardCard` is now a plain card body (no `li`) so the overlay can reuse it.
+  - Seen in a real browser (Playwright, bundled Chromium): the overlay's default drop animation flew back to the card's old slot after the optimistic move had already put it in the new column. Now skipped when the card lands in another column; kept for cancels and same-column drops. The hover ring is `ring-inset` — the scroll container clipped an outer ring top and bottom.
+  - Status colors: `STATUS_LABELS` became `STATUS_META` (label + title, column and drop-ring classes per status, from the `ui-context.md` table). Columns tint with their status, the header title takes the status text color, and the drop ring is the status color. Columns now size to their content (`items-start`).
+  - Fixed the whole page scrolling sideways on narrow screens (sort button cut off, two horizontal scrollbars): `SidebarInset` needed `min-w-0`, otherwise it never shrank below the board's ~1200px row. Checked at 390/600/954/1280px — page width = viewport, only the board scrolls.
+  - Toasts: shadcn `sonner` added; its `next-themes` import swapped for our `useTheme` (dependency removed) and its `--popover`/`--radius` vars pointed at our `--color-*`/`--radius-lg` tokens. `<Toaster />` in `App` and `renderApp`. The inline move-failure alert became `toast.error('Couldn't move "<title>" to <column>')` (one toast per request; no retry button — a drag is cheap to redo, and a retry could resend a stale move). Test setup stubs `setPointerCapture` (sonner's swipe).
+  - Scroll lives in the page card: the shell is `h-svh`, `SidebarInset` clips, `PageContent`'s body is `overflow-auto` — the page never scrolls, the top bar stays put, and the board's scrollbar sits on the card's bottom edge. The board row dropped its own `overflow-x-auto`; `min-w-max` below `lg` keeps the trailing padding when scrolled to the end. Browser-checked at 390/600/954/1100/1440px, the Install page included; dragging a card to the edge auto-scrolls the card (Backlog → Shipped at 954px).
+  - `RoadmapBoard` only renders and wires drag events; dnd-kit setup (sensors, collision, keyboard steps, announcements) lives in `board-dnd.ts` (`useBoardDnd`), the move + failure state in `useMoveRequest`.
+  - 3 new tests in `RoadmapPage.test.tsx` (61/61), driven through the keyboard sensor with a `getBoundingClientRect` stub laying out the columns. Checked that dropping the failure alert and dropping the same-column guard each fail a test. Mouse drag checked in the browser; touch still untested. Bundle 737 kB (236 kB gzipped).
 
 - **Pages own their top bar (`feat/dashboard-roadmap-board`)**:
   - Replaced the layout-owned header (title from route `handle`, actions through a context + portal slot) with `PageContent` (`title`, optional `actions`, optional body `className`) rendered by each page. `AppLayout` is now only sidebar + inset; `PageHandle`, `PageActions` and `page-actions-context` are gone.
@@ -158,7 +192,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Roadmap Board step 2: drag a card between columns (dnd-kit) through the existing optimistic `updateFeatureRequest`. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Roadmap Board is complete for the MVP. Candidates next: route-level code splitting (bundle 851 kB), widget tests, applying the two pending dev-DB migrations. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
 - Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
 
 ## Open Questions

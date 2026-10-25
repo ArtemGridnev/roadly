@@ -303,6 +303,24 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
 
         expect(JSON.stringify(response.body)).not.toContain(otherContactId);
       });
+
+      it("never exposes any author's name or email", async () => {
+        const response = await request(app.getHttpServer())
+          .get('/widget/feature-requests')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set(CONTACT_ID_HEADER, contactId)
+          .expect(200);
+
+        const serialized = JSON.stringify(response.body);
+        expect(serialized).not.toContain('john@example.com');
+        expect(serialized).not.toContain('John Roe');
+        expect(serialized).not.toContain('jane@example.com');
+        expect(
+          (response.body as Record<string, unknown>[]).every(
+            (featureRequest) => !('author' in featureRequest),
+          ),
+        ).toBe(true);
+      });
     });
 
     describe('sorting', () => {
@@ -429,14 +447,17 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         .send({ title: 'Dark mode', description: 'Please add dark mode' })
         .expect(201);
 
-      const body = response.body as FeatureRequestResponseDto;
+      const body = response.body as WidgetFeatureRequestResponseDto;
 
       expect(body).toMatchObject({
         title: 'Dark mode',
         description: 'Please add dark mode',
         workspaceId,
-        authorId: contactId,
+        hasVoted: true,
+        isMine: true,
       });
+      expect(body).not.toHaveProperty('authorId');
+      expect(body).not.toHaveProperty('author');
     });
 
     it("casts the author's vote on the new feature request", async () => {
@@ -447,7 +468,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         .send({ title: 'Dark mode', description: 'Please add dark mode' })
         .expect(201);
 
-      const body = response.body as FeatureRequestResponseDto;
+      const body = response.body as WidgetFeatureRequestResponseDto;
       const votes = await prisma.vote.findMany({
         where: { requestId: body.id },
       });

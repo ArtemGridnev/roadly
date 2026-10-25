@@ -9,3 +9,8 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: () => {},
   }),
 })
+
+Element.prototype.setPointerCapture ??= () => {}
+Element.prototype.releasePointerCapture ??= () => {}
+Element.prototype.hasPointerCapture ??= () => false
+Element.prototype.scrollIntoView ??= () => {}

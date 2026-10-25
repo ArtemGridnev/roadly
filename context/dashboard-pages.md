@@ -65,16 +65,20 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 - Future: joining (pending invites / invite links) appears here, above the form.
 
 ### Roadmap Board (`/:slug/roadmap`)
-- Kanban (Backlog / Planned / In Progress / Shipped) and table views of the same data, toggle top-right (`ui-context.md` §3).
-- Drag a card between columns to change status.
+- Kanban (Backlog / Planned / In Progress / Shipped; each column in its status color, `ui-context.md` → Status colors; columns are as tall as their content, not equal height) and table views of the same data, toggle top-right (`ui-context.md` §3).
+- **Table view:** one row per request — votes, title with a one-line description, status pill, category, created date (category and date hidden below `md`). Read-only; clicking a row opens the drawer (step 4). Same data and sort as the board; the status filter is multi-select (all on by default) and filters on the client. A filter that hides everything shows "No requests with these statuses." + **Show all statuses**.
+- View, sort and status filter live in `roadmapSlice`: they survive leaving and coming back, not a full reload.
+- **Narrow screens:** only the page card's body scrolls (sideways and down), never the page. Below `lg` the board snaps column by column; below `md` each column is the viewport width minus 5rem so the next one peeks in. Snapping is off while a card is dragged so edge auto-scroll works. Below `sm` the top-bar controls are icon-only. On phones drag is a bonus, not the path — status changes through the drawer.
+- Drag a card between columns to change status (mouse, touch after a 250ms press, or keyboard: space to pick up, ←/→ between columns, space to drop, escape to cancel — enter opens the drawer instead; screen reader announcements use the request title and column name). Only the status changes: the card lands where the current sort puts it, and there's no manual order within a column (no position field).
+- The move shows at once; if the API rejects it the card returns to its column and an error toast says `Couldn't move "<title>" to <column>` — no retry button; dragging again is the retry.
 - **Card** mirrors the widget's `RequestCard`: vote count, title, 2-line description preview, then category and created date. No status badge on kanban cards — the column already says it; the table view carries a status column. The vote count is read-only — Agents don't vote.
 - **Top bar (MVP):** page controls go in `PageContent`'s `actions`, top-right of the page's top bar. Only what `GET /feature-requests` supports — sort (Most voted / Newest) and, in table view, a status filter (kanban columns already split by status). No search and no category filter until the API supports them; this narrows the `ui-context.md` §3 top bar for the MVP.
-- **Drawer:** clicking a request opens the right slide-in drawer over the board. It isn't addressable by URL in the MVP — a reload closes it. In the drawer the Agent can:
-  - edit title, description and category;
-  - change status (the non-drag path);
-  - delete the request, behind a confirmation. Author and votes are read-only.
+- **Drawer:** clicking a card or table row (or Enter on a focused card) opens the right slide-in drawer over the board (shadcn `Sheet`, full width on phones). It isn't addressable by URL in the MVP — a reload closes it. It shows votes and the author (name + mailto email, or "Added by your team" when an Agent created it), read-only. In the drawer the Agent can:
+  - edit title, description and category in a form with **Save changes** (disabled until something changes; only changed fields are sent; emptying category clears it). A failed save keeps the edits and shows an inline error. Closing with unsaved edits (Escape, outside click, ✕) asks **Discard changes?**;
+  - change status with a select that applies at once (the non-drag path) — same optimistic update and failure toast as a drag;
+  - delete the request behind a confirmation ("<title> and its N votes will be removed"). Success closes the drawer with a "Deleted" toast; failure shows an error toast and keeps it open.
 - Empty board (no requests at all) → one line + **Install the widget** to `/:slug/install`. An empty column shows "No requests".
-- Sort defaults to Most voted and lives in `roadmapSlice`, so it survives leaving and coming back.
+- Sort defaults to Most voted.
 
 ### Install widget (`/:slug/install`)
 - Shows a copyable snippet carrying the workspace's `widgetKey`: a `#roadly` container, the `<script>` loading the widget bundle (`VITE_WIDGET_URL`), and `Roadly.init({ ... })` with the real key, `currentUser.*` placeholders for the host's signed-in user, and `theme: 'auto'`.
@@ -114,6 +118,7 @@ Built:
 - `POST /feature-requests` takes no `authorId` — Agent-created requests have no Contact author (`authorId: null`) and start at 0 votes.
 - Admin vote routes are removed — Agents don't vote.
 - `/workspace-members` is read-only (list, get); adding/removing members is removed until joining exists. The creator is a workspace's only member.
+- Admin feature-request responses include `author: { name, email } | null` (null = created by an Agent); the widget never gets it. `PATCH /feature-requests/:id` accepts `category: null` to clear the category (shared `updateFeatureRequestSchema`).
 - Signup requires a password of 8+ characters with a lowercase letter, an uppercase letter and a digit (shared `createAgentSchema`). Rate limits: login 5/min per IP+email, signup 10/hour per IP.
 
 ---

@@ -28,10 +28,12 @@ export class WidgetFeatureRequestsService {
         )
       : new Set<string>();
 
-    return featureRequests.map(({ authorId, ...featureRequest }) => ({
-      ...featureRequest,
-      hasVoted: votedIds.has(featureRequest.id),
-      isMine: contactId !== undefined && authorId === contactId,
-    }));
+    return featureRequests.map((featureRequest) =>
+      WidgetFeatureRequestResponseDto.fromFeatureRequest(featureRequest, {
+        hasVoted: votedIds.has(featureRequest.id),
+        isMine:
+          contactId !== undefined && featureRequest.authorId === contactId,
+      }),
+    );
   }
 }

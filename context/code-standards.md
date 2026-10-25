@@ -19,6 +19,7 @@
 
 - Functional components with hooks only. No class components.
 - Component files: PascalCase (`RequestList.tsx`). Hook files: camelCase prefixed with `use` (`useRequests.ts`).
+- Split components by layer. A UI pattern used across the app (page frame, drawer: layout, scrolling, close/discard behavior) is a generic component in `src/components/` that takes content as `children` and knows nothing about the domain — `PageContent`, `Drawer`. The feature component renders it and supplies only its own content (`RequestDrawer` = `Drawer` + request details). Small domain pieces shown in more than one place get their own component in the feature that owns the data (`StatusPill` in `feature-requests/`) instead of copied markup.
 
 ## State Management
 
@@ -26,6 +27,7 @@
 - Client-only state (filters, sort, board/drag) goes in Redux slices, or local `useState` when truly local.
 - Define RTK Query endpoints in the API slice, never inline in components.
 - Optimistic-update logic (upvote) stays in the API slice, not in components.
+- Notify about an action's outcome with `toast` from `sonner` (see `ui-context.md` §3), called where the action runs (hook or handler) — no notification state in components or slices. Form and field errors stay inline.
 
 ## Styling
 
@@ -71,7 +73,8 @@
 
 - Schema-driven: react-hook-form + `zodResolver` over the shared zod schema from `packages/shared` — never a redeclared shape.
 - User-facing error copy is mapped per field in the component, not via zod messages, so shared schemas stay copy-free.
-- Normalize input with `setValueAs` (trim; empty optional → `undefined`) so validation sees what will be sent.
+- Normalize input with `setValueAs` (trim; empty optional → `undefined`) so validation sees what will be sent. Exception: a field that can start empty and is cleared by sending `null` (e.g. category in the request drawer) stays a string in the form (`''` default) and becomes `null` at submit — a `setValueAs` that returns `null` breaks dirty tracking against an empty default.
+- A parent that needs a form's live state at a moment (e.g. "unsaved edits?" on close) asks the form through a ref (`useImperativeHandle` reading `formState`), not a copy pushed up through an effect — the copy lags and gives wrong answers.
 
 ## Comments
 

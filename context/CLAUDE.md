@@ -36,6 +36,8 @@ npx vitest run src/path/to/file.test.ts
 - `DATABASE_URL` — Postgres connection string
 - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` — admin dashboard auth tokens
 
+Dev ports: dashboard `5173` (the API's default `DASHBOARD_URL` for CORS), widget dev harness `5175` (`strictPort` — fails instead of taking another port), widget preview `4173` (the Install snippet's `VITE_WIDGET_URL`), API `3001`.
+
 `apps/widget` and `apps/dashboard` require `VITE_API_URL` — base URL of the API service. `apps/dashboard` also requires `VITE_WIDGET_URL` — URL of the hosted `widget.js`, used in the Install page snippet.
 
 > Env var names above are inferred from `architecture.md` and not yet confirmed against a real `.env.example` — correct once that file exists.

@@ -11,6 +11,10 @@ export default defineConfig(({ command }) => ({
     tailwindcss(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  server: {
+    port: 5175,
+    strictPort: true,
+  },
   define: {
     'process.env.NODE_ENV': JSON.stringify(command === 'build' ? 'production' : 'development'),
   },

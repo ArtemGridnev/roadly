@@ -5,6 +5,7 @@ export type { Agent } from './types/agent';
 export type { Contact } from './types/contact';
 export type {
   FeatureRequest,
+  FeatureRequestAuthor,
   WidgetFeatureRequest,
 } from './types/feature-request';
 export type { Vote } from './types/vote';

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router'
 import { LoadError } from '@/components/LoadError'
@@ -7,28 +8,50 @@ import type { RootState } from '@/store'
 import { useGetFeatureRequestsQuery } from '../../feature-requests/api/feature-requests-api'
 import { REQUEST_STATUSES } from '../../feature-requests/constants/request-status'
 import { useCurrentWorkspace } from '../../workspaces/hooks/use-current-workspace'
-import { BoardColumn } from '../components/BoardColumn'
 import { BoardSkeleton } from '../components/BoardSkeleton'
-import { setSort } from '../store/roadmap-slice'
+import { RequestDrawer } from '../components/RequestDrawer'
+import { RequestTable } from '../components/RequestTable'
+import { RequestTableSkeleton } from '../components/RequestTableSkeleton'
+import { RoadmapBoard } from '../components/RoadmapBoard'
+import { setSort, setStatusFilter, setView } from '../store/roadmap-slice'
 import { SortMenu } from '../components/SortMenu'
+import { StatusFilterMenu } from '../components/StatusFilterMenu'
+import { ViewToggle } from '../components/ViewToggle'
+
+const BOARD_SNAP =
+  'snap-x snap-mandatory scroll-px-4 md:scroll-px-6 lg:snap-none has-[[data-dragging]]:snap-none'
 
 export function RoadmapPage() {
   const workspace = useCurrentWorkspace()
-  const sort = useSelector((state: RootState) => state.roadmap.sort)
+  const { sort, view, statusFilter } = useSelector((state: RootState) => state.roadmap)
   const dispatch = useDispatch()
   const { data: requests, isLoading, isError, refetch } = useGetFeatureRequestsQuery({ sort })
+  const [openId, setOpenId] = useState<string | null>(null)
+  const openRequest = requests?.find((request) => request.id === openId)
+
+  const isTable = view === 'table'
+  const filtered = requests?.filter((request) => statusFilter.includes(request.status))
 
   return (
     <PageContent
       title="Roadmap"
-      actions={<SortMenu value={sort} onChange={(next) => dispatch(setSort(next))} />}
+      className={isTable ? undefined : BOARD_SNAP}
+      actions={
+        <>
+          {isTable ? (
+            <StatusFilterMenu value={statusFilter} onChange={(next) => dispatch(setStatusFilter(next))} />
+          ) : null}
+          <SortMenu value={sort} onChange={(next) => dispatch(setSort(next))} />
+          <ViewToggle value={view} onChange={(next) => dispatch(setView(next))} />
+        </>
+      }
     >
       {isError ? (
         <div className="py-12">
           <LoadError onRetry={refetch} />
         </div>
-      ) : isLoading || !requests ? (
-        <BoardSkeleton />
+      ) : isLoading || !requests || !filtered ? (
+        isTable ? <RequestTableSkeleton /> : <BoardSkeleton />
       ) : requests.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12 text-center">
           <p className="text-sm text-muted-foreground">
@@ -38,17 +61,19 @@ export function RoadmapPage() {
             <Link to={`/${workspace.slug}/install`}>Install the widget</Link>
           </Button>
         </div>
-      ) : (
-        <div className="flex gap-4 overflow-x-auto">
-          {REQUEST_STATUSES.map((status) => (
-            <BoardColumn
-              key={status}
-              status={status}
-              requests={requests.filter((request) => request.status === status)}
-            />
-          ))}
+      ) : !isTable ? (
+        <RoadmapBoard requests={requests} onOpen={setOpenId} />
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 py-12 text-center">
+          <p className="text-sm text-muted-foreground">No requests with these statuses.</p>
+          <Button variant="outline" onClick={() => dispatch(setStatusFilter([...REQUEST_STATUSES]))}>
+            Show all statuses
+          </Button>
         </div>
+      ) : (
+        <RequestTable requests={filtered} onOpen={setOpenId} />
       )}
+      <RequestDrawer request={openRequest} onClose={() => setOpenId(null)} />
     </PageContent>
   )
 }

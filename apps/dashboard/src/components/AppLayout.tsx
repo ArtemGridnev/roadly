@@ -7,9 +7,9 @@ export function AppLayout() {
   const workspace = useCurrentWorkspace()
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-svh">
       <AppSidebar workspace={workspace} />
-      <SidebarInset>
+      <SidebarInset className="min-h-0 min-w-0 overflow-hidden">
         <Outlet context={workspace} />
       </SidebarInset>
     </SidebarProvider>

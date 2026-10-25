@@ -12,7 +12,9 @@ export type CreateFeatureRequestInput = z.infer<
   typeof createFeatureRequestSchema
 >;
 
-export const updateFeatureRequestSchema = createFeatureRequestSchema.partial();
+export const updateFeatureRequestSchema = createFeatureRequestSchema
+  .partial()
+  .extend({ category: z.string().nullable().optional() });
 
 export type UpdateFeatureRequestInput = z.infer<
   typeof updateFeatureRequestSchema

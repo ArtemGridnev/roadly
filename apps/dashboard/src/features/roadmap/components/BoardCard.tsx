@@ -1,10 +1,16 @@
 import type { FeatureRequest } from '@roadly/shared'
 import { ArrowBigUp } from 'lucide-react'
 import { formatRequestDate } from '@/lib/format-date'
+import { cn } from '@/lib/utils'
 
-export function BoardCard({ request }: { request: FeatureRequest }) {
+interface BoardCardProps {
+  request: FeatureRequest
+  className?: string
+}
+
+export function BoardCard({ request, className }: BoardCardProps) {
   return (
-    <li className="flex gap-3 rounded-lg border bg-card p-3">
+    <div className={cn('flex gap-3 rounded-lg border bg-card p-3 text-left', className)}>
       <div
         aria-label={`${request.voteCount} votes`}
         className="flex h-12 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-secondary text-secondary-foreground"
@@ -25,6 +31,6 @@ export function BoardCard({ request }: { request: FeatureRequest }) {
           <span className="text-xs text-muted-foreground">{formatRequestDate(request.createdAt)}</span>
         </div>
       </div>
-    </li>
+    </div>
   )
 }
