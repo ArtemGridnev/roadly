@@ -2,7 +2,6 @@ import { useSyncExternalStore } from 'react'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type {
   CreateWidgetFeatureRequestInput,
-  FeatureRequest,
   WidgetFeatureRequest,
   WidgetFeatureRequestSort,
 } from '@roadly/shared'
@@ -57,7 +56,7 @@ export function useCreateFeatureRequest() {
 
   return useMutation({
     mutationFn: ({ widgetKey, contactId, input }: CreateFeatureRequestParams) =>
-      apiRequest<FeatureRequest>('/widget/feature-requests', {
+      apiRequest<WidgetFeatureRequest>('/widget/feature-requests', {
         method: 'POST',
         body: input,
         widgetKey,

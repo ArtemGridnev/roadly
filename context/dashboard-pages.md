@@ -118,6 +118,7 @@ Built:
 - `POST /feature-requests` takes no `authorId` — Agent-created requests have no Contact author (`authorId: null`) and start at 0 votes.
 - Admin vote routes are removed — Agents don't vote.
 - `/workspace-members` is read-only (list, get); adding/removing members is removed until joining exists. The creator is a workspace's only member.
+- Admin feature-request responses include `author: { name, email } | null` (null = created by an Agent); the widget never gets it. `PATCH /feature-requests/:id` accepts `category: null` to clear the category (shared `updateFeatureRequestSchema`).
 - Signup requires a password of 8+ characters with a lowercase letter, an uppercase letter and a digit (shared `createAgentSchema`). Rate limits: login 5/min per IP+email, signup 10/hour per IP.
 
 ---

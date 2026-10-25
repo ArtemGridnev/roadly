@@ -12,6 +12,12 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Feature-request author + clearable category (API + shared, `feat/dashboard-roadmap-board`)** — groundwork for the drawer:
+  - Admin responses (`GET /feature-requests`, `/:id`, PATCH, POST) carry `author: { name, email } | null` via a Prisma `author` select. The widget no longer strips fields (a deny-list — how `authorId` once leaked): `WidgetFeatureRequestResponseDto` is now an allow-list class that copies each permitted field, used by list and create. Widget create now returns that same shape (`hasVoted`/`isMine: true`, no `authorId`); the widget client ignored the body anyway and is now typed `WidgetFeatureRequest`. Shared `FeatureRequestAuthor` added, `WidgetFeatureRequest` omits `authorId` and `author`.
+  - Clearing a category already worked in the API (`@IsOptional` lets `null` through); only shared `updateFeatureRequestSchema` blocked it — now `category: string | null | undefined`.
+  - 3 new e2e tests (137/137): author on list (incl. null for agent-created) and single GET, category cleared to null, and the widget list never containing any contact's name or email (+ no `author`/`authorId` on widget create).
+  - Note: `pnpm lint` in `apps/api` runs `eslint --fix` and reformats ~16 unrelated files; reverted. Pre-existing lint errors remain (Prettier in `feature-requests.e2e-spec.ts`, `unbound-method` in the service, unsafe-any in several e2e specs).
+
 - **Roadmap Board, step 3 — table view (`feat/dashboard-roadmap-board`)**:
   - `@tanstack/react-table` v9 (`useTable`, core features only — filtering and sorting happen before the table) and shadcn `table`. The CLI again added the npm `cn` package; removed, import pointed at `@/lib/utils`. Its `overflow-x-auto` wrapper dropped so the page card stays the only scroll area.
   - `RequestTable`: votes, title + one-line description (truncated), status pill (`STATUS_META.pillClassName` is back), category, created; category and date hidden below `md` so a phone shows votes / title / status without sideways scrolling.

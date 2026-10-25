@@ -155,6 +155,33 @@ describe('FeatureRequestsController (e2e)', () => {
       expect(body).toHaveLength(2);
     });
 
+    it("includes the author's name and email, or null for agent-created requests", async () => {
+      await prisma.featureRequest.create({
+        data: {
+          title: 'From user',
+          description: 'desc',
+          workspaceId,
+          authorId,
+        },
+      });
+      await prisma.featureRequest.create({
+        data: { title: 'From agent', description: 'desc', workspaceId },
+      });
+
+      const response = await authed('get', '/feature-requests').expect(200);
+
+      const authorByTitle = Object.fromEntries(
+        (response.body as FeatureRequestResponseDto[]).map((featureRequest) => [
+          featureRequest.title,
+          featureRequest.author,
+        ]),
+      );
+      expect(authorByTitle).toEqual({
+        'From user': { name: 'Jane Doe', email: 'jane@example.com' },
+        'From agent': null,
+      });
+    });
+
     it('filters by status', async () => {
       await prisma.featureRequest.create({
         data: { title: 'A', description: 'A desc', workspaceId, authorId },
@@ -201,6 +228,10 @@ describe('FeatureRequestsController (e2e)', () => {
       const body = response.body as FeatureRequestResponseDto;
 
       expect(body.id).toBe(featureRequest.id);
+      expect(body.author).toEqual({
+        name: 'Jane Doe',
+        email: 'jane@example.com',
+      });
     });
 
     it('returns 404 for an unknown id', async () => {
@@ -240,6 +271,31 @@ describe('FeatureRequestsController (e2e)', () => {
 
       expect(body.status).toBe(RequestStatus.IN_PROGRESS);
       expect(body.title).toBe('A');
+    });
+
+    it('clears the category when it is set to null', async () => {
+      const featureRequest = await prisma.featureRequest.create({
+        data: {
+          title: 'A',
+          description: 'A desc',
+          category: 'UI',
+          workspaceId,
+          authorId,
+        },
+      });
+
+      const response = await authed(
+        'patch',
+        `/feature-requests/${featureRequest.id}`,
+      )
+        .send({ category: null })
+        .expect(200);
+
+      expect((response.body as FeatureRequestResponseDto).category).toBeNull();
+      const stored = await prisma.featureRequest.findUniqueOrThrow({
+        where: { id: featureRequest.id },
+      });
+      expect(stored.category).toBeNull();
     });
 
     it('returns 404 when updating an unknown id', async () => {

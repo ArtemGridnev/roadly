@@ -1,11 +1,18 @@
 import { FeatureRequest, RequestStatus } from '@prisma/client';
 
+export interface FeatureRequestAuthor {
+  name: string;
+  email: string;
+}
+
 export type FeatureRequestWithVoteCount = FeatureRequest & {
   _count: { votes: number };
+  author: FeatureRequestAuthor | null;
 };
 
 export const featureRequestVoteCountSelect = {
   _count: { select: { votes: true } },
+  author: { select: { name: true, email: true } },
 } as const;
 
 export class FeatureRequestResponseDto {
@@ -16,6 +23,7 @@ export class FeatureRequestResponseDto {
   readonly status: RequestStatus;
   readonly workspaceId: string;
   readonly authorId: string | null;
+  readonly author: FeatureRequestAuthor | null;
   readonly voteCount: number;
   readonly createdAt: Date;
 
@@ -27,6 +35,7 @@ export class FeatureRequestResponseDto {
     this.status = featureRequest.status;
     this.workspaceId = featureRequest.workspaceId;
     this.authorId = featureRequest.authorId;
+    this.author = featureRequest.author;
     this.voteCount = featureRequest._count.votes;
     this.createdAt = featureRequest.createdAt;
   }
