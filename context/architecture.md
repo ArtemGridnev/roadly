@@ -135,4 +135,4 @@ Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never
 - Turborepo pipelines: `build`, `dev`, `lint`, `test`, `type-check`.
 - Widget builds to a static bundle served from a CDN-friendly URL.
 - Dashboard builds to static assets (Vite).
-- API deployed as a Node service with a managed Postgres instance. 
+- API deployed as a Node service with a managed Postgres instance: `pnpm build`, then `pnpm start:prod` (`node dist/main`). Set `TRUST_PROXY` to the number of proxies in front of it (usually `1` on a PaaS) so rate limiting sees client IPs; unset trusts none.

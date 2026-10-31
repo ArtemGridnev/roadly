@@ -8,8 +8,8 @@ import { clearAccessCookie, clearRefreshCookie, REFRESH_COOKIE_NAME, setAccessCo
 import { AgentLoginResponseDto } from './dto/agent-login-response.dto';
 import { TokenRefreshResponseDto } from './dto/token-refresh-response.dto';
 import { RefreshTokenAuthGuard } from './guards/refresh-token-auth.guard';
-import { CreateAgentDto } from 'src/agents/dto/create-agent.dto';
-import { AgentResponseDto } from 'src/agents/dto/agent-response.dto';
+import { CreateAgentDto } from '../agents/dto/create-agent.dto';
+import { AgentResponseDto } from '../agents/dto/agent-response.dto';
 import { CurrentAgent } from './decorators/current-agent.decorator';
 import { AccessTokenPayload } from './dto/access-token-payload.dto';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';

@@ -12,6 +12,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **API production start + proxy-aware rate limiting (`fix/api-prod-start`)**:
+  - `start:prod` boots: `tsconfig.build.json` now includes only `src`, so `prisma.config.ts` no longer pushes the output to `dist/src/` and `node dist/main` finds the entry. The 11 absolute `src/...` imports in `auth` and `refresh-tokens` became relative — `nest start` and Jest resolve them, plain `node` doesn't.
+  - `trust proxy` set from `TRUST_PROXY` (number of proxies in front of the API; unset = 0, trust none). A hop count, not `true`, so a client can't dodge the login limit by sending its own `X-Forwarded-For`.
+  - Checked with `pnpm build && pnpm start:prod`: boots; with `TRUST_PROXY=1`, six failed logins from six forwarded IPs all get 401, the sixth from one IP gets 429. e2e 137/137, `tsc` clean; lint unchanged (pre-existing errors in `auth`).
+
 - **Feature folders split by kind (`feat/dashboard-roadmap-board`)**:
   - Each `src/features/<feature>/` now has `api/`, `pages/`, `guards/`, `components/`, `hooks/`, `store/`, `utils/`, `constants/` as needed (table in the dashboard README). Files moved with `git mv`; imports rewritten, `@/` and relative style kept as they were. `current-workspace.ts` renamed `hooks/use-current-workspace.ts`.
   - No behaviour change; 58/58, type-check, lint and build clean.
@@ -199,8 +204,6 @@ Update this file whenever the current phase, active feature, or implementation s
 
 - Shared `createWorkspaceSchema` only requires a non-empty slug; format, length and reserved words live only in the API DTO, so the dashboard learns about a bad slug from a 400. Move the rules into the shared schema (protected) so the form checks them before sending?
 - Dashboard bundle is one 521 kB chunk (165 kB gzipped) and Vite warns past 500 kB. Route-level code splitting once more pages land?
-- `nest build` emits `dist/src/main.js`, but `start:prod` runs `node dist/main` — pre-existing mismatch, `start:prod` won't boot.
-- Rate limiting keys on `req.ip`; behind a proxy in production, Express needs `trust proxy` set or every request shares the proxy's IP.
 - Shared `findFeatureRequestsQuerySchema` lacks `sort`, though the admin API accepts it. The dashboard slice adds it locally for now; extend the shared schema (protected) to remove that.
 - Zod costs the widget ~23 kB gzipped (a quarter of the bundle) because the shared schemas use zod classic, which doesn't tree-shake. Options: accept it; migrate `packages/shared` schemas to `zod/mini` (tree-shakeable, same runtime, different API — touches every consumer); or validate the widget form with react-hook-form's built-in rules instead of the shared schema (diverges from `architecture.md`).
 - The launcher uses `rounded-full`, which breaks the `ui-context.md` hard rule (`rounded-lg` everywhere, except status badges). Either square it off or add launchers to the documented exceptions.
