@@ -4,11 +4,11 @@ import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcryptjs';
 import { createHash, randomUUID } from 'crypto';
 import { Agent } from '@prisma/client';
-import { AgentsService } from 'src/agents/agents.service';
-import { AgentResponseDto } from 'src/agents/dto/agent-response.dto';
-import { CreateAgentDto } from 'src/agents/dto/create-agent.dto';
+import { AgentsService } from '../agents/agents.service';
+import { AgentResponseDto } from '../agents/dto/agent-response.dto';
+import { CreateAgentDto } from '../agents/dto/create-agent.dto';
 import { AccessTokenPayload } from './dto/access-token-payload.dto';
-import { RefreshTokensService } from 'src/refresh-tokens/refresh-tokens.service';
+import { RefreshTokensService } from '../refresh-tokens/refresh-tokens.service';
 import { RefreshTokenPayload } from './dto/refresh-token-payload.dto';
 
 const ACCESS_TOKEN_TTL = '60m';

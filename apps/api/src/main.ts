@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 import type {
@@ -20,8 +21,9 @@ const corsOptionsDelegate: CorsOptionsDelegate<Request> = (req, callback) => {
 };
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  app.set('trust proxy', Number(process.env.TRUST_PROXY ?? 0));
   app.enableCors(corsOptionsDelegate);
   app.use(cookieParser());
 
