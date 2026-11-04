@@ -15,8 +15,9 @@ Update this file whenever the current phase, active feature, or implementation s
 - **Widget hides Shipped requests (`feat/widget-hide-shipped`)**:
   - `GET /widget/feature-requests` leaves out `SHIPPED` requests. New `GET /widget/feature-requests/mine` (`@RequireContact()`, same `sort`) returns the Contact's own requests in every status. `FeatureRequestsService.findAll` takes `{ authorId, excludeStatus }` options next to the query.
   - Widget: each view asks its own endpoint (`useFeatureRequests(..., scope)`, scope in the query key); "My requests" no longer fetches everything and filters on `isMine`. New rule in `code-standards.md`: the API decides which records a list returns.
-  - Still open: how to show Shipped requests to Contacts. Voting on a Shipped request (from "My requests") is still allowed.
-  - e2e 143/143; switching off either filter fails its test. Widget type-check, lint, build clean. Not browser-checked.
+  - Votes on a Shipped request are frozen: `VotesService` rejects both voting and un-voting with 409 (`assertVotingOpen`), and the widget's vote button is disabled for Shipped requests (they only appear in "My requests" now). Rule added to the Vote entry in `CONTEXT.md`.
+  - Still open: how to show Shipped requests to Contacts.
+  - e2e 145/145; switching off either list filter or the vote check fails its test. Widget type-check, lint, build clean. Not browser-checked.
 
 - **API production start + proxy-aware rate limiting (`fix/api-prod-start`)**:
   - `start:prod` boots: `tsconfig.build.json` now includes only `src`, so `prisma.config.ts` no longer pushes the output to `dist/src/` and `node dist/main` finds the entry. The 11 absolute `src/...` imports in `auth` and `refresh-tokens` became relative — `nest start` and Jest resolve them, plain `node` doesn't.

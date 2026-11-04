@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, RequestStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { FeatureRequestsService } from '../feature-requests/feature-requests.service';
 import { CreateVoteDto } from './dto/create-vote.dto';
@@ -20,7 +20,7 @@ export class VotesService {
     requestId: string,
     createVoteDto: CreateVoteDto,
   ): Promise<VoteResponseDto> {
-    await this.featureRequestsService.findOne(requestId);
+    await this.assertVotingOpen(requestId);
 
     try {
       const vote = await this.prisma.vote.create({
@@ -46,6 +46,8 @@ export class VotesService {
   }
 
   async removeForContact(requestId: string, contactId: string): Promise<void> {
+    await this.assertVotingOpen(requestId);
+
     const { count } = await this.prisma.vote.deleteMany({
       where: { requestId, contactId },
     });
@@ -53,6 +55,16 @@ export class VotesService {
     if (count === 0) {
       throw new NotFoundException(
         `Contact ${contactId} has not voted for feature request ${requestId}`,
+      );
+    }
+  }
+
+  private async assertVotingOpen(requestId: string): Promise<void> {
+    const featureRequest = await this.featureRequestsService.findOne(requestId);
+
+    if (featureRequest.status === RequestStatus.SHIPPED) {
+      throw new ConflictException(
+        'Voting is closed for shipped feature requests',
       );
     }
   }
