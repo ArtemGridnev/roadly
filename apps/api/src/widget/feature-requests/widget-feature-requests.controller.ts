@@ -36,6 +36,20 @@ export class WidgetFeatureRequestsController {
   }
 
   @RequireContact()
+  @Get('mine')
+  findMine(
+    @CurrentWorkspace() workspace: ResolvedWorkspace,
+    @CurrentContact() contact: ResolvedContact,
+    @Query() query: FindWidgetFeatureRequestsQueryDto,
+  ): Promise<WidgetFeatureRequestResponseDto[]> {
+    return this.widgetFeatureRequestsService.findMine(
+      workspace.id,
+      contact.id,
+      query,
+    );
+  }
+
+  @RequireContact()
   @Post()
   async create(
     @CurrentWorkspace() workspace: ResolvedWorkspace,

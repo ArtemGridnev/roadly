@@ -6,20 +6,27 @@ import type {
   WidgetFeatureRequestSort,
 } from '@roadly/shared'
 import { apiRequest } from './client'
-import { widgetQueryKeys } from './query-keys'
+import { widgetQueryKeys, type FeatureRequestListScope } from './query-keys'
+
+const FEATURE_REQUEST_LIST_PATHS: Record<FeatureRequestListScope, string> = {
+  all: '/widget/feature-requests',
+  mine: '/widget/feature-requests/mine',
+}
 
 export function useFeatureRequests(
   widgetKey: string,
   contactId: string | undefined,
   sort: WidgetFeatureRequestSort,
+  scope: FeatureRequestListScope = 'all',
 ) {
   return useQuery({
-    queryKey: widgetQueryKeys.featureRequestList(widgetKey, sort, contactId),
+    queryKey: widgetQueryKeys.featureRequestList(widgetKey, scope, sort, contactId),
     queryFn: () =>
-      apiRequest<WidgetFeatureRequest[]>(`/widget/feature-requests?sort=${sort}`, {
+      apiRequest<WidgetFeatureRequest[]>(`${FEATURE_REQUEST_LIST_PATHS[scope]}?sort=${sort}`, {
         widgetKey,
         contactId,
       }),
+    enabled: scope === 'all' || contactId !== undefined,
     placeholderData: keepPreviousData,
   })
 }
