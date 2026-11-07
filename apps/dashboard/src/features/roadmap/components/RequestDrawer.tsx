@@ -43,10 +43,11 @@ export function RequestDrawer({ request, onClose }: RequestDrawerProps) {
             <dd className="min-w-0">
               {shown.author ? (
                 <>
-                  <span className="block truncate font-medium">{shown.author.name}</span>
+                  <span dir="auto" className="block w-fit max-w-full truncate font-medium">{shown.author.name}</span>
                   <a
                     href={`mailto:${shown.author.email}`}
-                    className="block truncate text-muted-foreground hover:text-foreground hover:underline"
+                    dir="auto"
+                    className="block w-fit max-w-full truncate text-muted-foreground hover:text-foreground hover:underline"
                   >
                     {shown.author.email}
                   </a>

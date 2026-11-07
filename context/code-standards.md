@@ -38,6 +38,7 @@
 ### Dashboard (`apps/dashboard`)
 
 - Build UI on shadcn/ui + Radix. Reuse existing shadcn components before hand-rolling new ones.
+- Layout must work in both directions: use logical classes (`ms-`, `pe-`, `start-`, `text-start`, `border-s`), never `ml-`, `pr-`, `left-`, `text-left`. Radix `side` props and the sidebar and sheet variants are physical, so take them from `useInlineSides`. Show user content with `dir="auto"`, on the truncating element itself so long text is cut at its end, plus `w-fit max-w-full` where a block would otherwise stretch and misalign short text. Fields that only take Latin text (email, password, slug) and code are `dir="ltr"`.
 - All UI text goes through `t()` with keys in `src/i18n/locales/`, including aria labels, toasts and screen reader announcements. `he.ts` is typed against `en.ts`, so a missing translation fails the build. Plural keys need `_one`/`_other` in English and also `_two` in Hebrew. Pass `t={t}` to `Trans` so it re-renders on a language change, and don't name a `Trans` tag after an HTML void element (`<link>`, `<img>`) — i18next drops its content.
 
 ### Widget (`apps/widget`)

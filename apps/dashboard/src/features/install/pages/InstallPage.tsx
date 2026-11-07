@@ -24,7 +24,7 @@ export function InstallPage() {
             </h2>
             <CopyButton value={snippet} label={t('install.snippetCopyLabel')} />
           </div>
-          <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
+          <ol className="list-decimal space-y-1 ps-5 text-sm text-muted-foreground">
             <li>{t('install.step1')}</li>
             <li>
               <Trans
@@ -43,7 +43,7 @@ export function InstallPage() {
               />
             </li>
           </ol>
-          <pre className="overflow-x-auto rounded-lg border bg-muted p-4 font-mono text-xs leading-relaxed">
+          <pre dir="ltr" className="overflow-x-auto rounded-lg border bg-muted p-4 font-mono text-xs leading-relaxed">
             <code>{snippet}</code>
           </pre>
           <p className="text-sm text-muted-foreground">

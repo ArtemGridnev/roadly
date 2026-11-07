@@ -37,11 +37,12 @@ const columns = helper.columns([
       <div className="min-w-0">
         <button
           type="button"
-          className="block max-w-full cursor-pointer truncate rounded-lg text-left font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          dir="auto"
+          className="block max-w-full cursor-pointer truncate rounded-lg text-start font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
           {info.getValue()}
         </button>
-        <p className="truncate text-muted-foreground">{info.row.original.description}</p>
+        <p dir="auto" className="truncate text-muted-foreground">{info.row.original.description}</p>
       </div>
     ),
   }),

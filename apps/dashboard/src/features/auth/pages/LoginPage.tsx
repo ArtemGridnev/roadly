@@ -59,6 +59,7 @@ export function LoginPage() {
             <Input
               id={ids.email}
               type="email"
+              dir="ltr"
               autoComplete="email"
               autoFocus
               aria-invalid={errors.email ? true : undefined}
@@ -75,6 +76,7 @@ export function LoginPage() {
             <Input
               id={ids.password}
               type="password"
+              dir="ltr"
               autoComplete="current-password"
               aria-invalid={errors.password ? true : undefined}
               aria-describedby={errors.password ? fieldDescriptionId(ids.password) : undefined}

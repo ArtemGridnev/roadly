@@ -7,16 +7,19 @@ import {
 } from "lucide-react"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useInlineSides } from "@/i18n/useInlineSides"
 import { useTheme } from "@/theme/useTheme"
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { resolvedTheme } = useTheme()
   const isMobile = useIsMobile()
+  const { end } = useInlineSides()
 
   return (
     <Sonner
       theme={resolvedTheme}
-      position={isMobile ? "top-center" : "bottom-right"}
+      position={isMobile ? "top-center" : `bottom-${end}`}
+      dir={end === "left" ? "rtl" : "ltr"}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,

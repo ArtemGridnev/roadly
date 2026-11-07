@@ -16,9 +16,9 @@ export function PageContent({ title, actions, className, children }: PageContent
   return (
     <>
       <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 md:px-6">
-        <SidebarTrigger aria-label={t('common.openMenu')} className="-ml-1 md:hidden" />
+        <SidebarTrigger aria-label={t('common.openMenu')} className="-ms-1 md:hidden" />
         <h1 className="text-xl font-semibold">{title}</h1>
-        {actions ? <div className="ml-auto flex items-center gap-2">{actions}</div> : null}
+        {actions ? <div className="ms-auto flex items-center gap-2">{actions}</div> : null}
       </header>
       <div className={cn('min-h-0 min-w-0 flex-1 overflow-auto p-4 md:p-6', className)}>{children}</div>
     </>

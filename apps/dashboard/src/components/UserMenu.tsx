@@ -10,12 +10,14 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import { useGetMeQuery, useLogoutMutation } from '@/features/auth/api/auth-api'
+import { useInlineSides } from '@/i18n/useInlineSides'
 
 export function UserMenu() {
   const { t } = useTranslation()
   const { data: agent } = useGetMeQuery()
   const [logout] = useLogoutMutation()
   const { isMobile } = useSidebar()
+  const { end } = useInlineSides()
 
   if (!agent) {
     return null
@@ -27,18 +29,18 @@ export function UserMenu() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg">
-              <span className="grid flex-1 text-left leading-tight">
-                <span className="truncate font-medium">{agent.name}</span>
-                <span className="truncate text-xs text-muted-foreground">{agent.email}</span>
+              <span className="grid flex-1 text-start leading-tight">
+                <span dir="auto" className="max-w-full justify-self-start truncate font-medium">{agent.name}</span>
+                <span dir="auto" className="max-w-full justify-self-start truncate text-xs text-muted-foreground">{agent.email}</span>
               </span>
-              <ChevronsUpDown className="ml-auto" />
+              <ChevronsUpDown className="ms-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent side={isMobile ? 'top' : 'right'} align="end" className="w-56">
+          <DropdownMenuContent side={isMobile ? 'top' : end} align="end" className="w-56">
             <DropdownMenuLabel className="grid font-normal leading-tight">
-              <span className="truncate font-medium">{agent.name}</span>
-              <span className="truncate text-xs text-muted-foreground">{agent.email}</span>
+              <span dir="auto" className="max-w-full justify-self-start truncate font-medium">{agent.name}</span>
+              <span dir="auto" className="max-w-full justify-self-start truncate text-xs text-muted-foreground">{agent.email}</span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => logout()}>

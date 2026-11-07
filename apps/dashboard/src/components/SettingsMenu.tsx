@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar'
 import { LANGUAGE_NAMES } from '@/i18n/i18n'
+import { useInlineSides } from '@/i18n/useInlineSides'
 import { useLanguage } from '@/i18n/useLanguage'
 import type { Theme } from '@/theme/theme-storage'
 import { useTheme } from '@/theme/useTheme'
@@ -87,6 +88,7 @@ function SettingsMenuContent({ side, align }: SettingsMenuContentProps) {
 export function SidebarSettingsMenu() {
   const { t } = useTranslation()
   const { isMobile } = useSidebar()
+  const { end } = useInlineSides()
 
   return (
     <SidebarMenuItem>
@@ -97,7 +99,7 @@ export function SidebarSettingsMenu() {
             <span>{t('settings.title')}</span>
           </SidebarMenuButton>
         </DropdownMenuTrigger>
-        <SettingsMenuContent side={isMobile ? 'top' : 'right'} align="end" />
+        <SettingsMenuContent side={isMobile ? 'top' : end} align="end" />
       </DropdownMenu>
     </SidebarMenuItem>
   )

@@ -5,7 +5,7 @@ import type { UserEvent } from '@testing-library/user-event'
 export async function chooseSetting(user: UserEvent, setting: string, option: string) {
   await user.click(await screen.findByRole('button', { name: /^(Settings|הגדרות)$/ }))
   screen.getByRole('menuitem', { name: setting }).focus()
-  await user.keyboard('{ArrowRight}')
+  await user.keyboard(document.documentElement.dir === 'rtl' ? '{ArrowLeft}' : '{ArrowRight}')
   ;(await screen.findByRole('menuitemradio', { name: option })).focus()
   await user.keyboard('{Enter}')
 }

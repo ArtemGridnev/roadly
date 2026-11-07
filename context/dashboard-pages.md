@@ -108,6 +108,7 @@ A **Settings** row sits in the sidebar footer above the user menu — not inside
 - **Sign up:** the current language is saved on the new Agent.
 - **Signed in:** a saved `Agent.language` wins over the browser's and replaces it. An Agent with none keeps the current language until they pick one. Picking one applies it at once and saves it with `PATCH /auth/me`; if that fails, the previous language comes back with a toast.
 - Theme stays per browser (`localStorage`); only language is saved on the server.
+- **Hebrew mirrors the whole layout:** `dir` and `lang` are set on `<html>` before first paint (an inline script in `index.html`, which must stay in sync with `language-storage.ts`). The sidebar and drawer swap sides, board columns run right to left with Backlog on the right, and the left and right arrows move a picked-up card to the column on that side. The Install snippet stays left to right. dnd-kit's horizontal scrolling doesn't work in RTL, so `RtlAutoScroller` and the keyboard coordinate getter handle it there.
 
 Built on shadcn/ui's `Sidebar`. On mobile it's hidden behind a menu button in the top bar and slides in as a sheet; on desktop it's fixed.
 

@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { i18n } from '@/i18n/i18n'
 import { mockApi, type MockResponse } from '@/test/mock-api'
 import { renderApp } from '@/test/render-app'
 import { REQUEST_STATUSES } from '../../feature-requests/constants/request-status'
@@ -141,6 +142,21 @@ test('moves a request to the next column with the keyboard', async () => {
   expect(titlesIn(await column('In progress'))).toEqual([])
   expect(update).toHaveBeenCalledWith({ status: 'SHIPPED' }, expect.anything())
   expect(await screen.findByText('SSO moved to Shipped.')).toBeInTheDocument()
+})
+
+test('moves a request to the next column with the left arrow in Hebrew', async () => {
+  await i18n.changeLanguage('he')
+  layOutColumns()
+  const update = vi.fn((body: unknown) => ({ status: 200, body: { ...sso, ...(body as object) } }))
+  const { user } = setup(() => ({ status: 200, body: [sso] }), { 'PATCH /feature-requests/r3': update })
+  await column('בתהליך')
+
+  screen.getByRole('button', { name: 'SSO' }).focus()
+  await user.keyboard(' ')
+  await user.keyboard('{ArrowLeft}')
+  await user.keyboard(' ')
+
+  await vi.waitFor(() => expect(update).toHaveBeenCalledWith({ status: 'SHIPPED' }, expect.anything()))
 })
 
 test('puts the request back and says so when the move fails', async () => {

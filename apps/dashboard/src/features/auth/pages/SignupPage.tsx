@@ -95,6 +95,7 @@ export function SignupPage() {
           <FormField id={ids.name} label={t('auth.signup.name')} error={errors.name && t('auth.signup.nameError')}>
             <Input
               id={ids.name}
+              dir="auto"
               autoComplete="name"
               autoFocus
               aria-invalid={errors.name ? true : undefined}
@@ -107,6 +108,7 @@ export function SignupPage() {
             <Input
               id={ids.email}
               type="email"
+              dir="ltr"
               autoComplete="email"
               aria-invalid={errors.email ? true : undefined}
               aria-describedby={errors.email ? fieldDescriptionId(ids.email) : undefined}
@@ -123,6 +125,7 @@ export function SignupPage() {
             <Input
               id={ids.password}
               type="password"
+              dir="ltr"
               autoComplete="new-password"
               aria-invalid={errors.password ? true : undefined}
               aria-describedby={fieldDescriptionId(ids.password)}

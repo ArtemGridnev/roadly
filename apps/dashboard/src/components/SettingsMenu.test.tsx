@@ -143,6 +143,34 @@ test('explains missing password rules in the chosen language', async () => {
   expect(await screen.findByText('חסרים: לפחות 8 תווים, אות גדולה ומספר.')).toBeInTheDocument()
 })
 
+test('lays the page out right to left in Hebrew and back again', async () => {
+  const { user } = setupSignedIn()
+
+  await chooseSetting(user, 'Language', 'עברית')
+  await screen.findByRole('heading', { name: 'מפת דרכים' })
+
+  expect(document.documentElement).toHaveAttribute('dir', 'rtl')
+  expect(document.documentElement).toHaveAttribute('lang', 'he')
+  expect(document.querySelector('[data-slot="sidebar"][data-side]')).toHaveAttribute('data-side', 'right')
+
+  await chooseSetting(user, 'שפה', 'English')
+  await screen.findByRole('heading', { name: 'Roadmap' })
+
+  expect(document.documentElement).toHaveAttribute('dir', 'ltr')
+  expect(document.documentElement).toHaveAttribute('lang', 'en')
+  expect(document.querySelector('[data-slot="sidebar"][data-side]')).toHaveAttribute('data-side', 'left')
+})
+
+test('opens the settings submenus with the left arrow in Hebrew', async () => {
+  const { user } = setupSignedIn('he')
+
+  await screen.findByRole('heading', { name: 'מפת דרכים' })
+  await chooseSetting(user, 'ערכת נושא', 'כהה')
+
+  expect(document.documentElement).toHaveClass('dark')
+  document.documentElement.classList.remove('dark')
+})
+
 test('uses every Hebrew plural form', () => {
   const votes = (count: number) => i18n.t('common.votes', { count, lng: 'he' })
 

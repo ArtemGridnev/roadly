@@ -66,6 +66,7 @@ export function RequestForm({ request, ref }: RequestFormProps) {
       <FormField id={ids.title} label={t('roadmap.form.title')} error={errors.title && t('roadmap.form.titleError')}>
         <Input
           id={ids.title}
+          dir="auto"
           aria-invalid={errors.title ? true : undefined}
           aria-describedby={errors.title ? fieldDescriptionId(ids.title) : undefined}
           {...register('title', { setValueAs: trim })}
@@ -75,6 +76,7 @@ export function RequestForm({ request, ref }: RequestFormProps) {
       <FormField id={ids.description} label={t('roadmap.form.description')} error={errors.description && t('roadmap.form.descriptionError')}>
         <Textarea
           id={ids.description}
+          dir="auto"
           rows={6}
           aria-invalid={errors.description ? true : undefined}
           aria-describedby={errors.description ? fieldDescriptionId(ids.description) : undefined}

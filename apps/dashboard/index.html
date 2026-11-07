@@ -15,6 +15,23 @@
         document.documentElement.classList.toggle('dark', dark)
       } catch {}
     </script>
+    <script>
+      // Applies the language before first paint; mirrors src/i18n/language-storage.ts.
+      {
+        let stored = null
+        try {
+          stored = localStorage.getItem('roadly-language')
+        } catch {}
+        const language =
+          stored === 'en' || stored === 'he'
+            ? stored
+            : navigator.language.toLowerCase().startsWith('he')
+              ? 'he'
+              : 'en'
+        document.documentElement.lang = language
+        document.documentElement.dir = language === 'he' ? 'rtl' : 'ltr'
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

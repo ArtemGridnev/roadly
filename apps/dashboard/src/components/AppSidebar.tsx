@@ -13,6 +13,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { useInlineSides } from '@/i18n/useInlineSides'
 import { RoadlyMark } from './RoadlyLogo'
 import { SidebarSettingsMenu } from './SettingsMenu'
 import { UserMenu } from './UserMenu'
@@ -20,11 +21,12 @@ import { WorkspaceSwitcher } from '@/features/workspaces/components/WorkspaceSwi
 
 export function AppSidebar({ workspace }: { workspace: Workspace }) {
   const { t } = useTranslation()
+  const { start } = useInlineSides()
 
   return (
-    <Sidebar variant="inset">
+    <Sidebar variant="inset" side={start}>
       <SidebarHeader className="flex-row items-center">
-        <RoadlyMark className="ml-1 size-7" />
+        <RoadlyMark className="ms-1 size-7" />
         <WorkspaceSwitcher workspace={workspace} />
       </SidebarHeader>
 

@@ -21,10 +21,14 @@ const collisionDetection: CollisionDetection = (args) => {
   return hits.length ? hits : rectIntersection(args)
 }
 
-const COLUMN_STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 }
+const COLUMN_STEPS: Record<string, Record<string, number>> = {
+  ltr: { ArrowLeft: -1, ArrowRight: 1 },
+  rtl: { ArrowLeft: 1, ArrowRight: -1 },
+}
 
 const columnKeyboardCoordinates: KeyboardCoordinateGetter = (event, { context }) => {
-  const step = COLUMN_STEPS[event.code]
+  const isRtl = document.documentElement.dir === 'rtl'
+  const step = COLUMN_STEPS[isRtl ? 'rtl' : 'ltr'][event.code]
   if (!step) {
     return
   }
@@ -32,7 +36,10 @@ const columnKeyboardCoordinates: KeyboardCoordinateGetter = (event, { context })
 
   const current = (context.over?.id ?? context.active?.data.current?.status) as RequestStatus
   const next = REQUEST_STATUSES[REQUEST_STATUSES.indexOf(current) + step]
-  const rect = next && context.droppableRects.get(next)
+  const node = isRtl && next ? context.droppableContainers.get(next)?.node.current : null
+  // dnd-kit's keyboard scrolling has the same negative scrollLeft problem as RtlAutoScroller.
+  node?.scrollIntoView({ inline: 'nearest', block: 'nearest' })
+  const rect = node ? node.getBoundingClientRect() : next && context.droppableRects.get(next)
 
   return rect ? { x: rect.left + 12, y: rect.top + 40 } : undefined
 }

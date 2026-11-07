@@ -68,6 +68,7 @@ export function CreateWorkspaceForm({ onCreated }: CreateWorkspaceFormProps) {
       <FormField id={ids.name} label={t('workspaces.form.name')} error={errors.name && t('workspaces.form.nameError')}>
         <Input
           id={ids.name}
+          dir="auto"
           autoComplete="organization"
           autoFocus
           aria-invalid={errors.name ? true : undefined}
@@ -86,6 +87,7 @@ export function CreateWorkspaceForm({ onCreated }: CreateWorkspaceFormProps) {
       <FormField id={ids.slug} label={t('workspaces.form.url')} hint={t('workspaces.form.urlHint')} error={slugError}>
         <Input
           id={ids.slug}
+          dir="ltr"
           autoComplete="off"
           spellCheck={false}
           aria-invalid={errors.slug ? true : undefined}

@@ -6,10 +6,12 @@ import {
   type UniqueIdentifier,
 } from '@dnd-kit/core'
 import type { FeatureRequest, RequestStatus } from '@roadly/shared'
+import { Direction } from 'radix-ui'
 import { useState } from 'react'
 import { REQUEST_STATUSES } from '../../feature-requests/constants/request-status'
 import { BoardCard } from './BoardCard'
 import { BoardColumn } from './BoardColumn'
+import { RtlAutoScroller } from './RtlAutoScroller'
 import { useBoardDnd } from '../hooks/use-board-dnd'
 import { useMoveRequest } from '../hooks/use-move-request'
 
@@ -20,6 +22,7 @@ interface RoadmapBoardProps {
 
 export function RoadmapBoard({ requests, onOpen }: RoadmapBoardProps) {
   const dnd = useBoardDnd(requests)
+  const isRtl = Direction.useDirection() === 'rtl'
   const moveRequest = useMoveRequest()
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
   const [landedElsewhere, setLandedElsewhere] = useState(false)
@@ -45,6 +48,7 @@ export function RoadmapBoard({ requests, onOpen }: RoadmapBoardProps) {
   return (
     <DndContext
       {...dnd}
+      autoScroll={isRtl ? { threshold: { x: 0, y: 0.2 } } : true}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveId(null)}
@@ -62,6 +66,8 @@ export function RoadmapBoard({ requests, onOpen }: RoadmapBoardProps) {
           />
         ))}
       </div>
+
+      {isRtl && activeId ? <RtlAutoScroller /> : null}
 
       <DragOverlay dropAnimation={landedElsewhere ? null : undefined}>
         {activeRequest ? <BoardCard request={activeRequest} className="cursor-grabbing shadow-sm" /> : null}
