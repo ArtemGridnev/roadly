@@ -12,15 +12,16 @@ interface MyRequestsViewProps {
 export function MyRequestsView({ onSelectRequest }: MyRequestsViewProps) {
   const { widgetKey, contact, identifyError } = useWidgetSession()
   const [sort, setSort] = useState<WidgetFeatureRequestSort>('newest')
-  const { data, isPending, error, refetch } = useFeatureRequests(widgetKey, contact?.id, sort)
-
-  const myRequests = contact
-    ? data?.filter((request) => request.isMine)
-    : undefined
+  const { data, isPending, error, refetch } = useFeatureRequests(
+    widgetKey,
+    contact?.id,
+    sort,
+    'mine',
+  )
 
   return (
     <RequestList
-      requests={myRequests}
+      requests={data}
       isPending={isPending || !contact}
       error={error ?? identifyError}
       emptyTitle="You haven't requested anything yet"

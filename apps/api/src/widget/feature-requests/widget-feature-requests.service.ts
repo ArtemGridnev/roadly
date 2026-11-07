@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { RequestStatus } from '@prisma/client';
 import { FeatureRequestsService } from '../../feature-requests/feature-requests.service';
+import { FeatureRequestResponseDto } from '../../feature-requests/dto/feature-request-response.dto';
 import { VotesService } from '../../votes/votes.service';
 import { FindWidgetFeatureRequestsQueryDto } from './dto/find-widget-feature-requests-query.dto';
 import { WidgetFeatureRequestResponseDto } from './dto/widget-feature-request-response.dto';
@@ -19,8 +21,30 @@ export class WidgetFeatureRequestsService {
     const featureRequests = await this.featureRequestsService.findAll(
       workspaceId,
       { sort: query.sort },
+      { excludeStatus: RequestStatus.SHIPPED },
     );
 
+    return this.toWidgetResponses(featureRequests, contactId);
+  }
+
+  async findMine(
+    workspaceId: string,
+    contactId: string,
+    query: FindWidgetFeatureRequestsQueryDto,
+  ): Promise<WidgetFeatureRequestResponseDto[]> {
+    const featureRequests = await this.featureRequestsService.findAll(
+      workspaceId,
+      { sort: query.sort },
+      { authorId: contactId },
+    );
+
+    return this.toWidgetResponses(featureRequests, contactId);
+  }
+
+  private async toWidgetResponses(
+    featureRequests: FeatureRequestResponseDto[],
+    contactId: string | undefined,
+  ): Promise<WidgetFeatureRequestResponseDto[]> {
     const votedIds = contactId
       ? await this.votesService.findVotedRequestIds(
           contactId,

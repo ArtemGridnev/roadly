@@ -424,6 +424,39 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       });
     });
 
+    it('leaves out shipped feature requests', async () => {
+      const open = await prisma.featureRequest.create({
+        data: {
+          title: 'Dark mode',
+          description: 'Please add dark mode',
+          workspaceId,
+          authorId: contactId,
+          status: 'IN_PROGRESS',
+        },
+      });
+      await prisma.featureRequest.create({
+        data: {
+          title: 'CSV export',
+          description: 'Already shipped',
+          workspaceId,
+          authorId: contactId,
+          status: 'SHIPPED',
+        },
+      });
+
+      const response = await request(app.getHttpServer())
+        .get('/widget/feature-requests')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set(CONTACT_ID_HEADER, contactId)
+        .expect(200);
+
+      expect(
+        (response.body as WidgetFeatureRequestResponseDto[]).map(
+          (featureRequest) => featureRequest.id,
+        ),
+      ).toEqual([open.id]);
+    });
+
     it('rejects a request missing the widget key header', async () => {
       await request(app.getHttpServer())
         .get('/widget/feature-requests')
@@ -434,6 +467,123 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       await request(app.getHttpServer())
         .get('/widget/feature-requests')
         .set(WIDGET_KEY_HEADER, 'does-not-exist')
+        .expect(401);
+    });
+  });
+
+  describe('GET /widget/feature-requests/mine', () => {
+    let otherContactId: string;
+
+    beforeEach(async () => {
+      const otherContact = await prisma.contact.create({
+        data: {
+          workspaceId,
+          externalId: 'ext-2',
+          name: 'John Roe',
+          email: 'john@example.com',
+        },
+      });
+      otherContactId = otherContact.id;
+    });
+
+    const createRequest = (
+      title: string,
+      authorId: string,
+      createdAt: string,
+      status: 'BACKLOG' | 'SHIPPED' = 'BACKLOG',
+    ) =>
+      prisma.featureRequest.create({
+        data: {
+          title,
+          description: title,
+          workspaceId,
+          authorId,
+          status,
+          createdAt: new Date(createdAt),
+        },
+      });
+
+    const listMine = async (query = '') => {
+      const response = await request(app.getHttpServer())
+        .get(`/widget/feature-requests/mine${query}`)
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set(CONTACT_ID_HEADER, contactId)
+        .expect(200);
+
+      return response.body as WidgetFeatureRequestResponseDto[];
+    };
+
+    it("lists only the identified contact's requests, shipped included", async () => {
+      const backlog = await createRequest('Mine', contactId, '2026-01-01');
+      const shipped = await createRequest(
+        'Mine shipped',
+        contactId,
+        '2026-02-01',
+        'SHIPPED',
+      );
+      await createRequest('Others', otherContactId, '2026-03-01');
+
+      const body = await listMine();
+
+      expect(body.map((featureRequest) => featureRequest.id)).toEqual([
+        shipped.id,
+        backlog.id,
+      ]);
+      expect(body.every((featureRequest) => featureRequest.isMine)).toBe(true);
+    });
+
+    it('marks the author vote as hasVoted', async () => {
+      await request(app.getHttpServer())
+        .post('/widget/feature-requests')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set(CONTACT_ID_HEADER, contactId)
+        .send({ title: 'Dark mode', description: 'Please add dark mode' })
+        .expect(201);
+
+      const [featureRequest] = await listMine();
+
+      expect(featureRequest).toMatchObject({ hasVoted: true, voteCount: 1 });
+    });
+
+    it('orders by vote count when sort=top', async () => {
+      const older = await createRequest('Older', contactId, '2026-01-01');
+      const newer = await createRequest('Newer', contactId, '2026-02-01');
+      await prisma.vote.create({
+        data: { requestId: older.id, contactId: otherContactId },
+      });
+
+      const body = await listMine('?sort=top');
+
+      expect(body.map((featureRequest) => featureRequest.id)).toEqual([
+        older.id,
+        newer.id,
+      ]);
+    });
+
+    it('rejects a request missing the contact id header', async () => {
+      await request(app.getHttpServer())
+        .get('/widget/feature-requests/mine')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .expect(401);
+    });
+
+    it('rejects a contact id that belongs to a different workspace', async () => {
+      const otherWorkspace = await prisma.workspace.create({
+        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
+      });
+      const outsider = await prisma.contact.create({
+        data: {
+          workspaceId: otherWorkspace.id,
+          externalId: 'ext-1',
+          name: 'John Roe',
+          email: 'john@example.com',
+        },
+      });
+
+      await request(app.getHttpServer())
+        .get('/widget/feature-requests/mine')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set(CONTACT_ID_HEADER, outsider.id)
         .expect(401);
     });
   });

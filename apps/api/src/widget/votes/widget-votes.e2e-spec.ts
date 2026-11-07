@@ -79,6 +79,21 @@ describe('WidgetVotesController (e2e)', () => {
         .expect(409);
     });
 
+    it('rejects a vote on a shipped feature request', async () => {
+      await prisma.featureRequest.update({
+        where: { id: requestId },
+        data: { status: 'SHIPPED' },
+      });
+
+      await request(app.getHttpServer())
+        .post(`/widget/feature-requests/${requestId}/votes`)
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set(CONTACT_ID_HEADER, contactId)
+        .expect(409);
+
+      expect(await prisma.vote.count({ where: { requestId } })).toBe(0);
+    });
+
     it('rejects a request missing the widget key header', async () => {
       await request(app.getHttpServer())
         .post(`/widget/feature-requests/${requestId}/votes`)
@@ -177,6 +192,22 @@ describe('WidgetVotesController (e2e)', () => {
         .set(WIDGET_KEY_HEADER, widgetKey)
         .set(CONTACT_ID_HEADER, contactId)
         .expect(201);
+    });
+
+    it('keeps the vote on a shipped feature request', async () => {
+      await prisma.vote.create({ data: { requestId, contactId } });
+      await prisma.featureRequest.update({
+        where: { id: requestId },
+        data: { status: 'SHIPPED' },
+      });
+
+      await request(app.getHttpServer())
+        .delete(`/widget/feature-requests/${requestId}/votes`)
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set(CONTACT_ID_HEADER, contactId)
+        .expect(409);
+
+      expect(await prisma.vote.count({ where: { requestId } })).toBe(1);
     });
 
     it('returns 404 when the contact has not voted', async () => {

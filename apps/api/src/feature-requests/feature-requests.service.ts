@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { RequestStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFeatureRequestDto } from './dto/create-feature-request.dto';
 import { UpdateFeatureRequestDto } from './dto/update-feature-request.dto';
@@ -33,11 +34,16 @@ export class FeatureRequestsService {
   async findAll(
     workspaceId: string,
     query: FindFeatureRequestsQueryDto,
+    {
+      authorId,
+      excludeStatus,
+    }: { authorId?: string; excludeStatus?: RequestStatus } = {},
   ): Promise<FeatureRequestResponseDto[]> {
     const featureRequests = await this.prisma.featureRequest.findMany({
       where: {
         workspaceId,
-        status: query.status,
+        authorId,
+        status: { equals: query.status, not: excludeStatus },
       },
       include: featureRequestVoteCountSelect,
       orderBy:
