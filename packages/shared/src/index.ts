@@ -1,5 +1,7 @@
 export { requestStatusSchema } from './types/request-status';
 export type { RequestStatus } from './types/request-status';
+export { languageSchema } from './types/language';
+export type { Language } from './types/language';
 export type { Workspace } from './types/workspace';
 export type { Agent } from './types/agent';
 export type { Contact } from './types/contact';
@@ -24,8 +26,16 @@ export type {
   TokenRefreshResponse,
 } from './api/auth';
 
-export { createAgentSchema, updateAgentSchema } from './api/agent';
-export type { CreateAgentInput, UpdateAgentInput } from './api/agent';
+export {
+  createAgentSchema,
+  updateAgentSchema,
+  updateCurrentAgentSchema,
+} from './api/agent';
+export type {
+  CreateAgentInput,
+  UpdateAgentInput,
+  UpdateCurrentAgentInput,
+} from './api/agent';
 
 export { createWorkspaceSchema, updateWorkspaceSchema } from './api/workspace';
 export type {

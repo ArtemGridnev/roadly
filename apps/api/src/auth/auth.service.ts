@@ -7,6 +7,7 @@ import { Agent } from '@prisma/client';
 import { AgentsService } from '../agents/agents.service';
 import { AgentResponseDto } from '../agents/dto/agent-response.dto';
 import { CreateAgentDto } from '../agents/dto/create-agent.dto';
+import { UpdateCurrentAgentDto } from '../agents/dto/update-current-agent.dto';
 import { AccessTokenPayload } from './dto/access-token-payload.dto';
 import { RefreshTokensService } from '../refresh-tokens/refresh-tokens.service';
 import { RefreshTokenPayload } from './dto/refresh-token-payload.dto';
@@ -54,6 +55,18 @@ export class AuthService {
     async getCurrentAgent(agentId: string): Promise<AgentResponseDto> {
         try {
             return await this.agentsService.findOne(agentId);
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw new UnauthorizedException();
+            }
+
+            throw error;
+        }
+    }
+
+    async updateCurrentAgent(agentId: string, updateCurrentAgentDto: UpdateCurrentAgentDto): Promise<AgentResponseDto> {
+        try {
+            return await this.agentsService.update(agentId, updateCurrentAgentDto);
         } catch (error) {
             if (error instanceof NotFoundException) {
                 throw new UnauthorizedException();
