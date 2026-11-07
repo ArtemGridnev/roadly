@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +28,7 @@ interface DrawerProps {
 }
 
 export function Drawer({ open, onClose, title, description, hasUnsavedChanges, children }: DrawerProps) {
+  const { t } = useTranslation()
   const [confirmDiscard, setConfirmDiscard] = useState(false)
 
   function requestClose() {
@@ -52,12 +54,12 @@ export function Drawer({ open, onClose, title, description, hasUnsavedChanges, c
       <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
-            <AlertDialogDescription>Your edits haven't been saved.</AlertDialogDescription>
+            <AlertDialogTitle>{t('common.discardTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('common.discardDescription')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep editing</AlertDialogCancel>
-            <AlertDialogAction onClick={onClose}>Discard</AlertDialogAction>
+            <AlertDialogCancel>{t('common.keepEditing')}</AlertDialogCancel>
+            <AlertDialogAction onClick={onClose}>{t('common.discard')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

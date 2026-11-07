@@ -100,7 +100,14 @@ Top to bottom:
 3. **Install**
 4. *(footer)* **User menu** — Agent name/email, sign out. Account only — no app preferences here.
 
-A **Theme** row (light / dark / system) sits in the sidebar footer above the user menu — not inside it; it moves to a Settings page once one exists.
+A **Settings** row sits in the sidebar footer above the user menu — not inside it — and opens a menu with **Theme** (light / dark / system) and **Language** (English / עברית) submenus. Standalone pages (sign in, sign up, onboarding, errors) have no sidebar, so they show the same menu behind a gear button in the corner. It moves to a Settings page once one exists.
+
+## Language
+
+- **Signed out:** the choice saved in this browser (`localStorage`, `roadly-language`), otherwise the browser language (`he*` → Hebrew, anything else → English).
+- **Sign up:** the current language is saved on the new Agent.
+- **Signed in:** a saved `Agent.language` wins over the browser's and replaces it. An Agent with none keeps the current language until they pick one. Picking one applies it at once and saves it with `PATCH /auth/me`; if that fails, the previous language comes back with a toast.
+- Theme stays per browser (`localStorage`); only language is saved on the server.
 
 Built on shadcn/ui's `Sidebar`. On mobile it's hidden behind a menu button in the top bar and slides in as a sheet; on desktop it's fixed.
 

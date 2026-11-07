@@ -1,6 +1,7 @@
 import type { FeatureRequest } from '@roadly/shared'
 import { ArrowBigUp } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Drawer } from '@/components/Drawer'
 import { Separator } from '@/components/ui/separator'
 import { formatRequestDate } from '@/lib/format-date'
@@ -14,6 +15,7 @@ interface RequestDrawerProps {
 }
 
 export function RequestDrawer({ request, onClose }: RequestDrawerProps) {
+  const { t, i18n } = useTranslation()
   const [shown, setShown] = useState(request)
   const formRef = useRef<RequestFormHandle>(null)
 
@@ -26,18 +28,18 @@ export function RequestDrawer({ request, onClose }: RequestDrawerProps) {
       open={request !== undefined}
       onClose={onClose}
       title={shown?.title ?? ''}
-      description={shown ? `Created ${formatRequestDate(shown.createdAt)}` : ''}
+      description={shown ? t('roadmap.drawer.created', { date: formatRequestDate(shown.createdAt, i18n.language) }) : ''}
       hasUnsavedChanges={() => formRef.current?.isDirty() ?? false}
     >
       {shown ? (
         <>
           <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-sm">
-            <dt className="text-muted-foreground">Votes</dt>
+            <dt className="text-muted-foreground">{t('roadmap.drawer.votes')}</dt>
             <dd className="flex items-center gap-1 font-medium">
               <ArrowBigUp aria-hidden="true" className="size-4" />
               {shown.voteCount}
             </dd>
-            <dt className="text-muted-foreground">Author</dt>
+            <dt className="text-muted-foreground">{t('roadmap.drawer.author')}</dt>
             <dd className="min-w-0">
               {shown.author ? (
                 <>
@@ -50,7 +52,7 @@ export function RequestDrawer({ request, onClose }: RequestDrawerProps) {
                   </a>
                 </>
               ) : (
-                <span className="text-muted-foreground">Added by your team</span>
+                <span className="text-muted-foreground">{t('roadmap.drawer.addedByTeam')}</span>
               )}
             </dd>
           </dl>

@@ -47,6 +47,7 @@ roadly/
 - @tanstack/react-table for request tables
 - react-hook-form + zod for forms
 - Framer Motion + tw-animate-css (the Tailwind v4 replacement for tailwindcss-animate) for motion, sonner for toasts
+- react-i18next for UI text (`src/i18n/`), English and Hebrew; rules in `dashboard-pages.md` § Language
 
 ### Backend (`apps/api`)
 

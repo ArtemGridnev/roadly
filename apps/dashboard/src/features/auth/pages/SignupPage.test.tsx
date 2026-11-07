@@ -83,6 +83,7 @@ test('creates the account with trimmed details and lands on onboarding', async (
     name: 'Ada Lovelace',
     email: 'ada@example.com',
     password: 'Analytical1',
+    language: 'en',
   }, expect.anything())
 })
 

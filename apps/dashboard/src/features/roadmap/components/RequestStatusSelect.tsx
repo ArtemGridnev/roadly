@@ -1,4 +1,5 @@
 import type { FeatureRequest, RequestStatus } from '@roadly/shared'
+import { useTranslation } from 'react-i18next'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -12,11 +13,12 @@ import { StatusPill } from '../../feature-requests/components/StatusPill'
 import { useMoveRequest } from '../hooks/use-move-request'
 
 export function RequestStatusSelect({ request }: { request: FeatureRequest }) {
+  const { t } = useTranslation()
   const moveRequest = useMoveRequest()
 
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor="request-status">Status</Label>
+      <Label htmlFor="request-status">{t('roadmap.drawer.status')}</Label>
       <Select
         value={request.status}
         onValueChange={(status) => moveRequest(request, status as RequestStatus)}

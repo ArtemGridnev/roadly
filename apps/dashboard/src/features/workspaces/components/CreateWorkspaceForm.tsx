@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createWorkspaceSchema, type CreateWorkspaceInput, type Workspace } from '@roadly/shared'
 import { getErrorStatus } from '@/api/errors'
@@ -10,8 +11,6 @@ import { fieldDescriptionId } from '@/lib/field-ids'
 import { nextSlug, slugify } from '../utils/slug'
 import { useCreateWorkspaceMutation } from '../api/workspaces-api'
 
-const SLUG_HINT = "Lowercase letters, numbers, and hyphens. Can't be changed later."
-
 const trim = (value: string) => value.trim()
 
 interface CreateWorkspaceFormProps {
@@ -19,6 +18,7 @@ interface CreateWorkspaceFormProps {
 }
 
 export function CreateWorkspaceForm({ onCreated }: CreateWorkspaceFormProps) {
+  const { t } = useTranslation()
   const [createWorkspace, { error: createError, isLoading }] = useCreateWorkspaceMutation()
   const [slugEdited, setSlugEdited] = useState(false)
   const formId = useId()
@@ -45,11 +45,11 @@ export function CreateWorkspaceForm({ onCreated }: CreateWorkspaceFormProps) {
 
     const status = getErrorStatus(result.error)
     if (status === 409) {
-      setError('slug', { type: 'server', message: `That URL is taken. Try ${nextSlug(input.slug)}.` })
+      setError('slug', { type: 'server', message: t('workspaces.form.urlTaken', { slug: nextSlug(input.slug) }) })
     } else if (status === 400) {
       setError('slug', {
         type: 'server',
-        message: "That URL can't be used. Use 3–40 lowercase letters, numbers, and hyphens.",
+        message: t('workspaces.form.urlInvalid'),
       })
     }
   })
@@ -57,15 +57,15 @@ export function CreateWorkspaceForm({ onCreated }: CreateWorkspaceFormProps) {
   const createStatus = getErrorStatus(createError)
   const formError =
     createError && createStatus !== 409 && createStatus !== 400
-      ? "Your workspace wasn't created. Check your connection and try again."
+      ? t('workspaces.form.failed')
       : null
 
   const slugError =
-    errors.slug?.type === 'server' ? errors.slug.message : errors.slug && 'Add a URL.'
+    errors.slug?.type === 'server' ? errors.slug.message : errors.slug && t('workspaces.form.urlError')
 
   return (
     <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
-      <FormField id={ids.name} label="Name" error={errors.name && 'Add a name.'}>
+      <FormField id={ids.name} label={t('workspaces.form.name')} error={errors.name && t('workspaces.form.nameError')}>
         <Input
           id={ids.name}
           autoComplete="organization"
@@ -83,7 +83,7 @@ export function CreateWorkspaceForm({ onCreated }: CreateWorkspaceFormProps) {
         />
       </FormField>
 
-      <FormField id={ids.slug} label="URL" hint={SLUG_HINT} error={slugError}>
+      <FormField id={ids.slug} label={t('workspaces.form.url')} hint={t('workspaces.form.urlHint')} error={slugError}>
         <Input
           id={ids.slug}
           autoComplete="off"
@@ -101,7 +101,7 @@ export function CreateWorkspaceForm({ onCreated }: CreateWorkspaceFormProps) {
       ) : null}
 
       <Button type="submit" disabled={isLoading}>
-        {isLoading ? 'Creating workspace…' : 'Create workspace'}
+        {isLoading ? t('workspaces.form.submitting') : t('workspaces.form.submit')}
       </Button>
     </form>
   )

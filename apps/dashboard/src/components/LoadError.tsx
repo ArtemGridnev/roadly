@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 
 interface LoadErrorProps {
@@ -5,13 +6,15 @@ interface LoadErrorProps {
 }
 
 export function LoadError({ onRetry }: LoadErrorProps) {
+  const { t } = useTranslation()
+
   return (
     <div role="alert" className="flex flex-col items-center gap-3 text-center">
       <p className="text-sm text-muted-foreground">
-        We couldn't reach Roadly. Check your connection and try again.
+        {t('common.loadError')}
       </p>
       <Button variant="outline" onClick={onRetry}>
-        Try again
+        {t('common.tryAgain')}
       </Button>
     </div>
   )

@@ -12,6 +12,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Dashboard translations and Settings menu (`feat/dashboard-i18n`)**:
+  - Second step of i18n. react-i18next with typed keys; all dashboard text extracted to `src/i18n/locales/en.ts` and `he.ts` (Hebrew is a draft awaiting review). Dates and password-rule lists format in the current language.
+  - `ThemeToggle` replaced by `SettingsMenu`: a Settings row in the sidebar and a gear on standalone pages, each with Theme and Language submenus. Language rules in `dashboard-pages.md`.
+  - Hebrew still lays out left to right, with `<html lang>` left at `en`, until `feat/dashboard-rtl`. Remaining steps: dashboard RTL, widget `language` init option.
+
 - **Agent language on the server (`feat/api-agent-language`)**:
   - First step of i18n (English + Hebrew). Nullable `Agent.language` (`Language` enum, `en | he`), returned in the agent response from signup, login, refresh and `/auth/me`. Signup accepts an optional `language`; new `PATCH /auth/me` sets it and rejects any other field. Shared `languageSchema`, `Language`, `updateCurrentAgentSchema`.
   - Remaining steps: dashboard strings and Settings gear, dashboard RTL, widget `language` init option.

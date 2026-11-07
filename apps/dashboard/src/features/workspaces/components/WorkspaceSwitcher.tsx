@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Workspace } from '@roadly/shared'
 import { ChevronsUpDown, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import {
   Dialog,
@@ -23,6 +24,7 @@ import { CreateWorkspaceForm } from './CreateWorkspaceForm'
 import { useGetWorkspacesQuery } from '../api/workspaces-api'
 
 export function WorkspaceSwitcher({ workspace }: { workspace: Workspace }) {
+  const { t } = useTranslation()
   const { data: workspaces = [] } = useGetWorkspacesQuery()
   const { isMobile, setOpenMobile } = useSidebar()
   const navigate = useNavigate()
@@ -46,7 +48,7 @@ export function WorkspaceSwitcher({ workspace }: { workspace: Workspace }) {
 
           <DropdownMenuContent side={isMobile ? 'bottom' : 'right'} align="start" className="w-56">
             <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-              Workspaces
+              {t('workspaces.switcherLabel')}
             </DropdownMenuLabel>
             {workspaces.map((option) => (
               <DropdownMenuCheckboxItem
@@ -60,7 +62,7 @@ export function WorkspaceSwitcher({ workspace }: { workspace: Workspace }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => setCreating(true)}>
               <Plus />
-              New workspace
+              {t('workspaces.new')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -68,8 +70,8 @@ export function WorkspaceSwitcher({ workspace }: { workspace: Workspace }) {
         <Dialog open={creating} onOpenChange={setCreating}>
           <DialogContent className="sm:max-w-sm">
             <DialogHeader>
-              <DialogTitle>New workspace</DialogTitle>
-              <DialogDescription>One per product. Its requests and roadmap live here.</DialogDescription>
+              <DialogTitle>{t('workspaces.new')}</DialogTitle>
+              <DialogDescription>{t('workspaces.newDescription')}</DialogDescription>
             </DialogHeader>
             <CreateWorkspaceForm
               onCreated={(created) => {

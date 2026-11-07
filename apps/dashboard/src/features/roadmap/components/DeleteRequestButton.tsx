@@ -1,5 +1,6 @@
 import type { FeatureRequest } from '@roadly/shared'
 import { Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
   AlertDialog,
@@ -21,39 +22,41 @@ interface DeleteRequestButtonProps {
 }
 
 export function DeleteRequestButton({ request, onDeleted }: DeleteRequestButtonProps) {
+  const { t } = useTranslation()
   const [deleteFeatureRequest, { isLoading }] = useDeleteFeatureRequestMutation()
 
   async function handleDelete() {
     try {
       await deleteFeatureRequest(request.id).unwrap()
       onDeleted()
-      toast.success(`Deleted "${request.title}"`)
+      toast.success(t('roadmap.delete.deleted', { title: request.title }))
     } catch {
-      toast.error(`Couldn't delete "${request.title}"`)
+      toast.error(t('roadmap.delete.failed', { title: request.title }))
     }
   }
-
-  const votes = request.voteCount === 1 ? '1 vote' : `${request.voteCount} votes`
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="outline" className="self-start text-destructive hover:text-destructive" disabled={isLoading}>
           <Trash2 />
-          Delete request
+          {t('roadmap.delete.button')}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete this request?</AlertDialogTitle>
+          <AlertDialogTitle>{t('roadmap.delete.confirmTitle')}</AlertDialogTitle>
           <AlertDialogDescription>
-            "{request.title}" and its {votes} will be removed. This can't be undone.
+            {t('roadmap.delete.confirmDescription', {
+              title: request.title,
+              votes: t('common.votes', { count: request.voteCount }),
+            })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction variant="destructive" onClick={handleDelete}>
-            Delete
+            {t('common.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -1,5 +1,6 @@
 import { Check, Copy } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 
 interface CopyButtonProps {
@@ -10,6 +11,7 @@ interface CopyButtonProps {
 type CopyState = 'idle' | 'copied' | 'failed'
 
 export function CopyButton({ value, label }: CopyButtonProps) {
+  const { t } = useTranslation()
   const [state, setState] = useState<CopyState>('idle')
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export function CopyButton({ value, label }: CopyButtonProps) {
     <Button variant="outline" size="sm" onClick={copy}>
       {state === 'copied' ? <Check /> : <Copy />}
       <span aria-live="polite">
-        {state === 'copied' ? 'Copied' : state === 'failed' ? "Couldn't copy — select it instead" : 'Copy'}
+        {state === 'copied' ? t('install.copied') : state === 'failed' ? t('install.copyFailed') : t('install.copy')}
       </span>
       <span className="sr-only">{label}</span>
     </Button>

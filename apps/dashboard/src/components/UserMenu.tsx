@@ -1,4 +1,5 @@
 import { ChevronsUpDown, LogOut } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/c
 import { useGetMeQuery, useLogoutMutation } from '@/features/auth/api/auth-api'
 
 export function UserMenu() {
+  const { t } = useTranslation()
   const { data: agent } = useGetMeQuery()
   const [logout] = useLogoutMutation()
   const { isMobile } = useSidebar()
@@ -41,7 +43,7 @@ export function UserMenu() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => logout()}>
               <LogOut />
-              Sign out
+              {t('common.signOut')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

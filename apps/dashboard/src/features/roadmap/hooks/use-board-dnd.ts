@@ -12,7 +12,9 @@ import {
   type UniqueIdentifier,
 } from '@dnd-kit/core'
 import type { FeatureRequest, RequestStatus } from '@roadly/shared'
-import { REQUEST_STATUSES, STATUS_META } from '../../feature-requests/constants/request-status'
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
+import { REQUEST_STATUSES } from '../../feature-requests/constants/request-status'
 
 const collisionDetection: CollisionDetection = (args) => {
   const hits = pointerWithin(args)
@@ -35,25 +37,23 @@ const columnKeyboardCoordinates: KeyboardCoordinateGetter = (event, { context })
   return rect ? { x: rect.left + 12, y: rect.top + 40 } : undefined
 }
 
-const screenReaderInstructions = {
-  draggable:
-    'Press enter to open the request. Press space to pick it up, the left and right arrow keys to move it between columns, space to drop it, and escape to cancel.',
-}
-
-function boardAnnouncements(titleOf: (id: UniqueIdentifier) => string | undefined): Announcements {
-  const columnName = (id: UniqueIdentifier) => STATUS_META[id as RequestStatus].label
+function boardAnnouncements(t: TFunction, titleOf: (id: UniqueIdentifier) => string | undefined): Announcements {
+  const columnName = (id: UniqueIdentifier) => t(`status.${id as RequestStatus}`)
 
   return {
-    onDragStart: ({ active }) => `Picked up ${titleOf(active.id)}.`,
+    onDragStart: ({ active }) => t('roadmap.dnd.pickedUp', { title: titleOf(active.id) }),
     onDragOver: ({ active, over }) =>
-      over ? `${titleOf(active.id)} is over ${columnName(over.id)}.` : undefined,
+      over ? t('roadmap.dnd.over', { title: titleOf(active.id), status: columnName(over.id) }) : undefined,
     onDragEnd: ({ active, over }) =>
-      over ? `${titleOf(active.id)} moved to ${columnName(over.id)}.` : `${titleOf(active.id)} dropped.`,
-    onDragCancel: ({ active }) => `Moving ${titleOf(active.id)} was cancelled.`,
+      over
+        ? t('roadmap.dnd.moved', { title: titleOf(active.id), status: columnName(over.id) })
+        : t('roadmap.dnd.dropped', { title: titleOf(active.id) }),
+    onDragCancel: ({ active }) => t('roadmap.dnd.cancelled', { title: titleOf(active.id) }),
   }
 }
 
 export function useBoardDnd(requests: FeatureRequest[]) {
+  const { t } = useTranslation()
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
@@ -67,6 +67,9 @@ export function useBoardDnd(requests: FeatureRequest[]) {
   return {
     sensors,
     collisionDetection,
-    accessibility: { announcements: boardAnnouncements(titleOf), screenReaderInstructions },
+    accessibility: {
+      announcements: boardAnnouncements(t, titleOf),
+      screenReaderInstructions: { draggable: t('roadmap.dnd.instructions') },
+    },
   }
 }
