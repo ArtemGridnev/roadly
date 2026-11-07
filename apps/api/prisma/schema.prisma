@@ -13,6 +13,11 @@ enum RequestStatus {
   SHIPPED
 }
 
+enum Language {
+  en
+  he
+}
+
 model Workspace {
   id        String   @id @default(cuid())
   name      String
@@ -43,6 +48,7 @@ model Agent {
   name         String
   email        String   @unique
   passwordHash String
+  language     Language?
   createdAt    DateTime @default(now())
 
   memberships   WorkspaceMember[]

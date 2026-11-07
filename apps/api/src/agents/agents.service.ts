@@ -8,6 +8,7 @@ import { hash } from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAgentDto } from './dto/create-agent.dto';
 import { AgentResponseDto } from './dto/agent-response.dto';
+import { UpdateCurrentAgentDto } from './dto/update-current-agent.dto';
 
 const SALT_ROUNDS = 10;
 
@@ -50,12 +51,31 @@ export class AgentsService {
     return AgentResponseDto.fromEntity(agent);
   }
 
+  async update(
+    id: string,
+    updateCurrentAgentDto: UpdateCurrentAgentDto,
+  ): Promise<AgentResponseDto> {
+    try {
+      const agent = await this.prisma.agent.update({
+        where: { id },
+        data: updateCurrentAgentDto,
+      });
+
+      return AgentResponseDto.fromEntity(agent);
+    } catch (error) {
+      throw this.mapKnownError(error);
+    }
+  }
+
   private mapKnownError(error: unknown): unknown {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002'
-    ) {
-      return new ConflictException('An agent with this email already exists');
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return new ConflictException('An agent with this email already exists');
+      }
+
+      if (error.code === 'P2025') {
+        return new NotFoundException('Agent not found');
+      }
     }
 
     return error;

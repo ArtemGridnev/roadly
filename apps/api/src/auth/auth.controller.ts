@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, Request, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { Public } from './decorators/public.decorator';
@@ -10,6 +10,7 @@ import { TokenRefreshResponseDto } from './dto/token-refresh-response.dto';
 import { RefreshTokenAuthGuard } from './guards/refresh-token-auth.guard';
 import { CreateAgentDto } from '../agents/dto/create-agent.dto';
 import { AgentResponseDto } from '../agents/dto/agent-response.dto';
+import { UpdateCurrentAgentDto } from '../agents/dto/update-current-agent.dto';
 import { CurrentAgent } from './decorators/current-agent.decorator';
 import { AccessTokenPayload } from './dto/access-token-payload.dto';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
@@ -47,6 +48,11 @@ export class AuthController {
     @Get('me')
     me(@CurrentAgent() agent: AccessTokenPayload): Promise<AgentResponseDto> {
         return this.authService.getCurrentAgent(agent.sub);
+    }
+
+    @Patch('me')
+    updateMe(@CurrentAgent() agent: AccessTokenPayload, @Body() updateCurrentAgentDto: UpdateCurrentAgentDto): Promise<AgentResponseDto> {
+        return this.authService.updateCurrentAgent(agent.sub, updateCurrentAgentDto);
     }
 
     @Public()

@@ -141,6 +141,23 @@ describe('AuthController (e2e)', () => {
       expect(cookies.some((c) => c.startsWith('refresh_token='))).toBe(true);
       expect(response.body.agent).toMatchObject({ name: 'Jane Doe', email: 'jane@example.com' });
       expect(response.body.agent.passwordHash).toBeUndefined();
+      expect(response.body.agent.language).toBeNull();
+    });
+
+    it('saves the language chosen at signup', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1', language: 'he' })
+        .expect(201);
+
+      expect(response.body.agent.language).toBe('he');
+    });
+
+    it('rejects an unsupported language at signup', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1', language: 'fr' })
+        .expect(400);
     });
 
     it('rejects an already registered email with 409', async () => {
@@ -236,6 +253,95 @@ describe('AuthController (e2e)', () => {
       await request(app.getHttpServer())
         .get('/auth/me')
         .set('Cookie', [accessCookie])
+        .expect(401);
+    });
+  });
+
+  describe('PATCH /auth/me', () => {
+    async function loginAndGetAccessCookie(email: string, password: string): Promise<string> {
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email, password })
+        .expect(201);
+
+      return getCookies(login).find((c) => c.startsWith('access_token='))!;
+    }
+
+    it('saves the language and returns it on later requests', async () => {
+      await createAgent('jane@example.com', 'super-secret');
+      const accessCookie = await loginAndGetAccessCookie('jane@example.com', 'super-secret');
+
+      const response = await request(app.getHttpServer())
+        .patch('/auth/me')
+        .set('Cookie', [accessCookie])
+        .send({ language: 'he' })
+        .expect(200);
+
+      expect(response.body).toMatchObject({ email: 'jane@example.com', language: 'he' });
+      expect(response.body.passwordHash).toBeUndefined();
+
+      const me = await request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Cookie', [accessCookie])
+        .expect(200);
+      expect(me.body.language).toBe('he');
+
+      const login = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'jane@example.com', password: 'super-secret' })
+        .expect(201);
+      expect(login.body.agent.language).toBe('he');
+    });
+
+    it('only changes the signed-in agent', async () => {
+      const other = await createAgent('other@example.com', 'super-secret');
+      await createAgent('jane@example.com', 'super-secret');
+      const accessCookie = await loginAndGetAccessCookie('jane@example.com', 'super-secret');
+
+      await request(app.getHttpServer())
+        .patch('/auth/me')
+        .set('Cookie', [accessCookie])
+        .send({ language: 'he' })
+        .expect(200);
+
+      const unchanged = await prisma.agent.findUniqueOrThrow({ where: { id: other.id } });
+      expect(unchanged.language).toBeNull();
+    });
+
+    it.each([
+      ['an unsupported language', { language: 'fr' }],
+      ['a null language', { language: null }],
+      ['a missing language', {}],
+      ['other agent fields', { language: 'he', name: 'Renamed' }],
+    ])('rejects %s', async (_, body) => {
+      await createAgent('jane@example.com', 'super-secret');
+      const accessCookie = await loginAndGetAccessCookie('jane@example.com', 'super-secret');
+
+      await request(app.getHttpServer())
+        .patch('/auth/me')
+        .set('Cookie', [accessCookie])
+        .send(body)
+        .expect(400);
+    });
+
+    it('rejects a request with no access token', async () => {
+      await request(app.getHttpServer())
+        .patch('/auth/me')
+        .send({ language: 'he' })
+        .expect(401);
+    });
+
+    it('returns 401 when the agent no longer exists', async () => {
+      const agent = await createAgent('jane@example.com', 'super-secret');
+      const accessCookie = await loginAndGetAccessCookie('jane@example.com', 'super-secret');
+
+      await prisma.refreshToken.deleteMany({ where: { agentId: agent.id } });
+      await prisma.agent.delete({ where: { id: agent.id } });
+
+      await request(app.getHttpServer())
+        .patch('/auth/me')
+        .set('Cookie', [accessCookie])
+        .send({ language: 'he' })
         .expect(401);
     });
   });

@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString, IsStrongPassword } from 'class-validator';
+import { Language } from '@prisma/client';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsStrongPassword } from 'class-validator';
 
 export class CreateAgentDto {
   @IsString()
@@ -17,4 +18,8 @@ export class CreateAgentDto {
     minSymbols: 0,
   })
   readonly password!: string;
+
+  @IsOptional()
+  @IsEnum(Language)
+  readonly language?: Language;
 }
