@@ -24,7 +24,7 @@
 ## State Management
 
 - Server state goes through RTK Query. Do not duplicate server data into a slice.
-- Client-only state (UI filter toggles, sort, board/drag) goes in Redux slices, or local `useState` when truly local.
+- Page filters, sort and view go in URL search params, so they survive a reload and can be shared. Other client-only state goes in Redux slices, or local `useState` when truly local.
 - Which records an endpoint returns is decided by the API (query params / service `where`), never by fetching everything and filtering in the client. Client-side filtering is only for view toggles over data the user already has full access to (e.g. the dashboard table's status filter).
 - Define RTK Query endpoints in the API slice, never inline in components.
 - Optimistic-update logic (upvote) stays in the API slice, not in components.

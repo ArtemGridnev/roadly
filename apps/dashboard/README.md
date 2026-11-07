@@ -20,7 +20,7 @@ In progress — see `context/architecture.md` for the intended stack (React + Re
 | `src/features/<feature>/` | Everything for one feature, split by kind (see below) |
 | `src/features/auth/` | Login, signup, `getMe`; `RequireAgent` and `GuestOnly` guards |
 | `src/features/workspaces/` | List and create workspaces; `store/workspace-slice.ts` holds the active workspace id; `WorkspaceRedirect` (zero workspaces → `/onboarding`) |
-| `src/features/roadmap/` | Roadmap Board: kanban (`RoadmapBoard`, dnd-kit drag to change status) and table (`RequestTable`, TanStack Table) views, view toggle, status filter, sort menu, request drawer (`RequestDrawer`, `RequestStatusSelect`, `RequestForm`, `DeleteRequestButton`); `store/roadmap-slice.ts` holds sort, view and status filter |
+| `src/features/roadmap/` | Roadmap Board: kanban (`RoadmapBoard`, dnd-kit drag to change status) and table (`RequestTable`, TanStack Table) views, view toggle, status filter, sort menu, request drawer (`RequestDrawer`, `RequestStatusSelect`, `RequestForm`, `DeleteRequestButton`); `hooks/use-roadmap-settings.ts` keeps sort, view and status filter in the URL and saves them per workspace in `localStorage` |
 | `src/features/install/` | Install page: embed snippet, `CopyButton` |
 | `src/features/feature-requests/` | List, update (optimistic), delete feature requests; `STATUS_META` and `StatusPill` |
 

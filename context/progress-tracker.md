@@ -12,6 +12,10 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Roadmap settings in the URL (`feat/dashboard-roadmap-url-filters`)**:
+  - Sort, view and status filter moved from `roadmapSlice` (deleted) to URL search params through `useRoadmapSettings`, so a reload or a shared link keeps them. Last-used values are saved per workspace in `localStorage`, and a URL without settings restores them and writes them back. Rules in `dashboard-pages.md`.
+  - 7 new tests in `RoadmapPage.test.tsx`; dashboard 85/85, lint and build pass. Not yet checked in a real browser.
+
 - **Widget hides Shipped requests (`feat/widget-hide-shipped`)**:
   - `GET /widget/feature-requests` leaves out `SHIPPED` requests. New `GET /widget/feature-requests/mine` (`@RequireContact()`, same `sort`) returns the Contact's own requests in every status. `FeatureRequestsService.findAll` takes `{ authorId, excludeStatus }` options next to the query.
   - Widget: each view asks its own endpoint (`useFeatureRequests(..., scope)`, scope in the query key); "My requests" no longer fetches everything and filters on `isMine`. New rule in `code-standards.md`: the API decides which records a list returns.

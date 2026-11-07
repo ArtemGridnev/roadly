@@ -1,6 +1,6 @@
 import { SquareKanban, Table2, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { RoadmapView } from '../store/roadmap-slice'
+import type { RoadmapView } from '../utils/roadmap-settings'
 
 const VIEWS: { value: RoadmapView; label: string; icon: LucideIcon }[] = [
   { value: 'kanban', label: 'Board', icon: SquareKanban },
