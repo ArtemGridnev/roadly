@@ -71,6 +71,10 @@ Before writing new code:
 4. Update `progress-tracker.md` to reflect completed work.
 5. Summarize changed files and mention risks, assumptions, or incomplete areas.
 
+## Branches
+
+- Name every branch `<type>/<scope>-<topic>`, as defined in the root `CLAUDE.md`. Never leave out the scope.
+
 ## Commits
 
 - Every commit needs explicit approval from the user, even when the task itself was approved. Approving the work is not approving the commit — show what will be committed and wait for a yes.

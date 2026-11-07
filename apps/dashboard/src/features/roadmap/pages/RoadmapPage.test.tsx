@@ -41,6 +41,7 @@ afterEach(() => {
 function setup(
   listResponse: (sort: string | null) => MockResponse,
   routes: Parameters<typeof mockApi>[0] = {},
+  path = '/acme/roadmap',
 ) {
   mockApi({
     'GET /auth/me': () => ({ status: 200, body: agent }),
@@ -49,7 +50,7 @@ function setup(
     ...routes,
   })
   const user = userEvent.setup()
-  const router = renderApp('/acme/roadmap')
+  const router = renderApp(path)
 
   return { router, user }
 }
@@ -227,4 +228,78 @@ test('keeps the table view after leaving the roadmap and coming back', async () 
 
   expect(await screen.findByRole('button', { name: 'Table' })).toHaveAttribute('aria-pressed', 'true')
   expect(rowTitles()).toEqual(['SSO'])
+})
+
+test('opens with the settings from the URL', async () => {
+  const { router } = setup(
+    (sort) => ({ status: 200, body: sort === 'newest' ? [sso, csvExport] : [] }),
+    {},
+    '/acme/roadmap?sort=newest&view=table&status=IN_PROGRESS',
+  )
+
+  expect(await screen.findByRole('button', { name: /Sort: Newest/ })).toBeInTheDocument()
+  await vi.waitFor(() => expect(rowTitles()).toEqual(['SSO']))
+  expect(screen.getByRole('button', { name: 'Table' })).toHaveAttribute('aria-pressed', 'true')
+  expect(router.state.location.search).toBe('?sort=newest&view=table&status=IN_PROGRESS')
+})
+
+test('writes changed settings to the URL', async () => {
+  const { router, user } = setup(() => ({ status: 200, body: [csvExport, sso] }))
+  await column('Backlog')
+  expect(router.state.location.search).toBe('?sort=top&view=kanban')
+
+  await user.click(screen.getByRole('button', { name: 'Table' }))
+  await user.click(screen.getByRole('button', { name: 'Status filter: All statuses' }))
+  await user.click(screen.getByRole('menuitemcheckbox', { name: 'Backlog' }))
+  await user.keyboard('{Escape}')
+
+  expect(router.state.location.search).toBe('?sort=top&view=table&status=PLANNED&status=IN_PROGRESS&status=SHIPPED')
+})
+
+test('keeps a filter that hides every status when the page opens from its URL', async () => {
+  setup(() => ({ status: 200, body: [sso] }), {}, '/acme/roadmap?view=table&status=')
+
+  expect(await screen.findByText('No requests with these statuses.')).toBeInTheDocument()
+})
+
+test('restores the saved settings on a URL without any', async () => {
+  localStorage.setItem('roadly-roadmap-ws-acme', 'sort=newest&view=table&status=IN_PROGRESS')
+  const { router } = setup(() => ({ status: 200, body: [csvExport, sso] }))
+
+  await vi.waitFor(() => expect(router.state.location.search).toBe('?sort=newest&view=table&status=IN_PROGRESS'))
+  await vi.waitFor(() => expect(rowTitles()).toEqual(['SSO']))
+})
+
+test('saves the settings from a URL over the saved ones', async () => {
+  localStorage.setItem('roadly-roadmap-ws-acme', 'sort=newest&view=table')
+  setup(() => ({ status: 200, body: [sso] }), {}, '/acme/roadmap?sort=top&view=kanban')
+
+  await column('In progress')
+
+  expect(localStorage.getItem('roadly-roadmap-ws-acme')).toBe('sort=top&view=kanban')
+})
+
+test('falls back to the defaults for settings it does not recognize', async () => {
+  const { router } = setup(() => ({ status: 200, body: [sso] }), {}, '/acme/roadmap?sort=oldest&view=list')
+
+  await column('In progress')
+
+  expect(screen.getByRole('button', { name: /Sort: Most voted/ })).toBeInTheDocument()
+  await vi.waitFor(() => expect(router.state.location.search).toBe('?sort=top&view=kanban'))
+})
+
+test('keeps the settings of each workspace apart', async () => {
+  const globex = { ...acme, id: 'ws-globex', name: 'Globex', slug: 'globex', widgetKey: 'wk_globex' }
+  localStorage.setItem('roadly-roadmap-ws-acme', 'sort=top&view=table')
+  localStorage.setItem('roadly-roadmap-ws-globex', 'sort=newest&view=kanban')
+  const { router } = setup(() => ({ status: 200, body: [sso] }), {
+    'GET /workspaces': () => ({ status: 200, body: [acme, globex] }),
+  })
+  await screen.findByRole('table')
+
+  await router.navigate('/globex/roadmap')
+
+  await column('In progress')
+  await vi.waitFor(() => expect(router.state.location.search).toBe('?sort=newest&view=kanban'))
+  expect(localStorage.getItem('roadly-roadmap-ws-acme')).toBe('sort=top&view=table')
 })
