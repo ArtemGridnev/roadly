@@ -11,10 +11,6 @@ export class CreateFeatureRequestDto {
   readonly description!: string;
 
   @IsOptional()
-  @IsString()
-  readonly category?: string;
-
-  @IsOptional()
   @IsEnum(RequestStatus)
   readonly status?: RequestStatus;
 }

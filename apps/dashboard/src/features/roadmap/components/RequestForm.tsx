@@ -15,7 +15,7 @@ import { useUpdateFeatureRequestMutation } from '../../feature-requests/api/feat
 
 const trim = (value: string) => value.trim()
 
-type EditableField = keyof Pick<UpdateFeatureRequestInput, 'title' | 'description' | 'category'>
+type EditableField = keyof Pick<UpdateFeatureRequestInput, 'title' | 'description'>
 
 export interface RequestFormHandle {
   isDirty: () => boolean
@@ -29,7 +29,7 @@ interface RequestFormProps {
 export function RequestForm({ request, ref }: RequestFormProps) {
   const [updateFeatureRequest, { isLoading, isError }] = useUpdateFeatureRequestMutation()
   const formId = useId()
-  const ids = { title: `${formId}-title`, description: `${formId}-description`, category: `${formId}-category` }
+  const ids = { title: `${formId}-title`, description: `${formId}-description` }
 
   const {
     register,
@@ -41,7 +41,6 @@ export function RequestForm({ request, ref }: RequestFormProps) {
     defaultValues: {
       title: request.title,
       description: request.description,
-      category: request.category ?? '',
     },
   })
 
@@ -51,10 +50,7 @@ export function RequestForm({ request, ref }: RequestFormProps) {
 
   const onSubmit = handleSubmit(async (values) => {
     const changes = Object.fromEntries(
-      (Object.keys(dirtyFields) as EditableField[]).map((field) => [
-        field,
-        field === 'category' ? values.category || null : values[field],
-      ]),
+      (Object.keys(dirtyFields) as EditableField[]).map((field) => [field, values[field]]),
     )
     const result = await updateFeatureRequest({ id: request.id, changes })
 
@@ -81,14 +77,6 @@ export function RequestForm({ request, ref }: RequestFormProps) {
           aria-invalid={errors.description ? true : undefined}
           aria-describedby={errors.description ? fieldDescriptionId(ids.description) : undefined}
           {...register('description', { setValueAs: trim })}
-        />
-      </FormField>
-
-      <FormField id={ids.category} label="Category" hint="Optional. Leave empty to remove it.">
-        <Input
-          id={ids.category}
-          aria-describedby={fieldDescriptionId(ids.category)}
-          {...register('category', { setValueAs: trim })}
         />
       </FormField>
 

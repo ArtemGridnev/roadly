@@ -19,7 +19,6 @@ const FIELD_ERRORS = {
 } as const
 
 const trim = (value: string) => value.trim()
-const trimToOptional = (value: string) => value.trim() || undefined
 
 interface NewRequestFormProps {
   onSent: () => void
@@ -32,7 +31,6 @@ export function NewRequestForm({ onSent }: NewRequestFormProps) {
   const ids = {
     title: `${formId}-title`,
     description: `${formId}-description`,
-    category: `${formId}-category`,
   }
 
   const {
@@ -86,14 +84,6 @@ export function NewRequestForm({ onSent }: NewRequestFormProps) {
             aria-invalid={errors.description ? true : undefined}
             aria-describedby={errors.description ? fieldErrorId(ids.description) : undefined}
             {...register('description', { setValueAs: trim })}
-          />
-        </FormField>
-
-        <FormField id={ids.category} label="Category" optional>
-          <TextInput
-            id={ids.category}
-            placeholder="e.g. Reporting"
-            {...register('category', { setValueAs: trimToOptional })}
           />
         </FormField>
       </div>

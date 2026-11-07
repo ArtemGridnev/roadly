@@ -66,15 +66,15 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 
 ### Roadmap Board (`/:slug/roadmap`)
 - Kanban (Backlog / Planned / In Progress / Shipped; each column in its status color, `ui-context.md` → Status colors; columns are as tall as their content, not equal height) and table views of the same data, toggle top-right (`ui-context.md` §3).
-- **Table view:** one row per request — votes, title with a one-line description, status pill, category, created date (category and date hidden below `md`). Read-only; clicking a row opens the drawer (step 4). Same data and sort as the board; the status filter is multi-select (all on by default) and filters on the client. A filter that hides everything shows "No requests with these statuses." + **Show all statuses**.
+- **Table view:** one row per request — votes, title with a one-line description, status pill, created date (date hidden below `md`). Read-only; clicking a row opens the drawer (step 4). Same data and sort as the board; the status filter is multi-select (all on by default) and filters on the client. A filter that hides everything shows "No requests with these statuses." + **Show all statuses**.
 - Sort, view and status filter live in the URL (`?sort=top&view=table&status=PLANNED&status=SHIPPED`; no `status` = all, `status=` = none), so a reload or a shared link shows the same page. Any of these params in the URL means the URL wins, and missing ones take their defaults. A URL with none of them restores the workspace's saved settings (`localStorage`, `roadly-roadmap-<workspaceId>`) and writes them back to the URL. Unrecognized values fall back to defaults. Changes replace the history entry, so back leaves the page instead of undoing a filter.
 - **Narrow screens:** only the page card's body scrolls (sideways and down), never the page. Below `lg` the board snaps column by column; below `md` each column is the viewport width minus 5rem so the next one peeks in. Snapping is off while a card is dragged so edge auto-scroll works. Below `sm` the top-bar controls are icon-only. On phones drag is a bonus, not the path — status changes through the drawer.
 - Drag a card between columns to change status (mouse, touch after a 250ms press, or keyboard: space to pick up, ←/→ between columns, space to drop, escape to cancel — enter opens the drawer instead; screen reader announcements use the request title and column name). Only the status changes: the card lands where the current sort puts it, and there's no manual order within a column (no position field).
 - The move shows at once; if the API rejects it the card returns to its column and an error toast says `Couldn't move "<title>" to <column>` — no retry button; dragging again is the retry.
-- **Card** mirrors the widget's `RequestCard`: vote count, title, 2-line description preview, then category and created date. No status badge on kanban cards — the column already says it; the table view carries a status column. The vote count is read-only — Agents don't vote.
-- **Top bar (MVP):** page controls go in `PageContent`'s `actions`, top-right of the page's top bar. Only what `GET /feature-requests` supports — sort (Most voted / Newest) and, in table view, a status filter (kanban columns already split by status). No search and no category filter until the API supports them; this narrows the `ui-context.md` §3 top bar for the MVP.
+- **Card** mirrors the widget's `RequestCard`: vote count, title, 2-line description preview, then created date. No status badge on kanban cards — the column already says it; the table view carries a status column. The vote count is read-only — Agents don't vote.
+- **Top bar (MVP):** page controls go in `PageContent`'s `actions`, top-right of the page's top bar. Only what `GET /feature-requests` supports — sort (Most voted / Newest) and, in table view, a status filter (kanban columns already split by status). No search until the API supports it; this narrows the `ui-context.md` §3 top bar for the MVP.
 - **Drawer:** clicking a card or table row (or Enter on a focused card) opens the right slide-in drawer over the board (shadcn `Sheet`, full width on phones). It isn't addressable by URL in the MVP — a reload closes it. It shows votes and the author (name + mailto email, or "Added by your team" when an Agent created it), read-only. In the drawer the Agent can:
-  - edit title, description and category in a form with **Save changes** (disabled until something changes; only changed fields are sent; emptying category clears it). A failed save keeps the edits and shows an inline error. Closing with unsaved edits (Escape, outside click, ✕) asks **Discard changes?**;
+  - edit title and description in a form with **Save changes** (disabled until something changes; only changed fields are sent). A failed save keeps the edits and shows an inline error. Closing with unsaved edits (Escape, outside click, ✕) asks **Discard changes?**;
   - change status with a select that applies at once (the non-drag path) — same optimistic update and failure toast as a drag;
   - delete the request behind a confirmation ("<title> and its N votes will be removed"). Success closes the drawer with a "Deleted" toast; failure shows an error toast and keeps it open.
 - Empty board (no requests at all) → one line + **Install the widget** to `/:slug/install`. An empty column shows "No requests".
@@ -118,7 +118,7 @@ Built:
 - `POST /feature-requests` takes no `authorId` — Agent-created requests have no Contact author (`authorId: null`) and start at 0 votes.
 - Admin vote routes are removed — Agents don't vote.
 - `/workspace-members` is read-only (list, get); adding/removing members is removed until joining exists. The creator is a workspace's only member.
-- Admin feature-request responses include `author: { name, email } | null` (null = created by an Agent); the widget never gets it. `PATCH /feature-requests/:id` accepts `category: null` to clear the category (shared `updateFeatureRequestSchema`).
+- Admin feature-request responses include `author: { name, email } | null` (null = created by an Agent); the widget never gets it.
 - Signup requires a password of 8+ characters with a lowercase letter, an uppercase letter and a digit (shared `createAgentSchema`). Rate limits: login 5/min per IP+email, signup 10/hour per IP.
 
 ---
@@ -126,7 +126,7 @@ Built:
 ## Not in the MVP
 
 - Stats row (summary numbers above the board). `ui-context.md`'s 32px size stays reserved for it and goes unused until then.
-- Search and category filter (need API support first).
+- Search (needs API support first).
 - Members page and joining a workspace.
 - Workspace Settings, renaming, deleting.
 - Addressable drawer URLs.

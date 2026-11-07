@@ -69,7 +69,6 @@ model FeatureRequest {
   id          String        @id @default(cuid())
   title       String
   description String
-  category    String?
   status      RequestStatus @default(BACKLOG)
   createdAt   DateTime      @default(now())
 

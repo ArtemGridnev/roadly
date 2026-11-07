@@ -21,14 +21,13 @@ const request = (id: string, title: string, status: string, voteCount: number, c
   id,
   title,
   description: `${title} description`,
-  category: null,
   status,
   workspaceId: acme.id,
   authorId: null,
   voteCount,
   createdAt,
 })
-const darkMode = { ...request('r1', 'Dark mode', 'BACKLOG', 3, '2026-10-01T00:00:00.000Z'), category: 'UI' }
+const darkMode = request('r1', 'Dark mode', 'BACKLOG', 3, '2026-10-01T00:00:00.000Z')
 const csvExport = request('r2', 'CSV export', 'BACKLOG', 9, '2026-09-01T00:00:00.000Z')
 const sso = request('r3', 'SSO', 'IN_PROGRESS', 5, '2026-10-05T00:00:00.000Z')
 
@@ -67,7 +66,6 @@ test('groups requests into a column per status', async () => {
   expect(titlesIn(backlog)).toEqual(['CSV export', 'Dark mode'])
   expect(within(backlog).getByText('2')).toBeInTheDocument()
   expect(within(backlog).getByLabelText('3 votes')).toBeInTheDocument()
-  expect(within(backlog).getByText('UI')).toBeInTheDocument()
   expect(titlesIn(await column('In progress'))).toEqual(['SSO'])
   expect(within(await column('Planned')).getByText('No requests')).toBeInTheDocument()
   expect(within(await column('Shipped')).getByText('No requests')).toBeInTheDocument()

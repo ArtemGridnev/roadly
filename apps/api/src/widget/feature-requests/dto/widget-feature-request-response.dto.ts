@@ -5,7 +5,6 @@ export class WidgetFeatureRequestResponseDto {
   readonly id: string;
   readonly title: string;
   readonly description: string;
-  readonly category: string | null;
   readonly status: RequestStatus;
   readonly workspaceId: string;
   readonly voteCount: number;
@@ -20,7 +19,6 @@ export class WidgetFeatureRequestResponseDto {
     this.id = featureRequest.id;
     this.title = featureRequest.title;
     this.description = featureRequest.description;
-    this.category = featureRequest.category;
     this.status = featureRequest.status;
     this.workspaceId = featureRequest.workspaceId;
     this.voteCount = featureRequest.voteCount;
