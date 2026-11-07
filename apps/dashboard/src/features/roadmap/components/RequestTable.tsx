@@ -1,5 +1,6 @@
 import type { FeatureRequest } from '@roadly/shared'
 import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table'
+import { useTranslation } from 'react-i18next'
 import {
   Table,
   TableBody,
@@ -11,34 +12,47 @@ import {
 import { formatRequestDate } from '@/lib/format-date'
 import { StatusPill } from '../../feature-requests/components/StatusPill'
 
+function ColumnHeader({ column }: { column: 'votes' | 'request' | 'status' | 'created' }) {
+  const { t } = useTranslation()
+
+  return t(`roadmap.table.${column}`)
+}
+
+function CreatedDate({ value }: { value: string }) {
+  const { i18n } = useTranslation()
+
+  return <span className="text-muted-foreground">{formatRequestDate(value, i18n.language)}</span>
+}
+
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, FeatureRequest>()
 const columns = helper.columns([
   helper.accessor('voteCount', {
-    header: 'Votes',
+    header: () => <ColumnHeader column="votes" />,
     cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
   }),
   helper.accessor('title', {
-    header: 'Request',
+    header: () => <ColumnHeader column="request" />,
     cell: (info) => (
       <div className="min-w-0">
         <button
           type="button"
-          className="block max-w-full cursor-pointer truncate rounded-lg text-left font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          dir="auto"
+          className="block max-w-full cursor-pointer truncate rounded-lg text-start font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
           {info.getValue()}
         </button>
-        <p className="truncate text-muted-foreground">{info.row.original.description}</p>
+        <p dir="auto" className="truncate text-muted-foreground">{info.row.original.description}</p>
       </div>
     ),
   }),
   helper.accessor('status', {
-    header: 'Status',
+    header: () => <ColumnHeader column="status" />,
     cell: (info) => <StatusPill status={info.getValue()} />,
   }),
   helper.accessor('createdAt', {
-    header: 'Created',
-    cell: (info) => <span className="text-muted-foreground">{formatRequestDate(info.getValue())}</span>,
+    header: () => <ColumnHeader column="created" />,
+    cell: (info) => <CreatedDate value={info.getValue()} />,
   }),
 ])
 

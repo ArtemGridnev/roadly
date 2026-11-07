@@ -28,6 +28,7 @@
 }
 
 @theme inline {
+  --font-sans: 'Inter', 'Heebo', var(--roadly-default-font-family);
   --color-sidebar: var(--color-background);
   --color-sidebar-foreground: var(--color-foreground);
   --color-sidebar-primary: var(--color-primary);

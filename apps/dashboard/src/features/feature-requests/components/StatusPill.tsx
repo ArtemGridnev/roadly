@@ -1,8 +1,11 @@
 import type { RequestStatus } from '@roadly/shared'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { STATUS_META } from '../constants/request-status'
 
 export function StatusPill({ status }: { status: RequestStatus }) {
+  const { t } = useTranslation()
+
   return (
     <span
       className={cn(
@@ -10,7 +13,7 @@ export function StatusPill({ status }: { status: RequestStatus }) {
         STATUS_META[status].pillClassName,
       )}
     >
-      {STATUS_META[status].label}
+      {t(`status.${status}`)}
     </span>
   )
 }

@@ -1,5 +1,6 @@
 import { useId } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from 'react-router'
 import { createAgentSchema, type CreateAgentInput } from '@roadly/shared'
@@ -8,29 +9,22 @@ import { FormField } from '@/components/FormField'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { useLanguage } from '@/i18n/useLanguage'
 import { fieldDescriptionId } from '@/lib/field-ids'
 import { useSignupMutation } from '../api/auth-api'
 
-const PASSWORD_HINT =
-  'At least 8 characters, with a lowercase letter, an uppercase letter, and a number.'
-
 const PASSWORD_RULES = [
-  { label: 'at least 8 characters', test: (value: string) => value.length >= 8 },
-  { label: 'a lowercase letter', test: (value: string) => /[a-z]/.test(value) },
-  { label: 'an uppercase letter', test: (value: string) => /[A-Z]/.test(value) },
-  { label: 'a number', test: (value: string) => /[0-9]/.test(value) },
-]
-
-const listFormat = new Intl.ListFormat('en', { type: 'conjunction' })
-
-function passwordError(password: string) {
-  const missing = PASSWORD_RULES.filter((rule) => !rule.test(password)).map((rule) => rule.label)
-  return missing.length ? `Needs ${listFormat.format(missing)}.` : PASSWORD_HINT
-}
+  { key: 'length', test: (value: string) => value.length >= 8 },
+  { key: 'lowercase', test: (value: string) => /[a-z]/.test(value) },
+  { key: 'uppercase', test: (value: string) => /[A-Z]/.test(value) },
+  { key: 'number', test: (value: string) => /[0-9]/.test(value) },
+] as const
 
 const trim = (value: string) => value.trim()
 
 export function SignupPage() {
+  const { t } = useTranslation()
+  const { language } = useLanguage()
   const [signup, { error: signupError, isLoading }] = useSignupMutation()
   const formId = useId()
   const ids = {
@@ -52,7 +46,7 @@ export function SignupPage() {
   const password = useWatch({ control, name: 'password' })
 
   const onSubmit = handleSubmit(async (input) => {
-    const result = await signup(input)
+    const result = await signup({ ...input, language })
 
     if (getErrorStatus(result.error) === 409) {
       setError('email', { type: 'taken' })
@@ -64,33 +58,44 @@ export function SignupPage() {
     !signupError || signupStatus === 409
       ? null
       : signupStatus === 429
-        ? 'Too many sign-up attempts. Try again in an hour.'
-        : "Your account wasn't created. Check your connection and try again."
+        ? t('auth.signup.tooManyAttempts')
+        : t('auth.signup.failed')
 
   const emailError =
     errors.email?.type === 'taken' ? (
       <>
-        An account with that email already exists.{' '}
+        {t('auth.signup.emailTaken')}{' '}
         <Link to="/login" className="font-medium underline underline-offset-4">
-          Sign in instead
+          {t('auth.signup.signInInstead')}
         </Link>
       </>
     ) : errors.email ? (
-      'Enter a valid email address.'
+      t('auth.invalidEmail')
     ) : undefined
+
+  const passwordHint = t('auth.signup.passwordHint')
+  const missingPasswordRules = PASSWORD_RULES.filter((rule) => !rule.test(password)).map((rule) =>
+    t(`auth.signup.passwordRules.${rule.key}`),
+  )
+  const passwordError = missingPasswordRules.length
+    ? t('auth.signup.passwordNeeds', {
+        list: new Intl.ListFormat(language, { type: 'conjunction' }).format(missingPasswordRules),
+      })
+    : passwordHint
 
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <h1 className="text-xl font-semibold">Create your account</h1>
-        <CardDescription>Start collecting feature requests from your users.</CardDescription>
+        <h1 className="text-xl font-semibold">{t('auth.signup.title')}</h1>
+        <CardDescription>{t('auth.signup.description')}</CardDescription>
       </CardHeader>
 
       <CardContent>
         <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
-          <FormField id={ids.name} label="Name" error={errors.name && 'Add your name.'}>
+          <FormField id={ids.name} label={t('auth.signup.name')} error={errors.name && t('auth.signup.nameError')}>
             <Input
               id={ids.name}
+              dir="auto"
               autoComplete="name"
               autoFocus
               aria-invalid={errors.name ? true : undefined}
@@ -99,10 +104,11 @@ export function SignupPage() {
             />
           </FormField>
 
-          <FormField id={ids.email} label="Email" error={emailError}>
+          <FormField id={ids.email} label={t('auth.email')} error={emailError}>
             <Input
               id={ids.email}
               type="email"
+              dir="ltr"
               autoComplete="email"
               aria-invalid={errors.email ? true : undefined}
               aria-describedby={errors.email ? fieldDescriptionId(ids.email) : undefined}
@@ -112,13 +118,14 @@ export function SignupPage() {
 
           <FormField
             id={ids.password}
-            label="Password"
-            hint={PASSWORD_HINT}
-            error={errors.password && passwordError(password)}
+            label={t('auth.password')}
+            hint={passwordHint}
+            error={errors.password && passwordError}
           >
             <Input
               id={ids.password}
               type="password"
+              dir="ltr"
               autoComplete="new-password"
               aria-invalid={errors.password ? true : undefined}
               aria-describedby={fieldDescriptionId(ids.password)}
@@ -133,15 +140,15 @@ export function SignupPage() {
           ) : null}
 
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Creating account…' : 'Create account'}
+            {isLoading ? t('auth.signup.submitting') : t('auth.signup.submit')}
           </Button>
         </form>
       </CardContent>
 
       <CardFooter className="justify-center text-sm text-muted-foreground">
-        Already have an account?&nbsp;
+        {t('auth.signup.haveAccount')}&nbsp;
         <Link to="/login" className="font-medium text-primary underline-offset-4 hover:underline">
-          Sign in
+          {t('auth.signup.signIn')}
         </Link>
       </CardFooter>
     </Card>

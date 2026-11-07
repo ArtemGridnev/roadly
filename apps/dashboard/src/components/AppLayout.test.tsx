@@ -2,6 +2,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { mockApi } from '@/test/mock-api'
 import { renderApp } from '@/test/render-app'
+import { chooseSetting } from '@/test/settings-menu'
 
 const agent = {
   id: 'agent-1',
@@ -76,8 +77,7 @@ test('shows who is signed in and signs them out', async () => {
 test('switches the theme from the sidebar', async () => {
   const { user } = setup()
 
-  await user.click(await screen.findByRole('button', { name: 'Theme' }))
-  await user.click(screen.getByRole('menuitemradio', { name: 'Dark' }))
+  await chooseSetting(user, 'Theme', 'Dark')
 
   expect(document.documentElement).toHaveClass('dark')
 })

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDispatch } from 'react-redux'
 import { Link, Outlet, useParams } from 'react-router'
 import { LoadError } from '@/components/LoadError'
@@ -39,17 +40,19 @@ export function WorkspaceRoute() {
 }
 
 function WorkspaceNotFound() {
+  const { t } = useTranslation()
+
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <h1 className="text-xl font-semibold">Workspace not found</h1>
+        <h1 className="text-xl font-semibold">{t('workspaces.notFound.title')}</h1>
       </CardHeader>
       <CardContent className="text-sm text-muted-foreground">
-        It doesn't exist, or you're not a member of it.
+        {t('workspaces.notFound.description')}
       </CardContent>
       <CardFooter>
         <Button asChild className="w-full">
-          <Link to="/">Go to your workspaces</Link>
+          <Link to="/">{t('workspaces.notFound.link')}</Link>
         </Button>
       </CardFooter>
     </Card>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { LoadError } from '@/components/LoadError'
 import { PageContent } from '@/components/PageContent'
@@ -20,6 +21,7 @@ const BOARD_SNAP =
   'snap-x snap-mandatory scroll-px-4 md:scroll-px-6 lg:snap-none has-[[data-dragging]]:snap-none'
 
 export function RoadmapPage() {
+  const { t } = useTranslation()
   const workspace = useCurrentWorkspace()
   const { sort, view, statusFilter, updateSettings } = useRoadmapSettings()
   const { data: requests, isLoading, isError, refetch } = useGetFeatureRequestsQuery({ sort })
@@ -31,7 +33,7 @@ export function RoadmapPage() {
 
   return (
     <PageContent
-      title="Roadmap"
+      title={t('roadmap.title')}
       className={isTable ? undefined : BOARD_SNAP}
       actions={
         <>
@@ -52,19 +54,19 @@ export function RoadmapPage() {
       ) : requests.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12 text-center">
           <p className="text-sm text-muted-foreground">
-            No requests yet. Install the widget so your users can send them.
+            {t('roadmap.empty')}
           </p>
           <Button asChild>
-            <Link to={`/${workspace.slug}/install`}>Install the widget</Link>
+            <Link to={`/${workspace.slug}/install`}>{t('roadmap.installWidget')}</Link>
           </Button>
         </div>
       ) : !isTable ? (
         <RoadmapBoard requests={requests} onOpen={setOpenId} />
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12 text-center">
-          <p className="text-sm text-muted-foreground">No requests with these statuses.</p>
+          <p className="text-sm text-muted-foreground">{t('roadmap.noMatches')}</p>
           <Button variant="outline" onClick={() => updateSettings({ statusFilter: [...REQUEST_STATUSES] })}>
-            Show all statuses
+            {t('roadmap.showAllStatuses')}
           </Button>
         </div>
       ) : (

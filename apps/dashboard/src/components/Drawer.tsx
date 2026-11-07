@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +17,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { useInlineSides } from '@/i18n/useInlineSides'
 
 interface DrawerProps {
   open: boolean
@@ -27,6 +29,8 @@ interface DrawerProps {
 }
 
 export function Drawer({ open, onClose, title, description, hasUnsavedChanges, children }: DrawerProps) {
+  const { t } = useTranslation()
+  const { end } = useInlineSides()
   const [confirmDiscard, setConfirmDiscard] = useState(false)
 
   function requestClose() {
@@ -40,9 +44,9 @@ export function Drawer({ open, onClose, title, description, hasUnsavedChanges, c
   return (
     <>
       <Sheet open={open} onOpenChange={(next) => !next && requestClose()}>
-        <SheetContent className="w-full gap-0 sm:max-w-md">
-          <SheetHeader className="pr-12">
-            <SheetTitle className="text-lg">{title}</SheetTitle>
+        <SheetContent side={end} className="w-full gap-0 sm:max-w-md">
+          <SheetHeader className="pe-12">
+            <SheetTitle dir="auto" className="text-lg">{title}</SheetTitle>
             <SheetDescription>{description}</SheetDescription>
           </SheetHeader>
           <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pb-4">{children}</div>
@@ -52,12 +56,12 @@ export function Drawer({ open, onClose, title, description, hasUnsavedChanges, c
       <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
-            <AlertDialogDescription>Your edits haven't been saved.</AlertDialogDescription>
+            <AlertDialogTitle>{t('common.discardTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('common.discardDescription')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Keep editing</AlertDialogCancel>
-            <AlertDialogAction onClick={onClose}>Discard</AlertDialogAction>
+            <AlertDialogCancel>{t('common.keepEditing')}</AlertDialogCancel>
+            <AlertDialogAction onClick={onClose}>{t('common.discard')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

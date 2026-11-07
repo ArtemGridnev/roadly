@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core'
 import type { FeatureRequest, RequestStatus } from '@roadly/shared'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { STATUS_META } from '../../feature-requests/constants/request-status'
 import { DraggableCard } from './DraggableCard'
@@ -11,6 +12,7 @@ interface BoardColumnProps {
 }
 
 export function BoardColumn({ status, requests, onOpen }: BoardColumnProps) {
+  const { t } = useTranslation()
   const headingId = `column-${status}`
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const meta = STATUS_META[status]
@@ -28,7 +30,7 @@ export function BoardColumn({ status, requests, onOpen }: BoardColumnProps) {
     >
       <div className="flex items-center gap-2 px-1">
         <h2 id={headingId} className={cn('text-sm font-semibold', meta.titleClassName)}>
-          {meta.label}
+          {t(`status.${status}`)}
         </h2>
         <span className="text-xs text-muted-foreground">{requests.length}</span>
       </div>
@@ -43,7 +45,7 @@ export function BoardColumn({ status, requests, onOpen }: BoardColumnProps) {
         </ul>
       ) : (
         <p className="rounded-lg border border-dashed px-3 py-6 text-center text-xs text-muted-foreground">
-          No requests
+          {t('roadmap.noRequests')}
         </p>
       )}
     </section>

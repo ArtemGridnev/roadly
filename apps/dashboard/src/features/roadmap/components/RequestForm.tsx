@@ -6,6 +6,7 @@ import {
 } from '@roadly/shared'
 import { useId, useImperativeHandle, type Ref } from 'react'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { FormField } from '@/components/FormField'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +28,7 @@ interface RequestFormProps {
 }
 
 export function RequestForm({ request, ref }: RequestFormProps) {
+  const { t } = useTranslation()
   const [updateFeatureRequest, { isLoading, isError }] = useUpdateFeatureRequestMutation()
   const formId = useId()
   const ids = { title: `${formId}-title`, description: `${formId}-description` }
@@ -61,18 +63,20 @@ export function RequestForm({ request, ref }: RequestFormProps) {
 
   return (
     <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
-      <FormField id={ids.title} label="Title" error={errors.title && 'Add a title.'}>
+      <FormField id={ids.title} label={t('roadmap.form.title')} error={errors.title && t('roadmap.form.titleError')}>
         <Input
           id={ids.title}
+          dir="auto"
           aria-invalid={errors.title ? true : undefined}
           aria-describedby={errors.title ? fieldDescriptionId(ids.title) : undefined}
           {...register('title', { setValueAs: trim })}
         />
       </FormField>
 
-      <FormField id={ids.description} label="Description" error={errors.description && 'Add a description.'}>
+      <FormField id={ids.description} label={t('roadmap.form.description')} error={errors.description && t('roadmap.form.descriptionError')}>
         <Textarea
           id={ids.description}
+          dir="auto"
           rows={6}
           aria-invalid={errors.description ? true : undefined}
           aria-describedby={errors.description ? fieldDescriptionId(ids.description) : undefined}
@@ -82,12 +86,12 @@ export function RequestForm({ request, ref }: RequestFormProps) {
 
       {isError ? (
         <p role="alert" className="text-sm text-destructive">
-          Your changes weren't saved. Check your connection and try again.
+          {t('roadmap.form.failed')}
         </p>
       ) : null}
 
       <Button type="submit" className="self-start" disabled={!isDirty || isLoading}>
-        {isLoading ? 'Saving…' : 'Save changes'}
+        {isLoading ? t('roadmap.form.submitting') : t('roadmap.form.submit')}
       </Button>
     </form>
   )

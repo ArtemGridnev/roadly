@@ -1,5 +1,6 @@
 import type { Workspace } from '@roadly/shared'
 import { Code, SquareKanban, type LucideIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { NavLink, useMatch } from 'react-router'
 import {
   Sidebar,
@@ -12,25 +13,29 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { useInlineSides } from '@/i18n/useInlineSides'
 import { RoadlyMark } from './RoadlyLogo'
-import { ThemeToggle } from './ThemeToggle'
+import { SidebarSettingsMenu } from './SettingsMenu'
 import { UserMenu } from './UserMenu'
 import { WorkspaceSwitcher } from '@/features/workspaces/components/WorkspaceSwitcher'
 
 export function AppSidebar({ workspace }: { workspace: Workspace }) {
+  const { t } = useTranslation()
+  const { start } = useInlineSides()
+
   return (
-    <Sidebar variant="inset">
+    <Sidebar variant="inset" side={start}>
       <SidebarHeader className="flex-row items-center">
-        <RoadlyMark className="ml-1 size-7" />
+        <RoadlyMark className="ms-1 size-7" />
         <WorkspaceSwitcher workspace={workspace} />
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <nav aria-label="Workspace">
+          <nav aria-label={t('nav.workspace')}>
             <SidebarMenu>
-              <NavItem to={`/${workspace.slug}/roadmap`} icon={SquareKanban} label="Roadmap" />
-              <NavItem to={`/${workspace.slug}/install`} icon={Code} label="Install" />
+              <NavItem to={`/${workspace.slug}/roadmap`} icon={SquareKanban} label={t('nav.roadmap')} />
+              <NavItem to={`/${workspace.slug}/install`} icon={Code} label={t('nav.install')} />
             </SidebarMenu>
           </nav>
         </SidebarGroup>
@@ -38,7 +43,7 @@ export function AppSidebar({ workspace }: { workspace: Workspace }) {
 
       <SidebarFooter>
         <SidebarMenu>
-          <ThemeToggle />
+          <SidebarSettingsMenu />
         </SidebarMenu>
         <UserMenu />
       </SidebarFooter>

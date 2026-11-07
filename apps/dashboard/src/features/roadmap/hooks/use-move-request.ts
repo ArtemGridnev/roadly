@@ -1,9 +1,10 @@
 import type { FeatureRequest, RequestStatus } from '@roadly/shared'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useUpdateFeatureRequestMutation } from '../../feature-requests/api/feature-requests-api'
-import { STATUS_META } from '../../feature-requests/constants/request-status'
 
 export function useMoveRequest() {
+  const { t } = useTranslation()
   const [updateFeatureRequest] = useUpdateFeatureRequestMutation()
 
   async function moveRequest(request: FeatureRequest, status: RequestStatus) {
@@ -14,7 +15,7 @@ export function useMoveRequest() {
     try {
       await updateFeatureRequest({ id: request.id, changes: { status } }).unwrap()
     } catch {
-      toast.error(`Couldn't move "${request.title}" to ${STATUS_META[status].label}`, {
+      toast.error(t('roadmap.moveFailed', { title: request.title, status: t(`status.${status}`) }), {
         id: `move-${request.id}`,
       })
     }

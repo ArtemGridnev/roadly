@@ -4,8 +4,13 @@ import { createRoot } from 'react-dom/client'
 import '@fontsource/inter/400.css'
 import '@fontsource/inter/500.css'
 import '@fontsource/inter/600.css'
+import '@fontsource/heebo/400.css'
+import '@fontsource/heebo/500.css'
+import '@fontsource/heebo/600.css'
 import './index.css'
+import './i18n/i18n'
 import { App } from './App'
+import { LanguageProvider } from './i18n/LanguageProvider'
 import { store } from './store'
 import { ThemeProvider } from './theme/ThemeProvider'
 
@@ -13,7 +18,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
       <ThemeProvider>
-        <App />
+        <LanguageProvider>
+          <App />
+        </LanguageProvider>
       </ThemeProvider>
     </Provider>
   </StrictMode>
