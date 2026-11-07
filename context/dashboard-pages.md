@@ -81,7 +81,7 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 - Sort defaults to Most voted.
 
 ### Install widget (`/:slug/install`)
-- Shows a copyable snippet carrying the workspace's `widgetKey`: a `#roadly` container, the `<script>` loading the widget bundle (`VITE_WIDGET_URL`), and `Roadly.init({ ... })` with the real key, `currentUser.*` placeholders for the host's signed-in user, and `theme: 'auto'`.
+- Shows a copyable snippet carrying the workspace's `widgetKey`: a `#roadly` container, the `<script>` loading the widget bundle (`VITE_WIDGET_URL`), and `Roadly.init({ ... })` with the real key, `currentUser.*` placeholders for the host's signed-in user, `theme: 'auto'` and `language: 'en'`.
 - One Copy button on the snippet ("Copied" for ~2s); three short steps link on to the Roadmap. No separate key display — the snippet is the only install path; add one if a non-snippet integration (npm package, key rotation) lands.
 - Landing page right after creating a workspace.
 

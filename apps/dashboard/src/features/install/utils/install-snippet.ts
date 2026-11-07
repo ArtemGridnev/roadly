@@ -16,6 +16,7 @@ export function installSnippet(widgetKey: string) {
     // Replace with your signed-in user
     user: { id: currentUser.id, name: currentUser.name, email: currentUser.email },
     theme: 'auto',
+    language: 'en', // or 'he'
   })
 </script>`
 }

@@ -1,6 +1,7 @@
 import { SearchX } from 'lucide-react'
 import { useEffect, useId, useRef, type KeyboardEvent } from 'react'
 import { useCachedFeatureRequest } from '../../api/feature-requests'
+import { useLanguage } from '../../i18n/use-language'
 import { useWidgetSession } from '../../session/widget-session'
 import { PanelHeader } from '../layout/PanelHeader'
 import { StateMessage } from '../ui/StateMessage'
@@ -13,6 +14,7 @@ interface RequestDetailOverlayProps {
 }
 
 export function RequestDetailOverlay({ requestId, onBack }: RequestDetailOverlayProps) {
+  const { t } = useLanguage()
   const { widgetKey, contact } = useWidgetSession()
   const request = useCachedFeatureRequest(widgetKey, contact?.id, requestId)
   const titleId = useId()
@@ -39,7 +41,7 @@ export function RequestDetailOverlay({ requestId, onBack }: RequestDetailOverlay
       onKeyDown={handleKeyDown}
       className="absolute inset-0 z-10 flex animate-overlay-in flex-col bg-background focus-visible:outline-none"
     >
-      <PanelHeader title="Request" titleId={titleId} onBack={onBack} />
+      <PanelHeader title={t.detail.title} titleId={titleId} onBack={onBack} />
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {request ? (
@@ -47,11 +49,11 @@ export function RequestDetailOverlay({ requestId, onBack }: RequestDetailOverlay
             <RequestVoteButton request={request} />
 
             <div className="flex min-w-0 flex-1 flex-col gap-3">
-              <h3 className="text-base font-semibold break-words text-foreground">
+              <h3 dir="auto" className="w-fit max-w-full text-base font-semibold break-words text-foreground">
                 {request.title}
               </h3>
               <RequestMeta request={request} />
-              <p className="text-sm break-words whitespace-pre-wrap text-muted-foreground">
+              <p dir="auto" className="w-fit max-w-full text-sm break-words whitespace-pre-wrap text-muted-foreground">
                 {request.description}
               </p>
             </div>
@@ -59,8 +61,8 @@ export function RequestDetailOverlay({ requestId, onBack }: RequestDetailOverlay
         ) : (
           <StateMessage
             icon={SearchX}
-            title="This request is no longer available"
-            description="It may have been removed by the team."
+            title={t.detail.missingTitle}
+            description={t.detail.missingDescription}
           />
         )}
       </div>

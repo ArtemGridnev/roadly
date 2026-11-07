@@ -1,8 +1,8 @@
 const FONT_LINK_ID = 'roadly-widget-fonts'
 const PROPERTY_STYLE_ID = 'roadly-widget-properties'
 
-const INTER_STYLESHEET_HREF =
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap'
+const FONTS_STYLESHEET_HREF =
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Heebo:wght@400;500;600&display=swap'
 
 const PROPERTY_RULE_PATTERN = /@property\s+--[\w-]+\s*\{[^}]*\}/g
 
@@ -12,7 +12,7 @@ export function installDocumentStyles(shadowCss: string): void {
     const link = document.createElement('link')
     link.id = FONT_LINK_ID
     link.rel = 'stylesheet'
-    link.href = INTER_STYLESHEET_HREF
+    link.href = FONTS_STYLESHEET_HREF
     document.head.appendChild(link)
   }
 

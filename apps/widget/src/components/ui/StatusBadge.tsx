@@ -1,12 +1,6 @@
 import type { RequestStatus } from '@roadly/shared'
+import { useLanguage } from '../../i18n/use-language'
 import { cn } from '../../lib/cn'
-
-const STATUS_LABELS: Record<RequestStatus, string> = {
-  BACKLOG: 'Backlog',
-  PLANNED: 'Planned',
-  IN_PROGRESS: 'In progress',
-  SHIPPED: 'Shipped',
-}
 
 const STATUS_CLASSES: Record<RequestStatus, string> = {
   BACKLOG: 'bg-blue-500/10 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
@@ -20,6 +14,8 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
+  const { t } = useLanguage()
+
   return (
     <span
       className={cn(
@@ -27,7 +23,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
         STATUS_CLASSES[status],
       )}
     >
-      {STATUS_LABELS[status]}
+      {t.status[status]}
     </span>
   )
 }

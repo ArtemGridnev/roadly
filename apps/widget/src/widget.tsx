@@ -1,8 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { RoadlyInitOptions } from '@roadly/shared'
+import { languageSchema, type RoadlyInitOptions } from '@roadly/shared'
 import { WidgetRoot } from './app/WidgetRoot'
+import { LanguageContext } from './i18n/use-language'
 import { WidgetSessionProvider } from './session/widget-session'
 import { mountShadowRoot } from './shadow/mount'
 import cssText from './index.css?inline'
@@ -35,13 +36,16 @@ function init(options: RoadlyInitOptions) {
   }
 
   const queryClient = new QueryClient()
+  const language = languageSchema.safeParse(options.language).data ?? 'en'
 
   createRoot(mount.mountPoint).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <WidgetSessionProvider widgetKey={options.widgetKey} user={options.user}>
-          <WidgetRoot theme={options.theme ?? 'auto'} />
-        </WidgetSessionProvider>
+        <LanguageContext.Provider value={language}>
+          <WidgetSessionProvider widgetKey={options.widgetKey} user={options.user}>
+            <WidgetRoot theme={options.theme ?? 'auto'} />
+          </WidgetSessionProvider>
+        </LanguageContext.Provider>
       </QueryClientProvider>
     </StrictMode>,
   )

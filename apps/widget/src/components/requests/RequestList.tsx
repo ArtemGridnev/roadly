@@ -1,6 +1,7 @@
 import type { WidgetFeatureRequest } from '@roadly/shared'
 import { Inbox, TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useLanguage } from '../../i18n/use-language'
 import { RequestCard } from './RequestCard'
 import { RequestListSkeleton } from './RequestListSkeleton'
 import { StateMessage } from '../ui/StateMessage'
@@ -21,15 +22,17 @@ interface RequestListProps extends RequestListContentProps {
 }
 
 export function RequestList({ error, onRetry, toolbar, ...contentProps }: RequestListProps) {
+  const { t } = useLanguage()
+
   if (error) {
     return (
       <StateMessage
         icon={TriangleAlert}
-        title="We couldn't load the requests"
-        description="The connection to Roadly failed."
+        title={t.list.loadErrorTitle}
+        description={t.list.loadErrorDescription}
         action={
           <Button variant="secondary" className="mt-2" onClick={onRetry}>
-            Try again
+            {t.list.tryAgain}
           </Button>
         }
       />

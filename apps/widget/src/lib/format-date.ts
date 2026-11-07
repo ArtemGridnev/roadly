@@ -1,9 +1,7 @@
-const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-})
-
-export function formatRequestDate(isoDate: string): string {
-  return dateFormatter.format(new Date(isoDate))
+export function formatRequestDate(isoDate: string, language: string): string {
+  return new Intl.DateTimeFormat(language, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(isoDate))
 }

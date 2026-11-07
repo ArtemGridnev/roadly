@@ -4,7 +4,7 @@
 @custom-variant dark (&:where([data-roadly-theme='dark'], [data-roadly-theme='dark'] *));
 
 @theme {
-  --font-sans: var(--roadly-font-family, var(--roadly-default-font-family));
+  --font-sans: var(--roadly-font-family, 'Inter', 'Heebo', var(--roadly-default-font-family));
 
   --radius-lg: var(--roadly-radius, var(--roadly-default-radius));
 
