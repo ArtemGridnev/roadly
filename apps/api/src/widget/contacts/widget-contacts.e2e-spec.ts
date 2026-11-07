@@ -93,5 +93,61 @@ describe('WidgetContactsController (e2e)', () => {
         .send({ name: 'Jane Doe' })
         .expect(400);
     });
+
+    it('rejects an externalId longer than 255 characters', async () => {
+      await request(app.getHttpServer())
+        .post('/widget/contacts')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .send({
+          externalId: 'x'.repeat(256),
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+        })
+        .expect(400);
+    });
+
+    it('rejects a name longer than 255 characters', async () => {
+      await request(app.getHttpServer())
+        .post('/widget/contacts')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .send({
+          externalId: 'ext-1',
+          name: 'x'.repeat(256),
+          email: 'jane@example.com',
+        })
+        .expect(400);
+    });
+
+    it('rate limits per workspace after 60 requests a minute', async () => {
+      const body = {
+        externalId: 'ext-1',
+        name: 'Jane Doe',
+        email: 'jane@example.com',
+      };
+
+      for (let i = 0; i < 60; i++) {
+        await request(app.getHttpServer())
+          .post('/widget/contacts')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .send(body)
+          .expect(201);
+      }
+
+      await request(app.getHttpServer())
+        .post('/widget/contacts')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .send(body)
+        .expect(429);
+
+      const otherWorkspace = await prisma.workspace.create({
+        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
+      });
+
+      await request(app.getHttpServer())
+        .post('/widget/contacts')
+        .set(WIDGET_KEY_HEADER, otherWorkspace.widgetKey)
+        .send(body)
+        .expect(201);
+    });
   });
 });

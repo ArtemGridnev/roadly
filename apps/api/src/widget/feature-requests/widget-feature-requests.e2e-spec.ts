@@ -678,5 +678,30 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         .send({ title: 'Dark mode', description: 'Please add dark mode' })
         .expect(401);
     });
+
+    it('rate limits creating after 10 requests a minute, leaving the list readable', async () => {
+      const body = { title: 'Dark mode', description: 'Please add dark mode' };
+
+      for (let i = 0; i < 10; i++) {
+        await request(app.getHttpServer())
+          .post('/widget/feature-requests')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set(CONTACT_ID_HEADER, contactId)
+          .send(body)
+          .expect(201);
+      }
+
+      await request(app.getHttpServer())
+        .post('/widget/feature-requests')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set(CONTACT_ID_HEADER, contactId)
+        .send(body)
+        .expect(429);
+
+      await request(app.getHttpServer())
+        .get('/widget/feature-requests')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .expect(200);
+    });
   });
 });

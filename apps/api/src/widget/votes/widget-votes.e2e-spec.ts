@@ -262,4 +262,38 @@ describe('WidgetVotesController (e2e)', () => {
       ).toBe(1);
     });
   });
+
+  describe('rate limiting', () => {
+    it('rate limits voting after 60 requests a minute', async () => {
+      for (let i = 0; i < 60; i++) {
+        await request(app.getHttpServer())
+          .post('/widget/feature-requests/missing/votes')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set(CONTACT_ID_HEADER, contactId)
+          .expect(404);
+      }
+
+      await request(app.getHttpServer())
+        .post('/widget/feature-requests/missing/votes')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set(CONTACT_ID_HEADER, contactId)
+        .expect(429);
+    });
+
+    it('rate limits removing votes after 60 requests a minute', async () => {
+      for (let i = 0; i < 60; i++) {
+        await request(app.getHttpServer())
+          .delete('/widget/feature-requests/missing/votes')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set(CONTACT_ID_HEADER, contactId)
+          .expect(404);
+      }
+
+      await request(app.getHttpServer())
+        .delete('/widget/feature-requests/missing/votes')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set(CONTACT_ID_HEADER, contactId)
+        .expect(429);
+    });
+  });
 });

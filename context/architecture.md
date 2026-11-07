@@ -105,7 +105,8 @@ Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never
 ### Widget identity (Contact)
 
 - **MVP:** the host app passes the current end user's id/name/email into `Roadly.init(...)`. The widget calls `POST /widget/contacts` once to find or create a `Contact` row keyed by that host-supplied id (stored as `externalId`, scoped to the resolved Workspace) and gets back a `Contact.id`, which it then sends as `x-contact-id` on subsequent write calls. Identity is trusted as-is (identified but unverified). Documented as a deliberate trade-off.
-- **Future:** the host app's backend signs a short-lived JWT with a shared secret; the widget passes it at init instead of raw identity; the backend verifies signature and expiry before trusting the identity. Because identity already travels via headers rather than path/body params, this migration only changes what generates the header value (the widget's TanStack Query fetcher), not the route shapes.
+- **Rate limits:** widget write routes use `WidgetThrottlerGuard`, tracking by IP + resolved Workspace. Per minute: `POST /widget/contacts` 60, `POST /widget/feature-requests` 10, each of `POST` and `DELETE` votes 60. Counters are in memory, so limits are per API instance.
+- **Decided, not built yet:** a two-step install. Unsigned stays the default so the snippet works straight away; the host's backend can then sign a short-lived JWT with a per-Workspace secret, and each Workspace can choose to enforce it. Both modes exchange for a bearer session token that replaces `x-contact-id` and `POST /widget/contacts`. See `docs/adr/0004-widget-identity.md`.
 
 ### Admin dashboard auth (Agent)
 

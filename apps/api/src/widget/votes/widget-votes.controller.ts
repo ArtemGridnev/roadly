@@ -5,7 +5,9 @@ import {
   HttpStatus,
   Param,
   Post,
+  UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { VotesService } from '../../votes/votes.service';
 import { FeatureRequestsService } from '../../feature-requests/feature-requests.service';
 import { VoteResponseDto } from '../../votes/dto/vote-response.dto';
@@ -13,6 +15,7 @@ import { WidgetAuth } from '../../auth/decorators/widget-auth.decorator';
 import { RequireContact } from '../../auth/decorators/require-contact.decorator';
 import { CurrentWorkspace } from '../../auth/decorators/current-workspace.decorator';
 import { CurrentContact } from '../../auth/decorators/current-contact.decorator';
+import { WidgetThrottlerGuard } from '../../auth/guards/widget-throttler.guard';
 import type {
   ResolvedContact,
   ResolvedWorkspace,
@@ -20,6 +23,8 @@ import type {
 
 @WidgetAuth()
 @RequireContact()
+@UseGuards(WidgetThrottlerGuard)
+@Throttle({ default: { ttl: 60_000, limit: 60 } })
 @Controller('widget/feature-requests/:requestId/votes')
 export class WidgetVotesController {
   constructor(

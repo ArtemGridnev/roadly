@@ -8,9 +8,15 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status (done), 3 table view + view toggle + status filter (done), 4 drawer (done).
+- Widget identity in five PRs (`docs/adr/0004-widget-identity.md`): 1 rate limits (done), 2 session token, 3 signed identity API, 4 signed identity in the widget, 5 two-step Install page.
 
 ## Completed
+
+- **Widget rate limits (`feat/api-widget-rate-limits`)**:
+  - `WidgetThrottlerGuard` tracks by IP + resolved Workspace, and runs after the auth guard, so an invalid key gets a 401 without using up a limit. Per minute: `POST /widget/contacts` 60, `POST /widget/feature-requests` 10, each of `POST` and `DELETE` votes 60. Reads aren't limited.
+  - `CreateContactDto` caps `externalId` and `name` at 255 characters. `createContactSchema` in `packages/shared` isn't used by any app and doesn't have the caps.
+  - Counters are in memory, so limits are per API instance. Scaling out would need shared storage.
+  - e2e 160/160; each new test failed before the change. Type-check and build clean, changed files pass lint.
 
 - **Widget translations and RTL (`feat/widget-i18n`)**:
   - Last step of i18n. New `language` option in `Roadly.init` (default English, anything else falls back to it), with no picker inside the widget and nothing saved. All widget text moved to `src/i18n/locales/en.ts` and `he.ts` (Hebrew is a draft awaiting review), through a small typed dictionary rather than i18next, to keep the bundle small. Dates follow the widget language instead of the browser's.

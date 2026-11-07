@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { FeatureRequestsService } from '../../feature-requests/feature-requests.service';
 import { WidgetFeatureRequestsService } from './widget-feature-requests.service';
 import { CreateWidgetFeatureRequestDto } from './dto/create-widget-feature-request.dto';
@@ -9,6 +10,7 @@ import { RequireContact } from '../../auth/decorators/require-contact.decorator'
 import { CurrentWorkspace } from '../../auth/decorators/current-workspace.decorator';
 import { CurrentContact } from '../../auth/decorators/current-contact.decorator';
 import { OptionalContact } from '../../auth/decorators/optional-contact.decorator';
+import { WidgetThrottlerGuard } from '../../auth/guards/widget-throttler.guard';
 import type {
   ResolvedContact,
   ResolvedWorkspace,
@@ -50,6 +52,8 @@ export class WidgetFeatureRequestsController {
   }
 
   @RequireContact()
+  @UseGuards(WidgetThrottlerGuard)
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
   @Post()
   async create(
     @CurrentWorkspace() workspace: ResolvedWorkspace,
