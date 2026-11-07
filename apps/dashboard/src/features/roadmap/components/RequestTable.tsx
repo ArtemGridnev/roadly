@@ -36,10 +36,6 @@ const columns = helper.columns([
     header: 'Status',
     cell: (info) => <StatusPill status={info.getValue()} />,
   }),
-  helper.accessor('category', {
-    header: 'Category',
-    cell: (info) => info.getValue() ?? <span className="text-muted-foreground">—</span>,
-  }),
   helper.accessor('createdAt', {
     header: 'Created',
     cell: (info) => <span className="text-muted-foreground">{formatRequestDate(info.getValue())}</span>,
@@ -49,7 +45,6 @@ const columns = helper.columns([
 const COLUMN_CLASSES: Record<string, string> = {
   voteCount: 'w-16',
   title: 'w-full max-w-0',
-  category: 'hidden md:table-cell',
   createdAt: 'hidden whitespace-nowrap md:table-cell',
 }
 

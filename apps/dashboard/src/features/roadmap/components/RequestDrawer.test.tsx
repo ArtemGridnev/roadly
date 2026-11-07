@@ -20,7 +20,6 @@ const sso = {
   id: 'r1',
   title: 'SSO',
   description: 'SAML single sign-on.',
-  category: 'Auth',
   status: 'PLANNED',
   workspaceId: acme.id,
   authorId: 'c1',
@@ -32,7 +31,6 @@ const webhooks = {
   ...sso,
   id: 'r2',
   title: 'Webhooks',
-  category: null,
   authorId: null,
   author: null,
   voteCount: 0,
@@ -89,7 +87,6 @@ test('opens a card with its votes, author and fields', async () => {
   expect(within(drawer).getByText('Jane Doe')).toBeInTheDocument()
   expect(within(drawer).getByRole('link', { name: 'jane@example.com' })).toHaveAttribute('href', 'mailto:jane@example.com')
   expect(within(drawer).getByLabelText('Title')).toHaveValue('SSO')
-  expect(within(drawer).getByLabelText('Category')).toHaveValue('Auth')
   expect(within(drawer).getByRole('button', { name: 'Save changes' })).toBeDisabled()
 })
 
@@ -99,7 +96,6 @@ test('says a request without an author was added by the team', async () => {
   const drawer = await openCard(user, 'Webhooks')
 
   expect(within(drawer).getByText('Added by your team')).toBeInTheDocument()
-  expect(within(drawer).getByLabelText('Category')).toHaveValue('')
   expect(within(drawer).getByRole('button', { name: 'Save changes' })).toBeDisabled()
 })
 
@@ -138,22 +134,12 @@ test('saves only the changed fields, trimmed', async () => {
   expect(await screen.findByRole('button', { name: 'Single sign-on', hidden: true })).toBeInTheDocument()
 })
 
-test('clears the category when the field is emptied', async () => {
-  const { update, user } = setup()
-  const drawer = await openCard(user, 'SSO')
-
-  await user.clear(within(drawer).getByLabelText('Category'))
-  await user.click(within(drawer).getByRole('button', { name: 'Save changes' }))
-
-  await vi.waitFor(() => expect(update).toHaveBeenCalledWith({ category: null }, expect.anything()))
-})
-
 test('closes without asking when an edit is undone', async () => {
   const { user } = setup()
   const drawer = await openCard(user, 'Webhooks')
 
-  await user.type(within(drawer).getByLabelText('Category'), 'Growth')
-  await user.clear(within(drawer).getByLabelText('Category'))
+  await user.type(within(drawer).getByLabelText('Title'), '!')
+  await user.type(within(drawer).getByLabelText('Title'), '{Backspace}')
   await user.keyboard('{Escape}')
 
   await vi.waitFor(() => expect(screen.queryByRole('dialog', { name: 'Webhooks' })).not.toBeInTheDocument())
@@ -175,11 +161,11 @@ test('keeps the edits and says so when saving fails', async () => {
   const { user } = setup({ 'PATCH /feature-requests/r1': () => ({ status: 500, body: {} }) })
   const drawer = await openCard(user, 'SSO')
 
-  await user.type(within(drawer).getByLabelText('Category'), ' SSO')
+  await user.type(within(drawer).getByLabelText('Title'), ' v2')
   await user.click(within(drawer).getByRole('button', { name: 'Save changes' }))
 
   expect(await within(drawer).findByRole('alert')).toHaveTextContent("Your changes weren't saved.")
-  expect(within(drawer).getByLabelText('Category')).toHaveValue('Auth SSO')
+  expect(within(drawer).getByLabelText('Title')).toHaveValue('SSO v2')
 })
 
 test('changes the status straight away', async () => {
