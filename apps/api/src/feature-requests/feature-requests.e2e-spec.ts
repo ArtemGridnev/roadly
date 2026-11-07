@@ -273,31 +273,6 @@ describe('FeatureRequestsController (e2e)', () => {
       expect(body.title).toBe('A');
     });
 
-    it('clears the category when it is set to null', async () => {
-      const featureRequest = await prisma.featureRequest.create({
-        data: {
-          title: 'A',
-          description: 'A desc',
-          category: 'UI',
-          workspaceId,
-          authorId,
-        },
-      });
-
-      const response = await authed(
-        'patch',
-        `/feature-requests/${featureRequest.id}`,
-      )
-        .send({ category: null })
-        .expect(200);
-
-      expect((response.body as FeatureRequestResponseDto).category).toBeNull();
-      const stored = await prisma.featureRequest.findUniqueOrThrow({
-        where: { id: featureRequest.id },
-      });
-      expect(stored.category).toBeNull();
-    });
-
     it('returns 404 when updating an unknown id', async () => {
       await authed('patch', '/feature-requests/does-not-exist')
         .send({ status: RequestStatus.PLANNED })

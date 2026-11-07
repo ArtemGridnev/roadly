@@ -12,6 +12,10 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Feature request category removed (`refactor/monorepo-remove-request-category`)**:
+  - Gone from the database (migration drops `FeatureRequest.category`; existing values deleted, not in production yet), API DTOs, shared schemas and types, the dashboard card, table and drawer form, and the widget form and request meta. Also removed what only category used: the widget `FormField` `optional` prop, `trimToOptional`, and the `code-standards.md` exception for fields cleared with `null`. Older entries below still mention category as history.
+  - e2e 144/144, dashboard 84/84 (the two category-clearing tests removed; two drawer tests now edit Title instead), build and type-check clean, dashboard and widget lint report no errors. API lint unchanged (pre-existing errors in `feature-requests.e2e-spec.ts`). The widget has no tests. Not browser-checked.
+
 - **Roadmap settings in the URL (`feat/dashboard-roadmap-url-filters`)**:
   - Sort, view and status filter moved from `roadmapSlice` (deleted) to URL search params through `useRoadmapSettings`, so a reload or a shared link keeps them. Last-used values are saved per workspace in `localStorage`, and a URL without settings restores them and writes them back. Rules in `dashboard-pages.md`.
   - 7 new tests in `RoadmapPage.test.tsx`; dashboard 85/85, lint and build pass. Not yet checked in a real browser.

@@ -29,16 +29,12 @@ A person who signs into the Admin Dashboard to triage Feature Requests and manag
 _Avoid_: User, TeamMember, Team Member, admin, product team (that's the group, not the individual)
 
 **Feature Request**:
-A titled, described suggestion submitted by a Contact through the Widget, with a Status and an optional Category. The unit of both voting and roadmap tracking.
+A titled, described suggestion submitted by a Contact through the Widget, with a Status. The unit of both voting and roadmap tracking.
 _Avoid_: issue, ticket, item, idea
 
 **Vote**:
 A single Contact's upvote on one Feature Request. One Vote per (Contact, Feature Request) pair — enforced by a unique constraint. Submitting a Feature Request casts its author's Vote. A Contact can remove their own Vote (un-vote); there is no downvote in scope. Votes are frozen once a Feature Request is Shipped: no new Votes and no un-votes.
 _Avoid_: like, upvote (as a noun — "upvote" is the action of casting a Vote, "Vote" is the record)
-
-**Category**:
-An optional free-text label a Contact attaches to a Feature Request at submission. Not a predefined/curated list — no admin category-management feature exists.
-_Avoid_: tag, type, label
 
 **Roadmap Board**:
 The Admin Dashboard surface listing Feature Requests in kanban (by Status column) or table view, with drag-and-drop Status changes. Short form: Board (used in code — `boardSlice`, `<Board>`).

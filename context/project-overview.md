@@ -33,7 +33,7 @@ Roadly is a feature request and roadmap tool. End users submit feature requests 
 
 ### Feature Requests (widget)
 
-- Submit a feature request (title, description, optional category).
+- Submit a feature request (title, description).
 - Public list view, sortable by votes or newest.
 - Upvote — one vote per user per request, with duplicate-vote prevention. A second click removes the vote. No limit on how many requests a user can vote on.
 - Submitting a request automatically casts the author's vote on it.
@@ -42,7 +42,7 @@ Roadly is a feature request and roadmap tool. End users submit feature requests 
 
 - Roadmap Board with columns: Backlog / Planned / In Progress / Shipped.
 - Drag-and-drop requests between statuses (admin only).
-- Edit a request's title, description, category and status, or delete it (admin only).
+- Edit a request's title, description and status, or delete it (admin only).
 
 ### Authentication
 
@@ -65,7 +65,7 @@ Roadly is a feature request and roadmap tool. End users submit feature requests 
 - Verified widget identity
 - Comments on requests
 - Admin vs. regular user roles
-- Filtering (status, category, "my requests")
+- Filtering (status, "my requests")
 - Pagination on the requests list
 - Status-change notifications (email or in-app)
 

@@ -29,7 +29,7 @@ A feedback and roadmap tool with two surfaces:
 ## Feature Scope
 
 ### Core (MVP)
-1. Submit feature request (title, description, optional category)
+1. Submit feature request (title, description)
 2. Public list view, sortable by votes / newest
 3. Upvote — one vote per user per request
 4. Status board — Backlog / Planned / In Progress / Shipped, drag-and-drop (admin)
@@ -40,7 +40,7 @@ A feedback and roadmap tool with two surfaces:
 7. Identity verification for the widget (signed, short-lived JWT)
 8. Comments
 9. Admin vs. regular user roles
-10. Filtering (status, category, "my requests")
+10. Filtering (status, "my requests")
 11. Pagination
 12. Status-change notifications (email or in-app)
 

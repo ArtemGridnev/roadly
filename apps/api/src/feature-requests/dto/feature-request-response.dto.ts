@@ -19,7 +19,6 @@ export class FeatureRequestResponseDto {
   readonly id: string;
   readonly title: string;
   readonly description: string;
-  readonly category: string | null;
   readonly status: RequestStatus;
   readonly workspaceId: string;
   readonly authorId: string | null;
@@ -31,7 +30,6 @@ export class FeatureRequestResponseDto {
     this.id = featureRequest.id;
     this.title = featureRequest.title;
     this.description = featureRequest.description;
-    this.category = featureRequest.category;
     this.status = featureRequest.status;
     this.workspaceId = featureRequest.workspaceId;
     this.authorId = featureRequest.authorId;
