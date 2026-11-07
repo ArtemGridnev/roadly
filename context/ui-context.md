@@ -97,7 +97,7 @@ Matches the canonical `Status` enum in `CONTEXT.md` — do not add, rename, or r
 On the Roadmap Board each column takes its status color too: the header title uses the pill's text color (no pill), the column background is the same hue at `/5` (`/10` in dark), and the drop-target ring is the `-500` shade. The dashboard keeps all of it per status in `STATUS_META` (`features/feature-requests/request-status.ts`).
 
 ### Typography
-- Font: **Inter** (`@fontsource/inter` or self-hosted), then **Heebo** for Hebrew, which Inter doesn't cover (dashboard, loaded per character through `unicode-range`), fallback `system-ui`.
+- Font: **Inter** (`@fontsource/inter` or self-hosted), then **Heebo** for Hebrew, which Inter doesn't cover (loaded per character through `unicode-range`), fallback `system-ui`.
 - Scale — use only these: **12 / 14 / 16 / 20 / 24 / 32px.**
   - 12 → captions, badges, timestamps
   - 14 → body default, table cells, form labels
@@ -154,6 +154,7 @@ The embeddable widget is a separate, lighter surface. It must NOT inherit the fu
 | Deps | Use the stack freely | Size-sensitive — prefer a plain CSS transition over pulling Framer Motion in if it does the job |
 | Font | Inter | Inherit host page font; fall back to Inter only if none set |
 | Dark mode | User-facing toggle (light / dark / system) | Optional `theme: 'light' \| 'dark' \| 'auto'` in the `init` call. Defaults to `'auto'` → follows host `prefers-color-scheme`. No user-facing toggle inside the widget; the host decides |
+| Language | Settings menu, saved on the agent | Optional `language: 'en' \| 'he'` in the `init` call. Defaults to `'en'`. No picker inside the widget; the host decides. Hebrew moves the launcher to the bottom left |
 
 **Rule of thumb:** admin-only component → full stack. Shared with or living in the widget → lightest option that still looks intentional.
 

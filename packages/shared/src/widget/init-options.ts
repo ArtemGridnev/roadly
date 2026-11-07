@@ -1,3 +1,5 @@
+import type { Language } from '../types/language';
+
 export interface WidgetUser {
   id: string;
   name: string;
@@ -11,4 +13,5 @@ export interface RoadlyInitOptions {
   widgetKey: string;
   user: WidgetUser;
   theme?: WidgetTheme;
+  language?: Language;
 }

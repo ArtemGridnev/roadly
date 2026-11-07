@@ -37,13 +37,14 @@
       <h1>Host page (dev harness)</h1>
       <p>
         Simulates a customer site embedding the widget. The launcher pins itself to the
-        bottom-right of the viewport; everything it renders lives inside a shadow root on
+        bottom corner of the viewport; everything it renders lives inside a shadow root on
         <code>#widget-container</code>, so nothing on this page can style it.
       </p>
       <p>
         Theme is <code>auto</code> — switch your OS between light and dark to watch the widget
         follow this page.
       </p>
+      <p>Add <code>?language=he</code> to the URL to see the widget in Hebrew.</p>
     </main>
 
     <div id="widget-container"></div>
@@ -55,6 +56,7 @@
         widgetKey: 'dev-widget-key',
         user: { id: 'dev-user-1', name: 'Dev User', email: 'dev@example.com' },
         theme: 'auto',
+        language: new URLSearchParams(location.search).get('language'),
       })
     </script>
   </body>

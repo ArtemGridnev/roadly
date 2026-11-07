@@ -115,9 +115,10 @@ Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never
 
 ## Widget Embedding Model
 
-- Host app includes the bundled script and calls `Roadly.init({ container, user, theme })`.
+- Host app includes the bundled script and calls `Roadly.init({ container, user, theme, language })`.
 - The widget self-mounts into the given container and renders inside a **Shadow DOM** for style isolation.
 - `theme: 'light' | 'dark' | 'auto'` (default `'auto'`, follows host `prefers-color-scheme`). No in-widget theme toggle.
+- `language: 'en' | 'he'` (default `'en'`). The host decides, with no in-widget picker and nothing saved. Hebrew mirrors the widget on its own root, not on the host's `<html>`.
 - Backend exposes a public API surface for the widget (list requests, submit, vote) distinct from the authenticated admin API.
 
 ### Shadow DOM constraints (must design around from the start)

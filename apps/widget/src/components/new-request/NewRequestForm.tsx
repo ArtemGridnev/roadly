@@ -6,17 +6,13 @@ import {
   type CreateWidgetFeatureRequestInput,
 } from '@roadly/shared'
 import { useCreateFeatureRequest } from '../../api/feature-requests'
+import { useLanguage } from '../../i18n/use-language'
 import { useWidgetSession } from '../../session/widget-session'
 import { Button } from '../ui/Button'
 import { FormField } from '../ui/FormField'
 import { fieldErrorId } from '../../lib/field-ids'
 import { TextInput } from '../ui/TextInput'
 import { TextArea } from '../ui/TextArea'
-
-const FIELD_ERRORS = {
-  title: 'Add a short title.',
-  description: 'Describe what you need and why.',
-} as const
 
 const trim = (value: string) => value.trim()
 
@@ -25,6 +21,7 @@ interface NewRequestFormProps {
 }
 
 export function NewRequestForm({ onSent }: NewRequestFormProps) {
+  const { t } = useLanguage()
   const { widgetKey, contact, identifyError } = useWidgetSession()
   const createFeatureRequest = useCreateFeatureRequest()
   const formId = useId()
@@ -54,19 +51,20 @@ export function NewRequestForm({ onSent }: NewRequestFormProps) {
   })
 
   const errorMessage = identifyError
-    ? "We couldn't identify your account, so requests can't be sent right now."
+    ? t.newRequest.identifyFailed
     : createFeatureRequest.isError
-      ? "Your request wasn't sent. Check your connection and try again."
+      ? t.newRequest.sendFailed
       : null
 
   return (
     <form noValidate onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-        <FormField id={ids.title} label="Title" error={errors.title && FIELD_ERRORS.title}>
+        <FormField id={ids.title} label={t.newRequest.titleLabel} error={errors.title && t.newRequest.titleError}>
           <TextInput
             id={ids.title}
             autoFocus
-            placeholder="e.g. Export reports to CSV"
+            dir="auto"
+            placeholder={t.newRequest.titlePlaceholder}
             aria-invalid={errors.title ? true : undefined}
             aria-describedby={errors.title ? fieldErrorId(ids.title) : undefined}
             {...register('title', { setValueAs: trim })}
@@ -75,12 +73,13 @@ export function NewRequestForm({ onSent }: NewRequestFormProps) {
 
         <FormField
           id={ids.description}
-          label="Description"
-          error={errors.description && FIELD_ERRORS.description}
+          label={t.newRequest.descriptionLabel}
+          error={errors.description && t.newRequest.descriptionError}
         >
           <TextArea
             id={ids.description}
-            placeholder="What are you trying to do, and what gets in the way today?"
+            dir="auto"
+            placeholder={t.newRequest.descriptionPlaceholder}
             aria-invalid={errors.description ? true : undefined}
             aria-describedby={errors.description ? fieldErrorId(ids.description) : undefined}
             {...register('description', { setValueAs: trim })}
@@ -99,7 +98,7 @@ export function NewRequestForm({ onSent }: NewRequestFormProps) {
           className="self-end"
           disabled={!contact || createFeatureRequest.isPending}
         >
-          {createFeatureRequest.isPending ? 'Sending…' : 'Send request'}
+          {createFeatureRequest.isPending ? t.newRequest.submitting : t.newRequest.submit}
         </Button>
       </div>
     </form>

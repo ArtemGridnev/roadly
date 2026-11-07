@@ -24,12 +24,15 @@ export function RequestCard({ request, onSelect }: RequestCardProps) {
           <button
             ref={titleButtonRef}
             type="button"
-            className="text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            dir="auto"
+            className="text-start focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             {request.title}
           </button>
         </h3>
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{request.description}</p>
+        <p dir="auto" className="mt-1 line-clamp-2 w-fit max-w-full text-sm text-muted-foreground">
+          {request.description}
+        </p>
 
         <div className="mt-3">
           <RequestMeta request={request} />

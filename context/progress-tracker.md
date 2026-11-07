@@ -12,11 +12,14 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Widget translations and RTL (`feat/widget-i18n`)**:
+  - Last step of i18n. New `language` option in `Roadly.init` (default English, anything else falls back to it), with no picker inside the widget and nothing saved. All widget text moved to `src/i18n/locales/en.ts` and `he.ts` (Hebrew is a draft awaiting review), through a small typed dictionary rather than i18next, to keep the bundle small. Dates follow the widget language instead of the browser's.
+  - Hebrew mirrors the widget on its own root, and the launcher moves to the bottom left. Setting `dir` in English too keeps the widget LTR on an RTL host page. User content uses `dir="auto"`, Heebo is added to the Google Fonts link, and the Install snippet shows the new option. The build escapes non-ASCII in `widget.js`, because raw Hebrew was garbled on host pages that aren't UTF-8.
+
 - **Dashboard translations, Settings menu and RTL (`feat/dashboard-i18n`)**:
   - Second step of i18n. react-i18next with typed keys; all dashboard text extracted to `src/i18n/locales/en.ts` and `he.ts` (Hebrew is a draft awaiting review). Dates and password-rule lists format in the current language.
   - `ThemeToggle` replaced by `SettingsMenu`: a Settings row in the sidebar and a gear on standalone pages, each with Theme and Language submenus. Language rules in `dashboard-pages.md`.
   - RTL: `dir` and `lang` on `<html>` before first paint, logical Tailwind classes throughout, `useInlineSides` for Radix and sidebar sides, Heebo for Hebrew text. User content uses `dir="auto"`, so a Hebrew request reads correctly in the English UI and the other way round.
-  - Remaining step: widget `language` init option.
 
 - **Agent language on the server (`feat/api-agent-language`)**:
   - First step of i18n (English + Hebrew). Nullable `Agent.language` (`Language` enum, `en | he`), returned in the agent response from signup, login, refresh and `/auth/me`. Signup accepts an optional `language`; new `PATCH /auth/me` sets it and rejects any other field. Shared `languageSchema`, `Language`, `updateCurrentAgentSchema`.

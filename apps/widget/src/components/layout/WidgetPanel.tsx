@@ -3,8 +3,9 @@ import { Plus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { PanelHeader } from './PanelHeader'
 import { TabBar } from './TabBar'
-import { DEFAULT_TAB, WIDGET_TABS, type TabId } from './tabs'
+import { DEFAULT_TAB, type TabId } from './tabs'
 import { Button } from '../ui/Button'
+import { useLanguage } from '../../i18n/use-language'
 import { NewRequestOverlay } from '../new-request/NewRequestOverlay'
 import { RequestDetailOverlay } from '../requests/RequestDetailOverlay'
 import { RequestsView } from '../../views/RequestsView'
@@ -19,6 +20,7 @@ interface WidgetPanelProps {
 }
 
 export function WidgetPanel({ isClosing, onClose, onExited }: WidgetPanelProps) {
+  const { dir, t } = useLanguage()
   const [activeTab, setActiveTab] = useState<TabId>(DEFAULT_TAB)
   const [isComposing, setIsComposing] = useState(false)
   const [announcement, setAnnouncement] = useState('')
@@ -58,26 +60,26 @@ export function WidgetPanel({ isClosing, onClose, onExited }: WidgetPanelProps) 
 
   const handleSent = () => {
     setActiveTab('mine')
-    setAnnouncement('Request sent')
+    setAnnouncement(t.newRequest.sent)
     closeComposer()
   }
 
   const isOverlayOpen = isComposing || selectedRequestId !== null
-  const activeTitle = WIDGET_TABS.find((tab) => tab.id === activeTab)?.title ?? ''
 
   return (
     <Tabs.Root
       value={activeTab}
+      dir={dir}
       onValueChange={(value) => setActiveTab(value as TabId)}
       inert={isClosing}
       data-state={isClosing ? 'closing' : 'open'}
       onAnimationEnd={(event) => {
         if (isClosing && event.target === event.currentTarget) onExited()
       }}
-      className="relative flex h-[min(38rem,calc(100vh-7.5rem))] w-[24rem] max-w-[calc(100vw-2rem)] origin-bottom-right animate-panel-in flex-col overflow-clip rounded-lg border border-border bg-background text-foreground shadow-lg data-[state=closing]:animate-panel-out max-sm:fixed max-sm:inset-0 max-sm:h-auto max-sm:w-auto max-sm:max-w-none max-sm:rounded-none max-sm:animate-none max-sm:border-0"
+      className="relative flex h-[min(38rem,calc(100vh-7.5rem))] w-[24rem] max-w-[calc(100vw-2rem)] origin-bottom-right animate-panel-in rtl:origin-bottom-left flex-col overflow-clip rounded-lg border border-border bg-background text-foreground shadow-lg data-[state=closing]:animate-panel-out max-sm:fixed max-sm:inset-0 max-sm:h-auto max-sm:w-auto max-sm:max-w-none max-sm:rounded-none max-sm:animate-none max-sm:border-0"
     >
       <div inert={isOverlayOpen} className="flex min-h-0 flex-1 flex-col">
-        <PanelHeader title={activeTitle} onClose={onClose} />
+        <PanelHeader title={t.tabs[activeTab].title} onClose={onClose} />
 
         <div className="relative flex min-h-0 flex-1 flex-col">
           <Tabs.Content value="requests" className={TAB_CONTENT_CLASSES}>
@@ -96,7 +98,7 @@ export function WidgetPanel({ isClosing, onClose, onExited }: WidgetPanelProps) 
                 className="pointer-events-auto shadow-sm"
               >
                 <Plus className="size-4" aria-hidden="true" />
-                New request
+                {t.newRequest.title}
               </Button>
             </div>
           ) : null}

@@ -11,6 +11,7 @@ self-mounting IIFE bundle (`dist/widget.js`) that a host app loads and initializ
     widgetKey: 'wk_...',
     user: { id: 'u_1', name: 'Jane Doe', email: 'jane@example.com' },
     theme: 'auto',
+    language: 'en',
   })
 </script>
 ```
@@ -33,6 +34,7 @@ Run `pnpm dev` and open the dev harness (`index.html`) to work on it against a r
 | `src/api/` | TanStack Query hooks and the fetch client |
 | `src/session/` | Contact identification from the host-supplied user |
 | `src/theme/` | `theme` option → resolved `light` / `dark` |
+| `src/i18n/` | `language` option → text and direction, with `locales/en.ts` and `he.ts` |
 | `src/lib/` | Small shared helpers (`cn`, date formatting) |
 
 ## Shadow DOM
@@ -49,7 +51,7 @@ document-wide — a browser ignores them inside a shadow root. For `@property` t
 cosmetic: Tailwind v4 compiles `.border` to `border-style: var(--tw-border-style)`, so without
 the registration every border on every element silently disappears.
 `src/shadow/install-document-styles.ts` extracts the `@property` rules from the compiled CSS and
-appends them, plus the Inter stylesheet link, to `document.head` (idempotently, so several widget
+appends them, plus the Inter and Heebo stylesheet link, to `document.head` (idempotently, so several widget
 instances on one page install them once).
 
 **Radix portalling components must set `container`** to an element inside the shadow root. The
@@ -73,8 +75,25 @@ app can override three variables on the container element:
 | `--roadly-font-family` | `'Inter', ui-sans-serif, system-ui, …` |
 
 Inter is loaded from the Google Fonts CDN rather than bundled: the widget is size-sensitive, and
-inlining three weights as base64 would add ~115 kB to a 91 kB (gzipped) bundle. If a host page's
+inlining three weights as base64 would add ~115 kB to a 91 kB (gzipped) bundle. Heebo covers Hebrew,
+which Inter doesn't, and its files only download when Hebrew text is on the page. If a host page's
 CSP blocks the stylesheet, the widget falls back to the host's system font stack.
+
+## Language
+
+The host sets `language: 'en' | 'he'` in `Roadly.init`. It is read once, and anything else falls back
+to English. There is no language picker inside the widget and nothing is saved.
+
+`useLanguage()` returns `{ language, dir, t }`. `t` is a plain typed object rather than i18next, to
+keep the bundle small, and `he.ts` is typed against `en.ts`, so a missing translation fails the build.
+
+Hebrew mirrors the widget: `dir` and `lang` sit on the widget's own root, never on the host's
+`<html>`, and the launcher moves to the bottom left. Setting `dir` in English too keeps the widget
+left to right on a host page that is RTL. Use logical classes (`ms-`, `pe-`, `end-`, `text-start`)
+and show user content with `dir="auto"`.
+
+The build escapes non-ASCII characters in `widget.js`. A script without a charset is decoded with the
+host page's encoding, so raw Hebrew would be garbled on a page that isn't UTF-8.
 
 ## Conventions
 

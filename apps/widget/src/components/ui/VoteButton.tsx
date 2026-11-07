@@ -1,5 +1,6 @@
 import { ArrowBigUp } from 'lucide-react'
 import type { MouseEvent } from 'react'
+import { useLanguage } from '../../i18n/use-language'
 import { cn } from '../../lib/cn'
 
 interface VoteButtonProps {
@@ -10,9 +11,12 @@ interface VoteButtonProps {
 }
 
 export function VoteButton({ count, hasVoted, disabled, onVote }: VoteButtonProps) {
+  const { t } = useLanguage()
+
   return (
     <button
       type="button"
+      aria-label={t.list.upvote(count)}
       aria-pressed={hasVoted}
       disabled={disabled}
       onClick={onVote}
@@ -32,9 +36,7 @@ export function VoteButton({ count, hasVoted, disabled, onVote }: VoteButtonProp
           hasVoted ? 'text-primary' : 'text-foreground',
         )}
       >
-        <span className="sr-only">Upvote, </span>
         {count}
-        <span className="sr-only"> votes</span>
       </span>
     </button>
   )

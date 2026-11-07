@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { WidgetTheme } from '@roadly/shared'
+import { useLanguage } from '../i18n/use-language'
 import { useResolvedTheme } from '../theme/use-resolved-theme'
 import { WidgetLauncher } from '../components/launcher/WidgetLauncher'
 import { WidgetPanel } from '../components/layout/WidgetPanel'
@@ -17,6 +18,7 @@ interface WidgetRootProps {
 export function WidgetRoot({ theme }: WidgetRootProps) {
   const [panelState, setPanelState] = useState<PanelState>('closed')
   const resolvedTheme = useResolvedTheme(theme)
+  const { language, dir } = useLanguage()
   const isOpen = panelState === 'open'
 
   const togglePanel = () => {
@@ -30,7 +32,9 @@ export function WidgetRoot({ theme }: WidgetRootProps) {
   return (
     <div
       data-roadly-theme={resolvedTheme}
-      className="fixed right-4 bottom-4 z-[2147483000] flex flex-col items-end gap-3 font-sans text-sm"
+      lang={language}
+      dir={dir}
+      className="fixed end-4 bottom-4 z-[2147483000] flex flex-col items-end gap-3 font-sans text-sm"
     >
       {panelState !== 'closed' ? (
         <WidgetPanel

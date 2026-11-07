@@ -1,4 +1,5 @@
 import { useId, type KeyboardEvent } from 'react'
+import { useLanguage } from '../../i18n/use-language'
 import { PanelHeader } from '../layout/PanelHeader'
 import { NewRequestForm } from './NewRequestForm'
 
@@ -8,6 +9,7 @@ interface NewRequestOverlayProps {
 }
 
 export function NewRequestOverlay({ onBack, onSent }: NewRequestOverlayProps) {
+  const { t } = useLanguage()
   const titleId = useId()
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -25,7 +27,7 @@ export function NewRequestOverlay({ onBack, onSent }: NewRequestOverlayProps) {
       onKeyDown={handleKeyDown}
       className="absolute inset-0 z-10 flex animate-overlay-in flex-col bg-background"
     >
-      <PanelHeader title="New request" titleId={titleId} onBack={onBack} />
+      <PanelHeader title={t.newRequest.title} titleId={titleId} onBack={onBack} />
       <NewRequestForm onSent={onSent} />
     </div>
   )
