@@ -8,9 +8,15 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Widget identity in five PRs (`docs/adr/0004-widget-identity.md`): 1 rate limits (done), 2 session token, 3 signed identity API, 4 signed identity in the widget, 5 two-step Install page.
+- Widget identity in five PRs (`docs/adr/0004-widget-identity.md`): 1 rate limits (done), 2 session token (done), 3 signed identity API, 4 signed identity in the widget, 5 two-step Install page.
 
 ## Completed
+
+- **Widget session token (`feat/monorepo-widget-session`)**:
+  - `POST /widget/session/unsigned` returns `{ sessionToken, contactId }` and no contact details. `POST /widget/contacts` and `x-contact-id` are gone, so a Contact id is no longer a credential. Requires a new `WIDGET_SESSION_SECRET` in every environment; the API won't boot without it.
+  - Widget: `createSessionClient` holds the token in memory, and `apiRequest` refreshes once on a 401 and retries, with concurrent requests sharing one refresh.
+  - Impersonation by `externalId` is still possible until signed identity lands.
+  - e2e 172/172. The widget has no test stack, so the session client was checked with a throwaway script running the real code against a running API: bearer on votes, dead session refresh and retry, one shared refresh, one retry only. CORS preflight checked with curl. Widget type-check, lint and build clean. Not browser-checked: the Playwright browser was locked by another session.
 
 - **Widget rate limits (`feat/api-widget-rate-limits`)**:
   - `WidgetThrottlerGuard` tracks by IP + resolved Workspace, and runs after the auth guard, so an invalid key gets a 401 without using up a limit. Per minute: `POST /widget/contacts` 60, `POST /widget/feature-requests` 10, each of `POST` and `DELETE` votes 60. Reads aren't limited.

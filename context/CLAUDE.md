@@ -35,6 +35,7 @@ npx vitest run src/path/to/file.test.ts
 `apps/api` requires a `.env` (see `.env.example`):
 - `DATABASE_URL` — Postgres connection string
 - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` — admin dashboard auth tokens
+- `WIDGET_SESSION_SECRET` — widget session tokens
 
 Dev ports: dashboard `5173` (the API's default `DASHBOARD_URL` for CORS), widget dev harness `5175` (`strictPort` — fails instead of taking another port), widget preview `4173` (the Install snippet's `VITE_WIDGET_URL`), API `3001`.
 

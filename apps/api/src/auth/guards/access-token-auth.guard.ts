@@ -9,10 +9,7 @@ import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { WIDGET_AUTH_KEY } from '../decorators/widget-auth.decorator';
 import { REQUIRE_CONTACT_KEY } from '../decorators/require-contact.decorator';
-import {
-  CONTACT_ID_HEADER,
-  WIDGET_KEY_HEADER,
-} from '../constants/widget-headers';
+import { WIDGET_KEY_HEADER } from '../constants/widget-headers';
 import {
   AuthenticatedRequest,
   ResolvedContact,
@@ -68,24 +65,15 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
     const workspace = await this.resolveWorkspace(widgetKey);
     request.workspace = workspace;
 
-    const sessionToken = this.extractSessionToken(request);
-    if (sessionToken) {
-      request.contact = await this.resolveSessionContact(
-        workspace.id,
-        sessionToken,
-      );
-      return true;
-    }
-
     const requiresContact = this.reflector.getAllAndOverride<boolean>(
       REQUIRE_CONTACT_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    const contactId = request.header(CONTACT_ID_HEADER);
+    const sessionToken = this.extractSessionToken(request);
 
-    if (requiresContact || contactId) {
-      request.contact = await this.resolveContact(workspace.id, contactId);
+    if (requiresContact || sessionToken) {
+      request.contact = await this.resolveContact(workspace.id, sessionToken);
     }
 
     return true;
@@ -113,10 +101,14 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
     return scheme === 'Bearer' ? token : undefined;
   }
 
-  private async resolveSessionContact(
+  private async resolveContact(
     workspaceId: string,
-    sessionToken: string,
+    sessionToken: string | undefined,
   ): Promise<ResolvedContact> {
+    if (!sessionToken) {
+      throw new UnauthorizedException('Missing session token');
+    }
+
     const payload = this.widgetSessionTokensService.verify(sessionToken);
 
     if (payload?.workspaceId !== workspaceId) {
@@ -132,28 +124,6 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new UnauthorizedException('Invalid session token');
-      }
-      throw error;
-    }
-  }
-
-  private async resolveContact(
-    workspaceId: string,
-    contactId: string | undefined,
-  ): Promise<ResolvedContact> {
-    if (!contactId) {
-      throw new UnauthorizedException(`Missing ${CONTACT_ID_HEADER} header`);
-    }
-
-    try {
-      const contact = await this.contactsService.findOne(
-        workspaceId,
-        contactId,
-      );
-      return { id: contact.id, workspaceId: contact.workspaceId };
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new UnauthorizedException(`Invalid ${CONTACT_ID_HEADER} header`);
       }
       throw error;
     }

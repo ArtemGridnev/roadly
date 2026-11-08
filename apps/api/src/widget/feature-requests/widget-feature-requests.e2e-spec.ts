@@ -2,10 +2,8 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { prisma } from '../../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
-import {
-  CONTACT_ID_HEADER,
-  WIDGET_KEY_HEADER,
-} from '../../auth/constants/widget-headers';
+import { widgetSessionHeader } from 'test/utils/widget-session';
+import { WIDGET_KEY_HEADER } from '../../auth/constants/widget-headers';
 import { FeatureRequestResponseDto } from '../../feature-requests/dto/feature-request-response.dto';
 import { WidgetFeatureRequestResponseDto } from './dto/widget-feature-request-response.dto';
 
@@ -178,7 +176,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         const response = await request(app.getHttpServer())
           .get('/widget/feature-requests')
           .set(WIDGET_KEY_HEADER, widgetKey)
-          .set(CONTACT_ID_HEADER, contactId)
+          .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
           .expect(200);
 
         expect(
@@ -199,7 +197,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         const response = await request(app.getHttpServer())
           .get('/widget/feature-requests')
           .set(WIDGET_KEY_HEADER, widgetKey)
-          .set(CONTACT_ID_HEADER, otherContact.id)
+          .set('Authorization', widgetSessionHeader(app, otherContact.id, otherContact.workspaceId))
           .expect(200);
 
         expect(
@@ -207,7 +205,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         ).toEqual({ [votedId]: false, [unvotedId]: false });
       });
 
-      it('is false everywhere without a contact id header', async () => {
+      it('is false everywhere without a session token', async () => {
         const response = await request(app.getHttpServer())
           .get('/widget/feature-requests')
           .set(WIDGET_KEY_HEADER, widgetKey)
@@ -218,11 +216,11 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         ).toEqual({ [votedId]: false, [unvotedId]: false });
       });
 
-      it('rejects a contact id that does not belong to the workspace', async () => {
+      it('rejects a contact that does not belong to the workspace', async () => {
         await request(app.getHttpServer())
           .get('/widget/feature-requests')
           .set(WIDGET_KEY_HEADER, widgetKey)
-          .set(CONTACT_ID_HEADER, 'does-not-exist')
+          .set('Authorization', widgetSessionHeader(app, 'does-not-exist', workspaceId))
           .expect(401);
       });
     });
@@ -275,7 +273,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         const response = await request(app.getHttpServer())
           .get('/widget/feature-requests')
           .set(WIDGET_KEY_HEADER, widgetKey)
-          .set(CONTACT_ID_HEADER, contactId)
+          .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
           .expect(200);
 
         expect(
@@ -283,7 +281,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         ).toEqual({ [mineId]: true, [othersId]: false });
       });
 
-      it('is false everywhere without a contact id header', async () => {
+      it('is false everywhere without a session token', async () => {
         const response = await request(app.getHttpServer())
           .get('/widget/feature-requests')
           .set(WIDGET_KEY_HEADER, widgetKey)
@@ -298,7 +296,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         const response = await request(app.getHttpServer())
           .get('/widget/feature-requests')
           .set(WIDGET_KEY_HEADER, widgetKey)
-          .set(CONTACT_ID_HEADER, contactId)
+          .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
           .expect(200);
 
         expect(JSON.stringify(response.body)).not.toContain(otherContactId);
@@ -308,7 +306,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         const response = await request(app.getHttpServer())
           .get('/widget/feature-requests')
           .set(WIDGET_KEY_HEADER, widgetKey)
-          .set(CONTACT_ID_HEADER, contactId)
+          .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
           .expect(200);
 
         const serialized = JSON.stringify(response.body);
@@ -447,7 +445,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       const response = await request(app.getHttpServer())
         .get('/widget/feature-requests')
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(200);
 
       expect(
@@ -507,7 +505,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       const response = await request(app.getHttpServer())
         .get(`/widget/feature-requests/mine${query}`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(200);
 
       return response.body as WidgetFeatureRequestResponseDto[];
@@ -536,7 +534,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       await request(app.getHttpServer())
         .post('/widget/feature-requests')
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .send({ title: 'Dark mode', description: 'Please add dark mode' })
         .expect(201);
 
@@ -560,14 +558,14 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       ]);
     });
 
-    it('rejects a request missing the contact id header', async () => {
+    it('rejects a request missing a session token', async () => {
       await request(app.getHttpServer())
         .get('/widget/feature-requests/mine')
         .set(WIDGET_KEY_HEADER, widgetKey)
         .expect(401);
     });
 
-    it('rejects a contact id that belongs to a different workspace', async () => {
+    it('rejects a session for a contact that belongs to a different workspace', async () => {
       const otherWorkspace = await prisma.workspace.create({
         data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
       });
@@ -583,7 +581,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       await request(app.getHttpServer())
         .get('/widget/feature-requests/mine')
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, outsider.id)
+        .set('Authorization', widgetSessionHeader(app, outsider.id, outsider.workspaceId))
         .expect(401);
     });
   });
@@ -593,7 +591,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/widget/feature-requests')
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .send({ title: 'Dark mode', description: 'Please add dark mode' })
         .expect(201);
 
@@ -614,7 +612,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/widget/feature-requests')
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .send({ title: 'Dark mode', description: 'Please add dark mode' })
         .expect(201);
 
@@ -631,7 +629,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       await request(app.getHttpServer())
         .post('/widget/feature-requests')
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .send({ description: 'no title' })
         .expect(400);
     });
@@ -640,7 +638,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       await request(app.getHttpServer())
         .post('/widget/feature-requests')
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .send({
           title: 'Dark mode',
           description: 'Please add dark mode',
@@ -650,7 +648,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         .expect(400);
     });
 
-    it('rejects a request missing the contact id header', async () => {
+    it('rejects a request missing a session token', async () => {
       await request(app.getHttpServer())
         .post('/widget/feature-requests')
         .set(WIDGET_KEY_HEADER, widgetKey)
@@ -658,7 +656,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         .expect(401);
     });
 
-    it('rejects a contact id that belongs to a different workspace', async () => {
+    it('rejects a session for a contact that belongs to a different workspace', async () => {
       const otherWorkspace = await prisma.workspace.create({
         data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
       });
@@ -674,7 +672,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       await request(app.getHttpServer())
         .post('/widget/feature-requests')
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, otherContact.id)
+        .set('Authorization', widgetSessionHeader(app, otherContact.id, otherContact.workspaceId))
         .send({ title: 'Dark mode', description: 'Please add dark mode' })
         .expect(401);
     });
@@ -686,7 +684,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
         await request(app.getHttpServer())
           .post('/widget/feature-requests')
           .set(WIDGET_KEY_HEADER, widgetKey)
-          .set(CONTACT_ID_HEADER, contactId)
+          .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
           .send(body)
           .expect(201);
       }
@@ -694,7 +692,7 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       await request(app.getHttpServer())
         .post('/widget/feature-requests')
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .send(body)
         .expect(429);
 
