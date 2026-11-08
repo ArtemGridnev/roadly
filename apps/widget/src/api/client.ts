@@ -10,34 +10,49 @@ export class ApiError extends Error {
   }
 }
 
+export interface RequestSession {
+  token: () => string | null
+  refresh: () => Promise<unknown>
+}
+
 interface ApiRequestOptions {
   method?: 'GET' | 'POST' | 'DELETE'
   body?: unknown
   widgetKey: string
-  contactId?: string
+  session?: RequestSession
 }
 
 export async function apiRequest<T>(
   path: string,
-  { method = 'GET', body, widgetKey, contactId }: ApiRequestOptions,
+  { method = 'GET', body, widgetKey, session }: ApiRequestOptions,
 ): Promise<T> {
-  const headers: Record<string, string> = {
-    'x-widget-key': widgetKey,
+  const send = () => {
+    const headers: Record<string, string> = {
+      'x-widget-key': widgetKey,
+    }
+
+    const sessionToken = session?.token()
+    if (sessionToken) {
+      headers.Authorization = `Bearer ${sessionToken}`
+    }
+
+    if (body !== undefined) {
+      headers['Content-Type'] = 'application/json'
+    }
+
+    return fetch(`${API_URL}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    })
   }
 
-  if (contactId) {
-    headers['x-contact-id'] = contactId
-  }
+  let response = await send()
 
-  if (body !== undefined) {
-    headers['Content-Type'] = 'application/json'
+  if (response.status === 401 && session) {
+    await session.refresh()
+    response = await send()
   }
-
-  const response = await fetch(`${API_URL}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  })
 
   if (!response.ok) {
     throw new ApiError(response.status, `${method} ${path} failed with ${response.status}`)

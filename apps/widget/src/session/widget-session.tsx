@@ -1,10 +1,11 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import type { Contact, RoadlyInitOptions } from '@roadly/shared'
-import { useIdentifyContact } from '../api/contacts'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import type { RoadlyInitOptions } from '@roadly/shared'
+import { createSessionClient, useIdentify, type SessionClient } from '../api/session'
 
 interface WidgetSessionValue {
   widgetKey: RoadlyInitOptions['widgetKey']
-  contact: Contact | null
+  session: SessionClient
+  contactId: string | undefined
   isIdentifying: boolean
   identifyError: unknown
 }
@@ -18,24 +19,31 @@ interface WidgetSessionProviderProps {
 }
 
 export function WidgetSessionProvider({ widgetKey, user, children }: WidgetSessionProviderProps) {
-  const [contact, setContact] = useState<Contact | null>(null)
-  const identifyContact = useIdentifyContact()
-  const { mutate } = identifyContact
+  const [contactId, setContactId] = useState<string>()
+  const session = useMemo(
+    () =>
+      createSessionClient(widgetKey, {
+        externalId: user.id,
+        name: user.name,
+        email: user.email,
+      }),
+    [widgetKey, user.id, user.name, user.email],
+  )
+  const identify = useIdentify()
+  const { mutate } = identify
 
   useEffect(() => {
-    mutate(
-      { widgetKey, input: { externalId: user.id, name: user.name, email: user.email } },
-      { onSuccess: setContact },
-    )
-  }, [mutate, widgetKey, user.id, user.name, user.email])
+    mutate(session, { onSuccess: ({ contactId }) => setContactId(contactId) })
+  }, [mutate, session])
 
   return (
     <WidgetSessionContext.Provider
       value={{
         widgetKey,
-        contact,
-        isIdentifying: identifyContact.isPending,
-        identifyError: identifyContact.error,
+        session,
+        contactId,
+        isIdentifying: identify.isPending,
+        identifyError: identify.error,
       }}
     >
       {children}

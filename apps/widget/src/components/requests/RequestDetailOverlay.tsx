@@ -2,7 +2,6 @@ import { SearchX } from 'lucide-react'
 import { useEffect, useId, useRef, type KeyboardEvent } from 'react'
 import { useCachedFeatureRequest } from '../../api/feature-requests'
 import { useLanguage } from '../../i18n/use-language'
-import { useWidgetSession } from '../../session/widget-session'
 import { PanelHeader } from '../layout/PanelHeader'
 import { StateMessage } from '../ui/StateMessage'
 import { RequestMeta } from './RequestMeta'
@@ -15,8 +14,7 @@ interface RequestDetailOverlayProps {
 
 export function RequestDetailOverlay({ requestId, onBack }: RequestDetailOverlayProps) {
   const { t } = useLanguage()
-  const { widgetKey, contact } = useWidgetSession()
-  const request = useCachedFeatureRequest(widgetKey, contact?.id, requestId)
+  const request = useCachedFeatureRequest(requestId)
   const titleId = useId()
   const dialogRef = useRef<HTMLDivElement>(null)
 
