@@ -12,19 +12,14 @@ interface MyRequestsViewProps {
 
 export function MyRequestsView({ onSelectRequest }: MyRequestsViewProps) {
   const { t } = useLanguage()
-  const { widgetKey, contact, identifyError } = useWidgetSession()
+  const { contactId, identifyError } = useWidgetSession()
   const [sort, setSort] = useState<WidgetFeatureRequestSort>('newest')
-  const { data, isPending, error, refetch } = useFeatureRequests(
-    widgetKey,
-    contact?.id,
-    sort,
-    'mine',
-  )
+  const { data, isPending, error, refetch } = useFeatureRequests(sort, 'mine')
 
   return (
     <RequestList
       requests={data}
-      isPending={isPending || !contact}
+      isPending={isPending || !contactId}
       error={error ?? identifyError}
       emptyTitle={t.list.emptyMineTitle}
       emptyDescription={t.list.emptyMineDescription}

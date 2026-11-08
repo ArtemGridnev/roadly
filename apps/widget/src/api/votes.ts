@@ -1,19 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { WidgetFeatureRequest } from '@roadly/shared'
+import { useWidgetSession } from '../session/widget-session'
 import { apiRequest } from './client'
 import { widgetQueryKeys } from './query-keys'
 
 interface ToggleVoteParams {
-  widgetKey: string
-  contactId: string
   requestId: string
   hasVoted: boolean
 }
 
 export function useToggleVote() {
+  const { widgetKey, session } = useWidgetSession()
   const queryClient = useQueryClient()
 
-  const applyVote = (widgetKey: string, requestId: string, hasVoted: boolean) =>
+  const applyVote = (requestId: string, hasVoted: boolean) =>
     queryClient.setQueriesData<WidgetFeatureRequest[]>(
       { queryKey: widgetQueryKeys.featureRequests(widgetKey) },
       (requests) =>
@@ -29,20 +29,20 @@ export function useToggleVote() {
     )
 
   return useMutation({
-    mutationFn: ({ widgetKey, contactId, requestId, hasVoted }: ToggleVoteParams) =>
+    mutationFn: ({ requestId, hasVoted }: ToggleVoteParams) =>
       apiRequest<unknown>(`/widget/feature-requests/${requestId}/votes`, {
         method: hasVoted ? 'DELETE' : 'POST',
         widgetKey,
-        contactId,
+        session,
       }),
-    onMutate: async ({ widgetKey, requestId, hasVoted }) => {
+    onMutate: async ({ requestId, hasVoted }) => {
       await queryClient.cancelQueries({ queryKey: widgetQueryKeys.featureRequests(widgetKey) })
-      applyVote(widgetKey, requestId, hasVoted)
+      applyVote(requestId, hasVoted)
     },
-    onError: (_error, { widgetKey, requestId, hasVoted }) => {
-      applyVote(widgetKey, requestId, !hasVoted)
+    onError: (_error, { requestId, hasVoted }) => {
+      applyVote(requestId, !hasVoted)
     },
-    onSettled: (_data, _error, { widgetKey }) =>
+    onSettled: () =>
       queryClient.invalidateQueries({
         queryKey: widgetQueryKeys.featureRequests(widgetKey),
         refetchType: 'none',

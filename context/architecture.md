@@ -75,7 +75,7 @@ Multi-tenant: one shared deployment serves many customer businesses. See `docs/a
 - `Workspace` — id, name, slug, widgetKey (public key the widget sends at init to identify its tenant). One per customer business.
 - `WorkspaceMember` — links an `Agent` to a `Workspace` it administers, `@@unique([workspaceId, agentId])`. A join table, not a direct FK, so one `Agent` can belong to multiple Workspaces.
 - `Agent` — id, name, email (globally unique), password credential, language (`en | he`, null until first chosen; set at signup or via `PATCH /auth/me`). Admin dashboard-only; signs in; global identity, not scoped to a single Workspace.
-- `Contact` — id, workspaceId, externalId (host-supplied id, found or created via `POST /widget/contacts` at widget init (an existing Contact's name/email are never overwritten), unique per `(workspaceId, externalId)` — not globally, since two Workspaces' host apps can send the same externalId), name, email. Widget-only; no credentials.
+- `Contact` — id, workspaceId, externalId (host-supplied id, found or created via `POST /widget/session/unsigned` at widget init (an existing Contact's name/email are never overwritten), unique per `(workspaceId, externalId)` — not globally, since two Workspaces' host apps can send the same externalId), name, email. Widget-only; no credentials.
 - `FeatureRequest` — id, workspaceId (denormalized for query/index simplicity), title, description, status, authorId (→ `Contact`; null when an Agent created it from the dashboard), createdAt
 - `Vote` — contactId (→ `Contact`) + requestId (deleted with its `FeatureRequest`), with a **unique constraint on (contactId, requestId)** to enforce one vote per Contact per request at the database level. No `workspaceId` of its own — see ADR 0003 for why. The service-layer check ADR 0003 calls for is implemented: every vote operation first resolves the target `FeatureRequest` through `FeatureRequestsService.findOneForWorkspace`, so a vote can't be read/written against a feature request outside the caller's resolved Workspace.
 - `Comment` — requestId, contactId (→ `Contact`), body, createdAt *(future — will need workspaceId too when built)*
@@ -89,7 +89,7 @@ Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never
 | Mode | Who | Mechanism | Guard |
 |---|---|---|---|
 | Public + workspace | Widget, read-only | `x-widget-key` header → `Workspace` | `AccessTokenAuthGuard` (`@WidgetAuth()` branch) |
-| Public + workspace + contact | Widget, write | `x-widget-key` + `x-contact-id` headers → `Workspace` + `Contact` | same guard (`@WidgetAuth()` + `@RequireContact()`) |
+| Public + workspace + contact | Widget, write | `x-widget-key` header + `Authorization: Bearer` session token → `Workspace` + `Contact` | same guard (`@WidgetAuth()` + `@RequireContact()`) |
 | Agent + workspace | Dashboard, workspace-scoped resources | access-token cookie (`Agent`) + `x-workspace-id` header, checked against `WorkspaceMember` | `WorkspaceMembershipGuard`, applied via `@UseGuards()` per controller |
 | Agent only | Dashboard, agent-scoped resources (`/auth/me`, `/workspaces` — results filtered by the Agent's memberships) | access-token cookie only | `AccessTokenAuthGuard` default path |
 
@@ -104,8 +104,9 @@ Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never
 
 ### Widget identity (Contact)
 
-- **MVP:** the host app passes the current end user's id/name/email into `Roadly.init(...)`. The widget calls `POST /widget/contacts` once to find or create a `Contact` row keyed by that host-supplied id (stored as `externalId`, scoped to the resolved Workspace) and gets back a `Contact.id`, which it then sends as `x-contact-id` on subsequent write calls. Identity is trusted as-is (identified but unverified). Documented as a deliberate trade-off.
-- **Future:** the host app's backend signs a short-lived JWT with a shared secret; the widget passes it at init instead of raw identity; the backend verifies signature and expiry before trusting the identity. Because identity already travels via headers rather than path/body params, this migration only changes what generates the header value (the widget's TanStack Query fetcher), not the route shapes.
+- **MVP:** the host app passes the current end user's id/name/email into `Roadly.init(...)`. The widget calls `POST /widget/session/unsigned` to find or create a `Contact` row keyed by that host-supplied id (stored as `externalId`, scoped to the resolved Workspace) and gets back `{ sessionToken, contactId }`, with no name, email or `externalId`. It holds the token in memory and sends it as a bearer token; on a 401 it refreshes once, sharing one refresh across concurrent requests, and retries. The token lasts 1h, is signed with `WIDGET_SESSION_SECRET` for its own audience, and is tied to one Workspace. The guard still looks up the Contact on each request, so deleting a Contact ends their session. `contactId` is only a cache key in the widget, not a credential. Identity is trusted as-is (identified but unverified), so anyone who knows an `externalId` can still act as that Contact until signed identity lands. Documented as a deliberate trade-off.
+- **Rate limits:** widget write routes use `WidgetThrottlerGuard`, tracking by IP + resolved Workspace. Per minute: `POST /widget/session/unsigned` 60, `POST /widget/feature-requests` 10, each of `POST` and `DELETE` votes 60. Counters are in memory, so limits are per API instance.
+- **Decided, not built yet:** a two-step install. Unsigned stays the default so the snippet works straight away; the host's backend can then sign a short-lived JWT with a per-Workspace secret, and each Workspace can choose to enforce it. A signed token will exchange for the same session token. See `docs/adr/0004-widget-identity.md`.
 
 ### Admin dashboard auth (Agent)
 

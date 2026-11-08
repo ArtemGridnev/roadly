@@ -9,30 +9,25 @@ interface RequestVoteButtonProps {
 }
 
 export function RequestVoteButton({ request }: RequestVoteButtonProps) {
-  const { widgetKey, contact } = useWidgetSession()
+  const { contactId } = useWidgetSession()
   const toggleVote = useToggleVote()
   const isVotingClosed = request.status === 'SHIPPED'
 
   const handleVote = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation()
 
-    if (!contact || isVotingClosed || toggleVote.isPending) {
+    if (!contactId || isVotingClosed || toggleVote.isPending) {
       return
     }
 
-    toggleVote.mutate({
-      widgetKey,
-      contactId: contact.id,
-      requestId: request.id,
-      hasVoted: request.hasVoted,
-    })
+    toggleVote.mutate({ requestId: request.id, hasVoted: request.hasVoted })
   }
 
   return (
     <VoteButton
       count={request.voteCount}
       hasVoted={request.hasVoted}
-      disabled={!contact || isVotingClosed}
+      disabled={!contactId || isVotingClosed}
       onVote={handleVote}
     />
   )

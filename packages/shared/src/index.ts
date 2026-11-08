@@ -12,6 +12,7 @@ export type {
 } from './types/feature-request';
 export type { Vote } from './types/vote';
 export type { WorkspaceMember } from './types/workspace-member';
+export type { WidgetSession } from './types/widget-session';
 
 export type {
   WidgetUser,

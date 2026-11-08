@@ -2,10 +2,8 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { prisma } from '../../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
-import {
-  CONTACT_ID_HEADER,
-  WIDGET_KEY_HEADER,
-} from '../../auth/constants/widget-headers';
+import { widgetSessionHeader } from 'test/utils/widget-session';
+import { WIDGET_KEY_HEADER } from '../../auth/constants/widget-headers';
 import { VoteResponseDto } from '../../votes/dto/vote-response.dto';
 
 describe('WidgetVotesController (e2e)', () => {
@@ -57,7 +55,7 @@ describe('WidgetVotesController (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(201);
 
       const body = response.body as VoteResponseDto;
@@ -69,13 +67,13 @@ describe('WidgetVotesController (e2e)', () => {
       await request(app.getHttpServer())
         .post(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(201);
 
       await request(app.getHttpServer())
         .post(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(409);
     });
 
@@ -88,7 +86,7 @@ describe('WidgetVotesController (e2e)', () => {
       await request(app.getHttpServer())
         .post(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(409);
 
       expect(await prisma.vote.count({ where: { requestId } })).toBe(0);
@@ -97,11 +95,11 @@ describe('WidgetVotesController (e2e)', () => {
     it('rejects a request missing the widget key header', async () => {
       await request(app.getHttpServer())
         .post(`/widget/feature-requests/${requestId}/votes`)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(401);
     });
 
-    it('rejects a request missing the contact id header', async () => {
+    it('rejects a request missing a session token', async () => {
       await request(app.getHttpServer())
         .post(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
@@ -132,7 +130,7 @@ describe('WidgetVotesController (e2e)', () => {
       await request(app.getHttpServer())
         .post(`/widget/feature-requests/${otherFeatureRequest.id}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(404);
     });
   });
@@ -144,7 +142,7 @@ describe('WidgetVotesController (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(204);
 
       expect(await prisma.vote.count({ where: { requestId } })).toBe(0);
@@ -169,7 +167,7 @@ describe('WidgetVotesController (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(204);
 
       const remaining = await prisma.vote.findMany({ where: { requestId } });
@@ -184,13 +182,13 @@ describe('WidgetVotesController (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(204);
 
       await request(app.getHttpServer())
         .post(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(201);
     });
 
@@ -204,7 +202,7 @@ describe('WidgetVotesController (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(409);
 
       expect(await prisma.vote.count({ where: { requestId } })).toBe(1);
@@ -214,11 +212,11 @@ describe('WidgetVotesController (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(404);
     });
 
-    it('rejects a request missing the contact id header', async () => {
+    it('rejects a request missing a session token', async () => {
       await request(app.getHttpServer())
         .delete(`/widget/feature-requests/${requestId}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
@@ -252,7 +250,7 @@ describe('WidgetVotesController (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/widget/feature-requests/${otherFeatureRequest.id}/votes`)
         .set(WIDGET_KEY_HEADER, widgetKey)
-        .set(CONTACT_ID_HEADER, contactId)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(404);
 
       expect(
@@ -260,6 +258,50 @@ describe('WidgetVotesController (e2e)', () => {
           where: { requestId: otherFeatureRequest.id },
         }),
       ).toBe(1);
+    });
+  });
+
+  it('does not accept a contact id as a credential', async () => {
+    await request(app.getHttpServer())
+      .post(`/widget/feature-requests/${requestId}/votes`)
+      .set(WIDGET_KEY_HEADER, widgetKey)
+      .set('x-contact-id', contactId)
+      .expect(401);
+
+    expect(await prisma.vote.count({ where: { requestId } })).toBe(0);
+  });
+
+  describe('rate limiting', () => {
+    it('rate limits voting after 60 requests a minute', async () => {
+      for (let i = 0; i < 60; i++) {
+        await request(app.getHttpServer())
+          .post('/widget/feature-requests/missing/votes')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
+          .expect(404);
+      }
+
+      await request(app.getHttpServer())
+        .post('/widget/feature-requests/missing/votes')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
+        .expect(429);
+    });
+
+    it('rate limits removing votes after 60 requests a minute', async () => {
+      for (let i = 0; i < 60; i++) {
+        await request(app.getHttpServer())
+          .delete('/widget/feature-requests/missing/votes')
+          .set(WIDGET_KEY_HEADER, widgetKey)
+          .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
+          .expect(404);
+      }
+
+      await request(app.getHttpServer())
+        .delete('/widget/feature-requests/missing/votes')
+        .set(WIDGET_KEY_HEADER, widgetKey)
+        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
+        .expect(429);
     });
   });
 });

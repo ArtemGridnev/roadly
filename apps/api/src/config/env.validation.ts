@@ -14,6 +14,10 @@ class EnvironmentVariables {
   @IsNotEmpty()
   REFRESH_TOKEN_SECRET!: string;
 
+  @IsString()
+  @IsNotEmpty()
+  WIDGET_SESSION_SECRET!: string;
+
   @IsOptional()
   @IsString()
   PORT?: string;

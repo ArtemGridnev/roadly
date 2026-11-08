@@ -5,6 +5,7 @@ import type {
   WidgetFeatureRequest,
   WidgetFeatureRequestSort,
 } from '@roadly/shared'
+import { useWidgetSession } from '../session/widget-session'
 import { apiRequest } from './client'
 import { widgetQueryKeys, type FeatureRequestListScope } from './query-keys'
 
@@ -14,28 +15,25 @@ const FEATURE_REQUEST_LIST_PATHS: Record<FeatureRequestListScope, string> = {
 }
 
 export function useFeatureRequests(
-  widgetKey: string,
-  contactId: string | undefined,
   sort: WidgetFeatureRequestSort,
   scope: FeatureRequestListScope = 'all',
 ) {
+  const { widgetKey, session, contactId } = useWidgetSession()
+
   return useQuery({
     queryKey: widgetQueryKeys.featureRequestList(widgetKey, scope, sort, contactId),
     queryFn: () =>
       apiRequest<WidgetFeatureRequest[]>(`${FEATURE_REQUEST_LIST_PATHS[scope]}?sort=${sort}`, {
         widgetKey,
-        contactId,
+        session,
       }),
     enabled: scope === 'all' || contactId !== undefined,
     placeholderData: keepPreviousData,
   })
 }
 
-export function useCachedFeatureRequest(
-  widgetKey: string,
-  contactId: string | undefined,
-  requestId: string,
-) {
+export function useCachedFeatureRequest(requestId: string) {
+  const { widgetKey, contactId } = useWidgetSession()
   const queryClient = useQueryClient()
 
   const findRequest = () =>
@@ -52,24 +50,19 @@ export function useCachedFeatureRequest(
   )
 }
 
-interface CreateFeatureRequestParams {
-  widgetKey: string
-  contactId: string
-  input: CreateWidgetFeatureRequestInput
-}
-
 export function useCreateFeatureRequest() {
+  const { widgetKey, session } = useWidgetSession()
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ widgetKey, contactId, input }: CreateFeatureRequestParams) =>
+    mutationFn: (input: CreateWidgetFeatureRequestInput) =>
       apiRequest<WidgetFeatureRequest>('/widget/feature-requests', {
         method: 'POST',
         body: input,
         widgetKey,
-        contactId,
+        session,
       }),
-    onSuccess: (_data, { widgetKey }) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: widgetQueryKeys.featureRequests(widgetKey) })
     },
   })

@@ -22,7 +22,7 @@ interface NewRequestFormProps {
 
 export function NewRequestForm({ onSent }: NewRequestFormProps) {
   const { t } = useLanguage()
-  const { widgetKey, contact, identifyError } = useWidgetSession()
+  const { contactId, identifyError } = useWidgetSession()
   const createFeatureRequest = useCreateFeatureRequest()
   const formId = useId()
   const ids = {
@@ -40,14 +40,11 @@ export function NewRequestForm({ onSent }: NewRequestFormProps) {
   })
 
   const onSubmit = handleSubmit((input) => {
-    if (!contact) {
+    if (!contactId) {
       return
     }
 
-    createFeatureRequest.mutate(
-      { widgetKey, contactId: contact.id, input },
-      { onSuccess: onSent },
-    )
+    createFeatureRequest.mutate(input, { onSuccess: onSent })
   })
 
   const errorMessage = identifyError
@@ -96,7 +93,7 @@ export function NewRequestForm({ onSent }: NewRequestFormProps) {
         <Button
           type="submit"
           className="self-end"
-          disabled={!contact || createFeatureRequest.isPending}
+          disabled={!contactId || createFeatureRequest.isPending}
         >
           {createFeatureRequest.isPending ? t.newRequest.submitting : t.newRequest.submit}
         </Button>

@@ -8,9 +8,21 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Roadmap Board in four steps: 1 read-only kanban (done), 2 drag to change status (done), 3 table view + view toggle + status filter (done), 4 drawer (done).
+- Widget identity in five PRs (`docs/adr/0004-widget-identity.md`): 1 rate limits (done), 2 session token (done), 3 signed identity API, 4 signed identity in the widget, 5 two-step Install page.
 
 ## Completed
+
+- **Widget session token (`feat/monorepo-widget-session`)**:
+  - `POST /widget/session/unsigned` returns `{ sessionToken, contactId }` and no contact details. `POST /widget/contacts` and `x-contact-id` are gone, so a Contact id is no longer a credential. Requires a new `WIDGET_SESSION_SECRET` in every environment; the API won't boot without it.
+  - Widget: `createSessionClient` holds the token in memory, and `apiRequest` refreshes once on a 401 and retries, with concurrent requests sharing one refresh.
+  - Impersonation by `externalId` is still possible until signed identity lands.
+  - e2e 172/172. The widget has no test stack, so the session client was checked with a throwaway script running the real code against a running API: bearer on votes, dead session refresh and retry, one shared refresh, one retry only. CORS preflight checked with curl. Widget type-check, lint and build clean. Not browser-checked: the Playwright browser was locked by another session.
+
+- **Widget rate limits (`feat/api-widget-rate-limits`)**:
+  - `WidgetThrottlerGuard` tracks by IP + resolved Workspace, and runs after the auth guard, so an invalid key gets a 401 without using up a limit. Per minute: `POST /widget/contacts` 60, `POST /widget/feature-requests` 10, each of `POST` and `DELETE` votes 60. Reads aren't limited.
+  - `CreateContactDto` caps `externalId` and `name` at 255 characters. `createContactSchema` in `packages/shared` isn't used by any app and doesn't have the caps.
+  - Counters are in memory, so limits are per API instance. Scaling out would need shared storage.
+  - e2e 160/160; each new test failed before the change. Type-check and build clean, changed files pass lint.
 
 - **Widget translations and RTL (`feat/widget-i18n`)**:
   - Last step of i18n. New `language` option in `Roadly.init` (default English, anything else falls back to it), with no picker inside the widget and nothing saved. All widget text moved to `src/i18n/locales/en.ts` and `he.ts` (Hebrew is a draft awaiting review), through a small typed dictionary rather than i18next, to keep the bundle small. Dates follow the widget language instead of the browser's.

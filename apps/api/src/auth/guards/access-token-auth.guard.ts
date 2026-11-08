@@ -9,10 +9,7 @@ import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { WIDGET_AUTH_KEY } from '../decorators/widget-auth.decorator';
 import { REQUIRE_CONTACT_KEY } from '../decorators/require-contact.decorator';
-import {
-  CONTACT_ID_HEADER,
-  WIDGET_KEY_HEADER,
-} from '../constants/widget-headers';
+import { WIDGET_KEY_HEADER } from '../constants/widget-headers';
 import {
   AuthenticatedRequest,
   ResolvedContact,
@@ -20,6 +17,7 @@ import {
 } from '../types/auth-context';
 import { WorkspacesService } from '../../workspaces/workspaces.service';
 import { ContactsService } from '../../contacts/contacts.service';
+import { WidgetSessionTokensService } from '../widget-session-tokens.service';
 
 @Injectable()
 export class AccessTokenAuthGuard extends AuthGuard('access-token') {
@@ -27,6 +25,7 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
     private reflector: Reflector,
     private workspacesService: WorkspacesService,
     private contactsService: ContactsService,
+    private widgetSessionTokensService: WidgetSessionTokensService,
   ) {
     super();
   }
@@ -71,10 +70,10 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
       [context.getHandler(), context.getClass()],
     );
 
-    const contactId = request.header(CONTACT_ID_HEADER);
+    const sessionToken = this.extractSessionToken(request);
 
-    if (requiresContact || contactId) {
-      request.contact = await this.resolveContact(workspace.id, contactId);
+    if (requiresContact || sessionToken) {
+      request.contact = await this.resolveContact(workspace.id, sessionToken);
     }
 
     return true;
@@ -94,23 +93,37 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
     }
   }
 
+  private extractSessionToken(
+    request: AuthenticatedRequest,
+  ): string | undefined {
+    const [scheme, token] = request.header('authorization')?.split(' ') ?? [];
+
+    return scheme === 'Bearer' ? token : undefined;
+  }
+
   private async resolveContact(
     workspaceId: string,
-    contactId: string | undefined,
+    sessionToken: string | undefined,
   ): Promise<ResolvedContact> {
-    if (!contactId) {
-      throw new UnauthorizedException(`Missing ${CONTACT_ID_HEADER} header`);
+    if (!sessionToken) {
+      throw new UnauthorizedException('Missing session token');
+    }
+
+    const payload = this.widgetSessionTokensService.verify(sessionToken);
+
+    if (payload?.workspaceId !== workspaceId) {
+      throw new UnauthorizedException('Invalid session token');
     }
 
     try {
       const contact = await this.contactsService.findOne(
         workspaceId,
-        contactId,
+        payload.sub,
       );
       return { id: contact.id, workspaceId: contact.workspaceId };
     } catch (error) {
       if (error instanceof NotFoundException) {
-        throw new UnauthorizedException(`Invalid ${CONTACT_ID_HEADER} header`);
+        throw new UnauthorizedException('Invalid session token');
       }
       throw error;
     }
