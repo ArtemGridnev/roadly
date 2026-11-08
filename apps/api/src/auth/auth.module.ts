@@ -11,6 +11,7 @@ import { AccessTokenStrategy } from './strategies/access-token.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { AccessTokenAuthGuard } from './guards/access-token-auth.guard';
+import { WidgetSessionTokensService } from './widget-session-tokens.service';
 import { RefreshTokensModule } from '../refresh-tokens/refresh-tokens.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 
@@ -29,8 +30,10 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AccessTokenStrategy,
     RefreshTokenStrategy,
     LocalStrategy,
+    WidgetSessionTokensService,
     { provide: APP_GUARD, useClass: AccessTokenAuthGuard },
   ],
   controllers: [AuthController],
+  exports: [WidgetSessionTokensService],
 })
 export class AuthModule {}

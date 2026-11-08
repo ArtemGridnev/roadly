@@ -20,6 +20,7 @@ import {
 } from '../types/auth-context';
 import { WorkspacesService } from '../../workspaces/workspaces.service';
 import { ContactsService } from '../../contacts/contacts.service';
+import { WidgetSessionTokensService } from '../widget-session-tokens.service';
 
 @Injectable()
 export class AccessTokenAuthGuard extends AuthGuard('access-token') {
@@ -27,6 +28,7 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
     private reflector: Reflector,
     private workspacesService: WorkspacesService,
     private contactsService: ContactsService,
+    private widgetSessionTokensService: WidgetSessionTokensService,
   ) {
     super();
   }
@@ -66,6 +68,15 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
     const workspace = await this.resolveWorkspace(widgetKey);
     request.workspace = workspace;
 
+    const sessionToken = this.extractSessionToken(request);
+    if (sessionToken) {
+      request.contact = await this.resolveSessionContact(
+        workspace.id,
+        sessionToken,
+      );
+      return true;
+    }
+
     const requiresContact = this.reflector.getAllAndOverride<boolean>(
       REQUIRE_CONTACT_KEY,
       [context.getHandler(), context.getClass()],
@@ -89,6 +100,38 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new UnauthorizedException(`Invalid ${WIDGET_KEY_HEADER} header`);
+      }
+      throw error;
+    }
+  }
+
+  private extractSessionToken(
+    request: AuthenticatedRequest,
+  ): string | undefined {
+    const [scheme, token] = request.header('authorization')?.split(' ') ?? [];
+
+    return scheme === 'Bearer' ? token : undefined;
+  }
+
+  private async resolveSessionContact(
+    workspaceId: string,
+    sessionToken: string,
+  ): Promise<ResolvedContact> {
+    const payload = this.widgetSessionTokensService.verify(sessionToken);
+
+    if (payload?.workspaceId !== workspaceId) {
+      throw new UnauthorizedException('Invalid session token');
+    }
+
+    try {
+      const contact = await this.contactsService.findOne(
+        workspaceId,
+        payload.sub,
+      );
+      return { id: contact.id, workspaceId: contact.workspaceId };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new UnauthorizedException('Invalid session token');
       }
       throw error;
     }
