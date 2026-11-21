@@ -1,4 +1,4 @@
-import { AgentResponseDto } from "src/agents/dto/agent-response.dto";
+import { AgentResponseDto } from 'src/agents/dto/agent-response.dto';
 
 export class AgentLoginResponseDto {
   readonly message: string;

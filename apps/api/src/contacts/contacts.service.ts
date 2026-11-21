@@ -10,6 +10,12 @@ import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 import { ContactResponseDto } from './dto/contact-response.dto';
 
+export interface VerifiedIdentity {
+  externalId: string;
+  name?: string;
+  email?: string;
+}
+
 @Injectable()
 export class ContactsService {
   constructor(
@@ -49,6 +55,27 @@ export class ContactsService {
       },
       update: {},
       create: { ...identifyContactDto, workspaceId },
+    });
+
+    return ContactResponseDto.fromEntity(contact);
+  }
+
+  async upsertVerified(
+    workspaceId: string,
+    { externalId, name, email }: VerifiedIdentity,
+  ): Promise<ContactResponseDto> {
+    await this.workspacesService.findOne(workspaceId);
+
+    const details = {
+      name,
+      email,
+      emailVerifiedAt: email ? new Date() : undefined,
+    };
+
+    const contact = await this.prisma.contact.upsert({
+      where: { workspaceId_externalId: { workspaceId, externalId } },
+      update: details,
+      create: { ...details, externalId, workspaceId },
     });
 
     return ContactResponseDto.fromEntity(contact);

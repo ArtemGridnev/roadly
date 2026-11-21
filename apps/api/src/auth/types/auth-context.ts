@@ -8,6 +8,7 @@ export interface ResolvedWorkspace {
 export interface ResolvedContact {
   readonly id: string;
   readonly workspaceId: string;
+  readonly verified: boolean;
 }
 
 export interface AuthenticatedRequest extends Request {

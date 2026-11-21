@@ -1,8 +1,10 @@
 import type { RequestStatus } from './request-status';
 
 export interface FeatureRequestAuthor {
-  name: string;
-  email: string;
+  externalId: string;
+  name: string | null;
+  email: string | null;
+  verified: boolean;
 }
 
 export interface FeatureRequest {

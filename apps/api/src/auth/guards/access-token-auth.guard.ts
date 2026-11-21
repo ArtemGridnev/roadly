@@ -10,12 +10,9 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { WIDGET_AUTH_KEY } from '../decorators/widget-auth.decorator';
 import { REQUIRE_CONTACT_KEY } from '../decorators/require-contact.decorator';
 import { WIDGET_KEY_HEADER } from '../constants/widget-headers';
-import {
-  AuthenticatedRequest,
-  ResolvedContact,
-  ResolvedWorkspace,
-} from '../types/auth-context';
+import { AuthenticatedRequest, ResolvedContact } from '../types/auth-context';
 import { WorkspacesService } from '../../workspaces/workspaces.service';
+import { WorkspaceResponseDto } from '../../workspaces/dto/workspace-response.dto';
 import { ContactsService } from '../../contacts/contacts.service';
 import { WidgetSessionTokensService } from '../widget-session-tokens.service';
 
@@ -63,7 +60,7 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
     }
 
     const workspace = await this.resolveWorkspace(widgetKey);
-    request.workspace = workspace;
+    request.workspace = { id: workspace.id };
 
     const requiresContact = this.reflector.getAllAndOverride<boolean>(
       REQUIRE_CONTACT_KEY,
@@ -73,7 +70,7 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
     const sessionToken = this.extractSessionToken(request);
 
     if (requiresContact || sessionToken) {
-      request.contact = await this.resolveContact(workspace.id, sessionToken);
+      request.contact = await this.resolveContact(workspace, sessionToken);
     }
 
     return true;
@@ -81,10 +78,9 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
 
   private async resolveWorkspace(
     widgetKey: string,
-  ): Promise<ResolvedWorkspace> {
+  ): Promise<WorkspaceResponseDto> {
     try {
-      const workspace = await this.workspacesService.findByWidgetKey(widgetKey);
-      return { id: workspace.id };
+      return await this.workspacesService.findByWidgetKey(widgetKey);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new UnauthorizedException(`Invalid ${WIDGET_KEY_HEADER} header`);
@@ -102,7 +98,7 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
   }
 
   private async resolveContact(
-    workspaceId: string,
+    workspace: WorkspaceResponseDto,
     sessionToken: string | undefined,
   ): Promise<ResolvedContact> {
     if (!sessionToken) {
@@ -111,16 +107,24 @@ export class AccessTokenAuthGuard extends AuthGuard('access-token') {
 
     const payload = this.widgetSessionTokensService.verify(sessionToken);
 
-    if (payload?.workspaceId !== workspaceId) {
+    if (payload?.workspaceId !== workspace.id) {
       throw new UnauthorizedException('Invalid session token');
+    }
+
+    if (workspace.requireSignedIdentity && !payload.verified) {
+      throw new UnauthorizedException('Signed identity required');
     }
 
     try {
       const contact = await this.contactsService.findOne(
-        workspaceId,
+        workspace.id,
         payload.sub,
       );
-      return { id: contact.id, workspaceId: contact.workspaceId };
+      return {
+        id: contact.id,
+        workspaceId: contact.workspaceId,
+        verified: payload.verified === true,
+      };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new UnauthorizedException('Invalid session token');

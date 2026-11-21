@@ -9,7 +9,10 @@ import { AccessTokenPayload } from '../dto/access-token-payload.dto';
 import { ACCESS_COOKIE_NAME } from '../utils/authCookie';
 
 @Injectable()
-export class AccessTokenStrategy extends PassportStrategy(Strategy, 'access-token') {
+export class AccessTokenStrategy extends PassportStrategy(
+  Strategy,
+  'access-token',
+) {
   constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([

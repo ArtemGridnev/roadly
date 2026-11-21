@@ -9,6 +9,14 @@ export type CreateWidgetFeatureRequestInput = z.infer<
   typeof createWidgetFeatureRequestSchema
 >;
 
+export const createSignedWidgetSessionSchema = z.object({
+  token: z.string().min(1),
+});
+
+export type CreateSignedWidgetSessionInput = z.infer<
+  typeof createSignedWidgetSessionSchema
+>;
+
 export const widgetFeatureRequestSortSchema = z.enum(['top', 'newest']);
 
 export type WidgetFeatureRequestSort = z.infer<

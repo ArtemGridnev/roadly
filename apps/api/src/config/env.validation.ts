@@ -18,6 +18,10 @@ class EnvironmentVariables {
   @IsNotEmpty()
   WIDGET_SESSION_SECRET!: string;
 
+  @IsString()
+  @IsNotEmpty()
+  IDENTITY_SECRET_ENCRYPTION_KEY!: string;
+
   @IsOptional()
   @IsString()
   PORT?: string;

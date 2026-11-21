@@ -63,7 +63,7 @@ export class WidgetFeatureRequestsController {
     const featureRequest = await this.featureRequestsService.create(
       workspace.id,
       createFeatureRequestDto,
-      { authorId: contact.id },
+      { authorId: contact.id, authorVerified: contact.verified },
     );
 
     return WidgetFeatureRequestResponseDto.fromFeatureRequest(featureRequest, {

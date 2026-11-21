@@ -3,5 +3,6 @@ export interface Workspace {
   name: string;
   slug: string;
   widgetKey: string;
+  requireSignedIdentity: boolean;
   createdAt: string;
 }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcryptjs';
@@ -17,114 +21,156 @@ const REFRESH_TOKEN_TTL_DAYS = 90;
 
 @Injectable()
 export class AuthService {
-    constructor(
-        private refreshTokensService: RefreshTokensService,
-        private agentsService: AgentsService,
-        private jwtService: JwtService,
-        private configService: ConfigService,
-    ) {}
+  constructor(
+    private refreshTokensService: RefreshTokensService,
+    private agentsService: AgentsService,
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
 
-    async validateUser(email: string, pass: string): Promise<AgentResponseDto> {
-        let agent: Agent;
+  async validateUser(email: string, pass: string): Promise<AgentResponseDto> {
+    let agent: Agent;
 
-        try {
-            agent = await this.agentsService.findByEmail(email);
-        } catch {
-            throw new UnauthorizedException('Invalid email or password');
-        }
-
-        const isPasswordValid = await compare(pass, agent.passwordHash);
-
-        if (!isPasswordValid) {
-            throw new UnauthorizedException('Invalid email or password');
-        }
-
-        return AgentResponseDto.fromEntity(agent);
+    try {
+      agent = await this.agentsService.findByEmail(email);
+    } catch {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    async login(agent: AgentResponseDto): Promise<{ accessToken: string, refreshToken: string, agent: AgentResponseDto }> {
-        return this.issueTokenPair(agent);
+    const isPasswordValid = await compare(pass, agent.passwordHash);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    async signup(createAgentDto: CreateAgentDto): Promise<{ accessToken: string, refreshToken: string, agent: AgentResponseDto }> {
-        const agent = await this.agentsService.create(createAgentDto);
+    return AgentResponseDto.fromEntity(agent);
+  }
 
-        return this.issueTokenPair(agent);
+  async login(
+    agent: AgentResponseDto,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    agent: AgentResponseDto;
+  }> {
+    return this.issueTokenPair(agent);
+  }
+
+  async signup(
+    createAgentDto: CreateAgentDto,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    agent: AgentResponseDto;
+  }> {
+    const agent = await this.agentsService.create(createAgentDto);
+
+    return this.issueTokenPair(agent);
+  }
+
+  async getCurrentAgent(agentId: string): Promise<AgentResponseDto> {
+    try {
+      return await this.agentsService.findOne(agentId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new UnauthorizedException();
+      }
+
+      throw error;
     }
+  }
 
-    async getCurrentAgent(agentId: string): Promise<AgentResponseDto> {
-        try {
-            return await this.agentsService.findOne(agentId);
-        } catch (error) {
-            if (error instanceof NotFoundException) {
-                throw new UnauthorizedException();
-            }
+  async updateCurrentAgent(
+    agentId: string,
+    updateCurrentAgentDto: UpdateCurrentAgentDto,
+  ): Promise<AgentResponseDto> {
+    try {
+      return await this.agentsService.update(agentId, updateCurrentAgentDto);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new UnauthorizedException();
+      }
 
-            throw error;
-        }
+      throw error;
     }
+  }
 
-    async updateCurrentAgent(agentId: string, updateCurrentAgentDto: UpdateCurrentAgentDto): Promise<AgentResponseDto> {
-        try {
-            return await this.agentsService.update(agentId, updateCurrentAgentDto);
-        } catch (error) {
-            if (error instanceof NotFoundException) {
-                throw new UnauthorizedException();
-            }
+  async logout(refreshToken: string): Promise<void> {
+    await this.refreshTokensService.revokeByTokenHash(
+      this.hashRefreshToken(refreshToken),
+    );
+  }
 
-            throw error;
-        }
-    }
+  async validateRefreshToken(refreshToken: string): Promise<void> {
+    await this.refreshTokensService.findValidByTokenHash(
+      this.hashRefreshToken(refreshToken),
+    );
+  }
 
-    async logout(refreshToken: string): Promise<void> {
-        await this.refreshTokensService.revokeByTokenHash(this.hashRefreshToken(refreshToken));
-    }
+  async rotateRefreshToken(
+    refreshToken: string,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    agent: AgentResponseDto;
+  }> {
+    const refreshTokenData =
+      await this.refreshTokensService.findValidByTokenHash(
+        this.hashRefreshToken(refreshToken),
+      );
 
-    async validateRefreshToken(refreshToken: string): Promise<void> {
-        await this.refreshTokensService.findValidByTokenHash(this.hashRefreshToken(refreshToken));
-    }
+    await this.refreshTokensService.revoke(refreshTokenData.id);
 
-    async rotateRefreshToken(refreshToken: string): Promise<{ accessToken: string, refreshToken: string, agent: AgentResponseDto }> {
-        const refreshTokenData = await this.refreshTokensService.findValidByTokenHash(this.hashRefreshToken(refreshToken));
+    const agent = await this.agentsService.findOne(refreshTokenData.agentId);
 
-        await this.refreshTokensService.revoke(refreshTokenData.id);
+    return this.issueTokenPair(agent);
+  }
 
-        const agent = await this.agentsService.findOne(refreshTokenData.agentId);
+  private async issueTokenPair(
+    agent: AgentResponseDto,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    agent: AgentResponseDto;
+  }> {
+    const accessTokenPayload: AccessTokenPayload = {
+      username: agent.email,
+      sub: agent.id,
+    };
+    const accessToken = this.signAccessToken(accessTokenPayload);
 
-        return this.issueTokenPair(agent);
-    }
+    const refreshTokenPayload: RefreshTokenPayload = {
+      sub: agent.id,
+      jti: randomUUID(),
+    };
+    const refreshToken = this.signRefreshToken(refreshTokenPayload);
 
-    private async issueTokenPair(agent: AgentResponseDto): Promise<{ accessToken: string, refreshToken: string, agent: AgentResponseDto }> {
-        const accessTokenPayload: AccessTokenPayload = { username: agent.email, sub: agent.id };
-        const accessToken = this.signAccessToken(accessTokenPayload);
+    await this.refreshTokensService.create({
+      agentId: agent.id,
+      tokenHash: this.hashRefreshToken(refreshToken),
+      expiresAt: new Date(
+        Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
+      ),
+    });
 
-        const refreshTokenPayload: RefreshTokenPayload = { sub: agent.id, jti: randomUUID() };
-        const refreshToken = this.signRefreshToken(refreshTokenPayload);
+    return { accessToken, refreshToken, agent };
+  }
 
-        await this.refreshTokensService.create({
-            agentId: agent.id,
-            tokenHash: this.hashRefreshToken(refreshToken),
-            expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000),
-        });
+  private hashRefreshToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
 
-        return { accessToken, refreshToken, agent };
-    }
+  private signAccessToken(payload: AccessTokenPayload): string {
+    return this.jwtService.sign(payload, {
+      secret: this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
+      expiresIn: ACCESS_TOKEN_TTL,
+    });
+  }
 
-    private hashRefreshToken(token: string): string {
-        return createHash('sha256').update(token).digest('hex');
-    }
-
-    private signAccessToken(payload: AccessTokenPayload): string {
-        return this.jwtService.sign(payload, {
-            secret: this.configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
-            expiresIn: ACCESS_TOKEN_TTL,
-        });
-    }
-
-    private signRefreshToken(payload: RefreshTokenPayload): string {
-        return this.jwtService.sign(payload, {
-            secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
-            expiresIn: `${REFRESH_TOKEN_TTL_DAYS}d`,
-        });
-    }
+  private signRefreshToken(payload: RefreshTokenPayload): string {
+    return this.jwtService.sign(payload, {
+      secret: this.configService.getOrThrow<string>('REFRESH_TOKEN_SECRET'),
+      expiresIn: `${REFRESH_TOKEN_TTL_DAYS}d`,
+    });
+  }
 }

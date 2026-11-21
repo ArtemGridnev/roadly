@@ -82,7 +82,10 @@ describe('AuthController (e2e)', () => {
   });
 
   describe('POST /auth/refresh', () => {
-    async function loginAndGetCookies(email: string, password: string): Promise<string[]> {
+    async function loginAndGetCookies(
+      email: string,
+      password: string,
+    ): Promise<string[]> {
       await createAgent(email, password);
 
       const response = await request(app.getHttpServer())
@@ -94,8 +97,13 @@ describe('AuthController (e2e)', () => {
     }
 
     it('rotates the token pair for a valid refresh token', async () => {
-      const cookies = await loginAndGetCookies('jane@example.com', 'super-secret');
-      const refreshCookie = cookies.find((c) => c.startsWith('refresh_token='))!;
+      const cookies = await loginAndGetCookies(
+        'jane@example.com',
+        'super-secret',
+      );
+      const refreshCookie = cookies.find((c) =>
+        c.startsWith('refresh_token='),
+      )!;
 
       const response = await request(app.getHttpServer())
         .post('/auth/refresh')
@@ -110,8 +118,13 @@ describe('AuthController (e2e)', () => {
     });
 
     it('rejects reuse of an already-rotated refresh token', async () => {
-      const cookies = await loginAndGetCookies('jane@example.com', 'super-secret');
-      const refreshCookie = cookies.find((c) => c.startsWith('refresh_token='))!;
+      const cookies = await loginAndGetCookies(
+        'jane@example.com',
+        'super-secret',
+      );
+      const refreshCookie = cookies.find((c) =>
+        c.startsWith('refresh_token='),
+      )!;
 
       await request(app.getHttpServer())
         .post('/auth/refresh')
@@ -133,13 +146,20 @@ describe('AuthController (e2e)', () => {
     it('creates the agent and signs them in', async () => {
       const response = await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1' })
+        .send({
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+          password: 'Super-secret1',
+        })
         .expect(201);
 
       const cookies = getCookies(response);
       expect(cookies.some((c) => c.startsWith('access_token='))).toBe(true);
       expect(cookies.some((c) => c.startsWith('refresh_token='))).toBe(true);
-      expect(response.body.agent).toMatchObject({ name: 'Jane Doe', email: 'jane@example.com' });
+      expect(response.body.agent).toMatchObject({
+        name: 'Jane Doe',
+        email: 'jane@example.com',
+      });
       expect(response.body.agent.passwordHash).toBeUndefined();
       expect(response.body.agent.language).toBeNull();
     });
@@ -147,7 +167,12 @@ describe('AuthController (e2e)', () => {
     it('saves the language chosen at signup', async () => {
       const response = await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1', language: 'he' })
+        .send({
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+          password: 'Super-secret1',
+          language: 'he',
+        })
         .expect(201);
 
       expect(response.body.agent.language).toBe('he');
@@ -156,7 +181,12 @@ describe('AuthController (e2e)', () => {
     it('rejects an unsupported language at signup', async () => {
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1', language: 'fr' })
+        .send({
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+          password: 'Super-secret1',
+          language: 'fr',
+        })
         .expect(400);
     });
 
@@ -165,7 +195,11 @@ describe('AuthController (e2e)', () => {
 
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1' })
+        .send({
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+          password: 'Super-secret1',
+        })
         .expect(409);
     });
 
@@ -185,20 +219,32 @@ describe('AuthController (e2e)', () => {
       for (let i = 0; i < 10; i++) {
         await request(app.getHttpServer())
           .post('/auth/signup')
-          .send({ name: 'Jane Doe', email: `jane-${i}@example.com`, password: 'Super-secret1' })
+          .send({
+            name: 'Jane Doe',
+            email: `jane-${i}@example.com`,
+            password: 'Super-secret1',
+          })
           .expect(201);
       }
 
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'jane-10@example.com', password: 'Super-secret1' })
+        .send({
+          name: 'Jane Doe',
+          email: 'jane-10@example.com',
+          password: 'Super-secret1',
+        })
         .expect(429);
     });
 
     it('rejects an invalid email', async () => {
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'not-an-email', password: 'Super-secret1' })
+        .send({
+          name: 'Jane Doe',
+          email: 'not-an-email',
+          password: 'Super-secret1',
+        })
         .expect(400);
     });
 
@@ -212,7 +258,12 @@ describe('AuthController (e2e)', () => {
     it('rejects unknown fields', async () => {
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send({ name: 'Jane Doe', email: 'jane@example.com', password: 'Super-secret1', role: 'admin' })
+        .send({
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+          password: 'Super-secret1',
+          role: 'admin',
+        })
         .expect(400);
     });
   });
@@ -224,7 +275,9 @@ describe('AuthController (e2e)', () => {
         .post('/auth/login')
         .send({ email: 'jane@example.com', password: 'super-secret' })
         .expect(201);
-      const accessCookie = getCookies(login).find((c) => c.startsWith('access_token='))!;
+      const accessCookie = getCookies(login).find((c) =>
+        c.startsWith('access_token='),
+      )!;
 
       const response = await request(app.getHttpServer())
         .get('/auth/me')
@@ -245,7 +298,9 @@ describe('AuthController (e2e)', () => {
         .post('/auth/login')
         .send({ email: 'jane@example.com', password: 'super-secret' })
         .expect(201);
-      const accessCookie = getCookies(login).find((c) => c.startsWith('access_token='))!;
+      const accessCookie = getCookies(login).find((c) =>
+        c.startsWith('access_token='),
+      )!;
 
       await prisma.refreshToken.deleteMany({ where: { agentId: agent.id } });
       await prisma.agent.delete({ where: { id: agent.id } });
@@ -258,7 +313,10 @@ describe('AuthController (e2e)', () => {
   });
 
   describe('PATCH /auth/me', () => {
-    async function loginAndGetAccessCookie(email: string, password: string): Promise<string> {
+    async function loginAndGetAccessCookie(
+      email: string,
+      password: string,
+    ): Promise<string> {
       const login = await request(app.getHttpServer())
         .post('/auth/login')
         .send({ email, password })
@@ -269,7 +327,10 @@ describe('AuthController (e2e)', () => {
 
     it('saves the language and returns it on later requests', async () => {
       await createAgent('jane@example.com', 'super-secret');
-      const accessCookie = await loginAndGetAccessCookie('jane@example.com', 'super-secret');
+      const accessCookie = await loginAndGetAccessCookie(
+        'jane@example.com',
+        'super-secret',
+      );
 
       const response = await request(app.getHttpServer())
         .patch('/auth/me')
@@ -277,7 +338,10 @@ describe('AuthController (e2e)', () => {
         .send({ language: 'he' })
         .expect(200);
 
-      expect(response.body).toMatchObject({ email: 'jane@example.com', language: 'he' });
+      expect(response.body).toMatchObject({
+        email: 'jane@example.com',
+        language: 'he',
+      });
       expect(response.body.passwordHash).toBeUndefined();
 
       const me = await request(app.getHttpServer())
@@ -296,7 +360,10 @@ describe('AuthController (e2e)', () => {
     it('only changes the signed-in agent', async () => {
       const other = await createAgent('other@example.com', 'super-secret');
       await createAgent('jane@example.com', 'super-secret');
-      const accessCookie = await loginAndGetAccessCookie('jane@example.com', 'super-secret');
+      const accessCookie = await loginAndGetAccessCookie(
+        'jane@example.com',
+        'super-secret',
+      );
 
       await request(app.getHttpServer())
         .patch('/auth/me')
@@ -304,7 +371,9 @@ describe('AuthController (e2e)', () => {
         .send({ language: 'he' })
         .expect(200);
 
-      const unchanged = await prisma.agent.findUniqueOrThrow({ where: { id: other.id } });
+      const unchanged = await prisma.agent.findUniqueOrThrow({
+        where: { id: other.id },
+      });
       expect(unchanged.language).toBeNull();
     });
 
@@ -315,7 +384,10 @@ describe('AuthController (e2e)', () => {
       ['other agent fields', { language: 'he', name: 'Renamed' }],
     ])('rejects %s', async (_, body) => {
       await createAgent('jane@example.com', 'super-secret');
-      const accessCookie = await loginAndGetAccessCookie('jane@example.com', 'super-secret');
+      const accessCookie = await loginAndGetAccessCookie(
+        'jane@example.com',
+        'super-secret',
+      );
 
       await request(app.getHttpServer())
         .patch('/auth/me')
@@ -333,7 +405,10 @@ describe('AuthController (e2e)', () => {
 
     it('returns 401 when the agent no longer exists', async () => {
       const agent = await createAgent('jane@example.com', 'super-secret');
-      const accessCookie = await loginAndGetAccessCookie('jane@example.com', 'super-secret');
+      const accessCookie = await loginAndGetAccessCookie(
+        'jane@example.com',
+        'super-secret',
+      );
 
       await prisma.refreshToken.deleteMany({ where: { agentId: agent.id } });
       await prisma.agent.delete({ where: { id: agent.id } });
@@ -353,7 +428,9 @@ describe('AuthController (e2e)', () => {
         .post('/auth/login')
         .send({ email: 'jane@example.com', password: 'super-secret' })
         .expect(201);
-      const refreshCookie = getCookies(login).find((c) => c.startsWith('refresh_token='))!;
+      const refreshCookie = getCookies(login).find((c) =>
+        c.startsWith('refresh_token='),
+      )!;
 
       const response = await request(app.getHttpServer())
         .post('/auth/logout')
@@ -380,10 +457,18 @@ describe('AuthController (e2e)', () => {
         .post('/auth/login')
         .send({ email: 'jane@example.com', password: 'super-secret' })
         .expect(201);
-      const refreshCookie = getCookies(login).find((c) => c.startsWith('refresh_token='))!;
+      const refreshCookie = getCookies(login).find((c) =>
+        c.startsWith('refresh_token='),
+      )!;
 
-      await request(app.getHttpServer()).post('/auth/logout').set('Cookie', [refreshCookie]).expect(204);
-      await request(app.getHttpServer()).post('/auth/logout').set('Cookie', [refreshCookie]).expect(204);
+      await request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Cookie', [refreshCookie])
+        .expect(204);
+      await request(app.getHttpServer())
+        .post('/auth/logout')
+        .set('Cookie', [refreshCookie])
+        .expect(204);
     });
   });
 });

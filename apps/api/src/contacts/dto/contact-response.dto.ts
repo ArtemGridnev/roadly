@@ -4,8 +4,9 @@ export class ContactResponseDto {
   readonly id: string;
   readonly workspaceId: string;
   readonly externalId: string;
-  readonly name: string;
-  readonly email: string;
+  readonly name: string | null;
+  readonly email: string | null;
+  readonly emailVerifiedAt: Date | null;
   readonly createdAt: Date;
 
   constructor(contact: Contact) {
@@ -14,6 +15,7 @@ export class ContactResponseDto {
     this.externalId = contact.externalId;
     this.name = contact.name;
     this.email = contact.email;
+    this.emailVerifiedAt = contact.emailVerifiedAt;
     this.createdAt = contact.createdAt;
   }
 

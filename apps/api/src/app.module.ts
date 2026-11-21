@@ -14,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { RefreshTokensService } from './refresh-tokens/refresh-tokens.service';
 import { RefreshTokensModule } from './refresh-tokens/refresh-tokens.module';
 import { WidgetModule } from './widget/widget.module';
+import { WorkspaceIdentityModule } from './workspace-identity/workspace-identity.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { WidgetModule } from './widget/widget.module';
     AuthModule,
     RefreshTokensModule,
     WidgetModule,
+    WorkspaceIdentityModule,
   ],
   controllers: [AppController],
   providers: [AppService, RefreshTokensService],

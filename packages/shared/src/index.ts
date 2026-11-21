@@ -13,6 +13,10 @@ export type {
 export type { Vote } from './types/vote';
 export type { WorkspaceMember } from './types/workspace-member';
 export type { WidgetSession } from './types/widget-session';
+export type {
+  WorkspaceIdentity,
+  WorkspaceIdentitySecret,
+} from './types/workspace-identity';
 
 export type {
   WidgetUser,
@@ -44,6 +48,9 @@ export type {
   UpdateWorkspaceInput,
 } from './api/workspace';
 
+export { updateWorkspaceIdentitySchema } from './api/workspace-identity';
+export type { UpdateWorkspaceIdentityInput } from './api/workspace-identity';
+
 export { createWorkspaceMemberSchema } from './api/workspace-member';
 export type { CreateWorkspaceMemberInput } from './api/workspace-member';
 
@@ -74,11 +81,13 @@ export type {
 
 export {
   createWidgetFeatureRequestSchema,
+  createSignedWidgetSessionSchema,
   widgetFeatureRequestSortSchema,
   findWidgetFeatureRequestsQuerySchema,
 } from './api/widget';
 export type {
   CreateWidgetFeatureRequestInput,
+  CreateSignedWidgetSessionInput,
   WidgetFeatureRequestSort,
   FindWidgetFeatureRequestsQuery,
 } from './api/widget';

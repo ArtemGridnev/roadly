@@ -10,11 +10,14 @@ import { RefreshTokenPayload } from '../dto/refresh-token-payload.dto';
 import { AuthService } from '../auth.service';
 
 @Injectable()
-export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'refresh-token') {
-    constructor(
-        private configService: ConfigService,
-        private authService: AuthService
-    ) {
+export class RefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'refresh-token',
+) {
+  constructor(
+    private configService: ConfigService,
+    private authService: AuthService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => {

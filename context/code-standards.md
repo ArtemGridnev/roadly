@@ -56,7 +56,7 @@
 ## API Layer
 
 - Never expose an admin capability on the public (widget) API.
-- Do not build widget-identity-verification-dependent logic until that feature lands — treat the host-passed identity as trusted for now.
+- Anything sent to a Contact's email address must require `emailVerifiedAt`; a signed session alone doesn't verify the stored email.
 
 ## Testing
 

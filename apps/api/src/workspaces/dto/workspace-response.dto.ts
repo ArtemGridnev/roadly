@@ -5,6 +5,7 @@ export class WorkspaceResponseDto {
   readonly name: string;
   readonly slug: string;
   readonly widgetKey: string;
+  readonly requireSignedIdentity: boolean;
   readonly createdAt: Date;
 
   constructor(workspace: Workspace) {
@@ -12,6 +13,7 @@ export class WorkspaceResponseDto {
     this.name = workspace.name;
     this.slug = workspace.slug;
     this.widgetKey = workspace.widgetKey;
+    this.requireSignedIdentity = workspace.requireSignedIdentity;
     this.createdAt = workspace.createdAt;
   }
 
