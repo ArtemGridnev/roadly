@@ -4,6 +4,6 @@ import { baseQueryWithReauth } from './base-query';
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Agent', 'Workspace', 'FeatureRequest'],
+  tagTypes: ['Agent', 'Workspace', 'FeatureRequest', 'WorkspaceIdentity'],
   endpoints: () => ({}),
 });

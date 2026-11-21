@@ -81,7 +81,7 @@ test('creates the workspace with trimmed details and lands on install', async ()
   await user.type(await screen.findByLabelText('Name'), '  Acme Inc ')
   await user.click(screen.getByRole('button', { name: 'Create workspace' }))
 
-  expect(await screen.findByRole('heading', { name: 'Snippet' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: '1. Connect' })).toBeInTheDocument()
   expect(router.state.location.pathname).toBe('/acme-inc/install')
   expect(createWorkspace).toHaveBeenCalledWith({ name: 'Acme Inc', slug: 'acme-inc' }, expect.anything())
 })
@@ -91,7 +91,7 @@ test('leaves the form out of history once the workspace is created', async () =>
 
   await user.type(await screen.findByLabelText('Name'), 'Acme Inc')
   await user.click(screen.getByRole('button', { name: 'Create workspace' }))
-  await screen.findByRole('heading', { name: 'Snippet' })
+  await screen.findByRole('heading', { name: '1. Connect' })
   await router.navigate(-1)
 
   expect(router.state.location.pathname).toBe('/acme-inc/install')

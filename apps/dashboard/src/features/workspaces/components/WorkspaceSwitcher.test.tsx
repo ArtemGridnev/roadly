@@ -78,7 +78,7 @@ test('creates a workspace from the switcher and opens its install page', async (
   await user.type(within(dialog).getByLabelText('Name'), 'Gamma')
   await user.click(within(dialog).getByRole('button', { name: 'Create workspace' }))
 
-  expect(await screen.findByRole('heading', { name: 'Snippet' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: '1. Connect' })).toBeInTheDocument()
   expect(router.state.location.pathname).toBe('/gamma/install')
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(screen.getByRole('button', { name: /Gamma/ })).toBeInTheDocument()

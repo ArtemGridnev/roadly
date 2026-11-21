@@ -105,16 +105,68 @@ export const en = {
   install: {
     title: 'Install',
     intro: 'Add the widget to your app so your users can request and vote on features.',
-    snippet: 'Snippet',
     snippetCopyLabel: 'snippet',
     copy: 'Copy',
     copied: 'Copied',
     copyFailed: "Couldn't copy — select it instead",
-    step1: 'Paste the snippet into your app where the widget should load.',
-    step2:
-      'Replace <code>currentUser</code> with your signed-in user. Their requests and votes are saved under that id.',
-    step3: 'Open the <a>Roadmap</a> to see requests come in.',
     keyNote: "The widget key in the snippet is public, so it's safe in your front end.",
+    connect: {
+      title: '1. Connect',
+      waiting: 'Waiting for the first user',
+      connected: 'Connected',
+      snippetTitle: 'Add the snippet',
+      snippetStep:
+        'Paste it into your app where the widget should load, and replace <code>currentUser</code> with your signed-in user. Their requests and votes are saved under that id.',
+      checkTitle: 'Check it works',
+      checkStep:
+        'Open the widget in your app once and this step shows Connected. Requests your users send show up on the <a>Roadmap</a>.',
+    },
+    secure: {
+      title: '2. Secure',
+      waiting: 'Not signed yet',
+      connected: 'Signed identity is working',
+      intro:
+        "Without it, anyone who knows a user's id can send requests and votes as them, and their requests show as Unverified. Sign each user on your server so the widget can prove who they are.",
+      secretTitle: 'Identity secret',
+      secretNote:
+        'Keep it on your server, for example as <code>ROADLY_IDENTITY_SECRET</code>. Never put it in your front end.',
+      generate: 'Generate secret',
+      rotate: 'Rotate secret',
+      secretFailed: "The secret wasn't created. Check your connection and try again.",
+      secretDialogTitle: 'Your identity secret',
+      secretDialogDescription: "Copy it now. You won't see it again.",
+      secretCopyLabel: 'identity secret',
+      done: 'Done',
+      rotateConfirmTitle: 'Rotate the secret?',
+      rotateConfirmDescription:
+        'The old secret keeps working for 24 hours. Signed identity has to work with the new secret before it can be required again.',
+      rotateConfirm: 'Rotate',
+      serverTitle: 'On your server',
+      serverIntro:
+        'The example uses Node with <code>jsonwebtoken</code>, but any language and any JWT library works, as long as it signs with HS256 and includes <code>user_id</code> and <code>exp</code>.',
+      installStep: 'Install a JWT library:',
+      installCopyLabel: 'install command',
+      serverStep:
+        'Add a route behind your own sign-in, so only the signed-in user gets their token. It signs that user with the secret from <code>ROADLY_IDENTITY_SECRET</code>, and a token can last up to 1 hour.',
+      serverCopyLabel: 'server code',
+      clientTitle: 'In your app',
+      clientStep: 'Replace <code>user</code> with <code>getToken</code> in the snippet. It asks your route for a signed token.',
+      clientCopyLabel: 'signed snippet',
+      enforceTitle: 'Enforce',
+      requireLabel: 'Require signed identity',
+      requireHint: "Users without a signed token can still read requests, but can't send or vote.",
+      requireDisabledHint: 'Available once a user has opened the widget with a token signed with the current secret.',
+      requireConfirmTitle: 'Require signed identity?',
+      requireConfirmDescription:
+        "Users without a signed token are signed out on their next action. They can still read requests, but can't send or vote.",
+      requireConfirm: 'Require',
+      stopRequireConfirmTitle: 'Stop requiring signed identity?',
+      stopRequireConfirmDescription:
+        "Anyone who knows a user's id can send requests and votes as them again, and their requests show as Unverified.",
+      stopRequireConfirm: 'Stop requiring',
+      requireFailed: "The setting wasn't saved. Check your connection and try again.",
+      requireNotConnected: 'Signed identity has to work with the current secret first.',
+    },
   },
   roadmap: {
     title: 'Roadmap',
@@ -160,6 +212,8 @@ export const en = {
       votes: 'Votes',
       author: 'Author',
       addedByTeam: 'Added by your team',
+      unverified: 'Unverified',
+      unverifiedNote: "Sent without signed identity, so the name and email aren't confirmed.",
       status: 'Status',
     },
     form: {

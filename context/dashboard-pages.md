@@ -73,7 +73,7 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 - The move shows at once; if the API rejects it the card returns to its column and an error toast says `Couldn't move "<title>" to <column>` — no retry button; dragging again is the retry.
 - **Card** mirrors the widget's `RequestCard`: vote count, title, 2-line description preview, then created date. No status badge on kanban cards — the column already says it; the table view carries a status column. The vote count is read-only — Agents don't vote.
 - **Top bar (MVP):** page controls go in `PageContent`'s `actions`, top-right of the page's top bar. Only what `GET /feature-requests` supports — sort (Most voted / Newest) and, in table view, a status filter (kanban columns already split by status). No search until the API supports it; this narrows the `ui-context.md` §3 top bar for the MVP.
-- **Drawer:** clicking a card or table row (or Enter on a focused card) opens the right slide-in drawer over the board (shadcn `Sheet`, full width on phones). It isn't addressable by URL in the MVP — a reload closes it. It shows votes and the author (name + mailto email, or "Added by your team" when an Agent created it), read-only. In the drawer the Agent can:
+- **Drawer:** clicking a card or table row (or Enter on a focused card) opens the right slide-in drawer over the board (shadcn `Sheet`, full width on phones). It isn't addressable by URL in the MVP — a reload closes it. It shows votes and the author (name, or `externalId` when there's no name; a mailto email when there is one; or "Added by your team" when an Agent created it), read-only. A request sent without a signed session (`author.verified` false) gets an "Unverified" badge and a one-line explanation. In the drawer the Agent can:
   - edit title and description in a form with **Save changes** (disabled until something changes; only changed fields are sent). A failed save keeps the edits and shows an inline error. Closing with unsaved edits (Escape, outside click, ✕) asks **Discard changes?**;
   - change status with a select that applies at once (the non-drag path) — same optimistic update and failure toast as a drag;
   - delete the request behind a confirmation ("<title> and its N votes will be removed"). Success closes the drawer with a "Deleted" toast; failure shows an error toast and keeps it open.
@@ -81,8 +81,18 @@ Name, email, password. Link to sign in. On success → signed in → `/onboardin
 - Sort defaults to Most voted.
 
 ### Install widget (`/:slug/install`)
-- Shows a copyable snippet carrying the workspace's `widgetKey`: a `#roadly` container, the `<script>` loading the widget bundle (`VITE_WIDGET_URL`), and `Roadly.init({ ... })` with the real key, `currentUser.*` placeholders for the host's signed-in user, `theme: 'auto'` and `language: 'en'`.
-- One Copy button on the snippet ("Copied" for ~2s); three short steps link on to the Roadmap. No separate key display — the snippet is the only install path; add one if a non-snippet integration (npm package, key rotation) lands.
+- Two numbered steps on one page. Each step title has a status tag beside it (rounded, green when done, muted while waiting) from `GET /workspace-identity`, refetched when the tab regains focus so a customer sees it change after trying their app. Inside a step, sub-steps are `h3` headings with a short text each.
+- **1. Connect** (tag: Waiting for the first user / Connected, `widgetConnected`):
+  - **Add the snippet:** paste it and replace `currentUser`. The snippet carries the workspace's `widgetKey`: a `#roadly` container, the `<script>` loading the widget bundle (`VITE_WIDGET_URL`), and `Roadly.init({ ... })` with the real key, `currentUser.*` placeholders, `theme: 'auto'` and `language: 'en'`, each with a comment listing its values. Then the note that the key is public.
+  - **Check it works:** open the widget once; requests show up on the Roadmap (link).
+- **2. Secure** (tag: Not signed yet / Signed identity is working, `signedIdentityConnected`): a warning alert on why unsigned identity is risky, then:
+  - **Identity secret:** Generate secret (no confirmation) shows it once in a dialog with Copy; it's never shown again. Afterwards the button is Rotate secret, behind a confirmation (old secret valid for 24h; signed identity must work with the new one before it can be required again).
+  - **On your server:** a note that the Node `jsonwebtoken` example stands for any language and JWT library that signs HS256 with `user_id` and `exp`; `npm install jsonwebtoken` in its own block; the token route sample (HS256, `expiresIn: '1h'`).
+  - **In your app:** the snippet with `getToken` in place of `user`.
+  - **Enforce:** Require signed identity switch, disabled until `signedIdentityConnected`, with an info alert saying why. Turning it on or off asks first, each with its own copy. Failures are toasts, with their own copy for the 409.
+- Code blocks are syntax-highlighted (`prism-react-renderer`, token types mapped to Tailwind classes with `dark:` variants; no inline styles) and stay left to right in Hebrew. Each has its Copy button inside it: top corner for multi-line code, beside the line for one-liners ("Copied" for ~2s). Comments inside code only explain option values; steps and caveats go in the text around the block.
+- The page's alerts (shadcn `Alert`, plus a `warning` variant) are static guidance, so they use `role="note"`, not `alert`.
+- Any Agent can manage the secret and the requirement (no roles yet).
 - Landing page right after creating a workspace.
 
 ---

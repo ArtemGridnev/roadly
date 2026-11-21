@@ -43,14 +43,26 @@ export function RequestDrawer({ request, onClose }: RequestDrawerProps) {
             <dd className="min-w-0">
               {shown.author ? (
                 <>
-                  <span dir="auto" className="block w-fit max-w-full truncate font-medium">{shown.author.name}</span>
-                  <a
-                    href={`mailto:${shown.author.email}`}
-                    dir="auto"
-                    className="block w-fit max-w-full truncate text-muted-foreground hover:text-foreground hover:underline"
-                  >
-                    {shown.author.email}
-                  </a>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span dir="auto" className="truncate font-medium">{shown.author.name ?? shown.author.externalId}</span>
+                    {shown.author.verified ? null : (
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                        {t('roadmap.drawer.unverified')}
+                      </span>
+                    )}
+                  </span>
+                  {shown.author.email ? (
+                    <a
+                      href={`mailto:${shown.author.email}`}
+                      dir="auto"
+                      className="block w-fit max-w-full truncate text-muted-foreground hover:text-foreground hover:underline"
+                    >
+                      {shown.author.email}
+                    </a>
+                  ) : null}
+                  {shown.author.verified ? null : (
+                    <p className="mt-1 text-xs text-muted-foreground">{t('roadmap.drawer.unverifiedNote')}</p>
+                  )}
                 </>
               ) : (
                 <span className="text-muted-foreground">{t('roadmap.drawer.addedByTeam')}</span>

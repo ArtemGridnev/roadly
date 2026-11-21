@@ -6,17 +6,46 @@ if (!widgetUrl) {
   )
 }
 
-export function installSnippet(widgetKey: string) {
+function snippet(widgetKey: string, identityLine: string) {
   return `<div id="roadly"></div>
 <script src="${widgetUrl}"></script>
 <script>
   Roadly.init({
     container: '#roadly',
     widgetKey: '${widgetKey}',
-    // Replace with your signed-in user
-    user: { id: currentUser.id, name: currentUser.name, email: currentUser.email },
+    ${identityLine}
+    // 'light', 'dark', or 'auto' to follow your user's system setting
     theme: 'auto',
-    language: 'en', // or 'he'
+    // 'en' or 'he'. Hebrew also lays the widget out right to left
+    language: 'en',
   })
 </script>`
 }
+
+export function installSnippet(widgetKey: string) {
+  return snippet(
+    widgetKey,
+    'user: { id: currentUser.id, name: currentUser.name, email: currentUser.email },',
+  )
+}
+
+export function signedInstallSnippet(widgetKey: string) {
+  return snippet(
+    widgetKey,
+    "getToken: () => fetch('/roadly-token').then((response) => response.text()),",
+  )
+}
+
+export const tokenLibraryInstallCommand = 'npm install jsonwebtoken'
+
+export const tokenRouteSnippet = `import jwt from 'jsonwebtoken'
+
+app.get('/roadly-token', requireSignedIn, (req, res) => {
+  const token = jwt.sign(
+    { user_id: String(req.user.id), name: req.user.name, email: req.user.email },
+    process.env.ROADLY_IDENTITY_SECRET,
+    { algorithm: 'HS256', expiresIn: '1h' },
+  )
+
+  res.type('text/plain').send(token)
+})`

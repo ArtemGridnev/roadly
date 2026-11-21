@@ -237,7 +237,7 @@ test('keeps the table view after leaving the roadmap and coming back', async () 
   await user.click(screen.getByRole('button', { name: 'Table' }))
 
   await router.navigate('/acme/install')
-  await screen.findByRole('heading', { name: 'Snippet' })
+  await screen.findByRole('heading', { name: '1. Connect' })
   await router.navigate('/acme/roadmap')
 
   expect(await screen.findByRole('button', { name: 'Table' })).toHaveAttribute('aria-pressed', 'true')
