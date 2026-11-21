@@ -2,16 +2,7 @@ import { Info } from 'lucide-react'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -70,26 +61,18 @@ export function RequireSignedIdentitySwitch({ required, canRequire }: RequireSig
         </Alert>
       )}
 
-      <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmTarget ? t('install.secure.requireConfirmTitle') : t('install.secure.stopRequireConfirmTitle')}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmTarget
-                ? t('install.secure.requireConfirmDescription')
-                : t('install.secure.stopRequireConfirmDescription')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void update(confirmTarget)}>
-              {confirmTarget ? t('install.secure.requireConfirm') : t('install.secure.stopRequireConfirm')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={isConfirming}
+        onOpenChange={setIsConfirming}
+        title={confirmTarget ? t('install.secure.requireConfirmTitle') : t('install.secure.stopRequireConfirmTitle')}
+        description={
+          confirmTarget
+            ? t('install.secure.requireConfirmDescription')
+            : t('install.secure.stopRequireConfirmDescription')
+        }
+        confirmLabel={confirmTarget ? t('install.secure.requireConfirm') : t('install.secure.stopRequireConfirm')}
+        onConfirm={() => void update(confirmTarget)}
+      />
     </div>
   )
 }
