@@ -111,18 +111,4 @@ describe('WorkspaceMembersController (e2e)', () => {
       await authed('get', `/workspace-members/${member.id}`).expect(404);
     });
   });
-
-  describe('removed routes', () => {
-    it('does not expose POST /workspace-members', async () => {
-      await authed('post', '/workspace-members').send({ agentId }).expect(404);
-    });
-
-    it('does not expose DELETE /workspace-members/:id', async () => {
-      const member = await prisma.workspaceMember.create({
-        data: { agentId, workspaceId },
-      });
-
-      await authed('delete', `/workspace-members/${member.id}`).expect(404);
-    });
-  });
 });

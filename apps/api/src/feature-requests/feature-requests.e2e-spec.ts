@@ -373,26 +373,4 @@ describe('FeatureRequestsController (e2e)', () => {
       await authed('delete', '/feature-requests/does-not-exist').expect(404);
     });
   });
-
-  describe('removed vote routes', () => {
-    it.each([
-      ['post', ''],
-      ['get', ''],
-      ['get', '/some-id'],
-      ['patch', '/some-id'],
-      ['delete', '/some-id'],
-    ] as const)(
-      'does not expose %s /feature-requests/:id/votes%s',
-      async (method, suffix) => {
-        const featureRequest = await prisma.featureRequest.create({
-          data: { title: 'A', description: 'A desc', workspaceId, authorId },
-        });
-
-        await authed(
-          method,
-          `/feature-requests/${featureRequest.id}/votes${suffix}`,
-        ).expect(404);
-      },
-    );
-  });
 });

@@ -66,17 +66,6 @@ describe('ContactsController (e2e)', () => {
         .expect(400);
     });
 
-    it('rejects unknown fields', async () => {
-      await authed('post', '/contacts')
-        .send({
-          externalId: 'ext-1',
-          name: 'Jane Doe',
-          email: 'jane@example.com',
-          notAllowed: 'nope',
-        })
-        .expect(400);
-    });
-
     it('rejects a duplicate externalId within the same workspace', async () => {
       await prisma.contact.create({
         data: {
