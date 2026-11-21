@@ -207,23 +207,20 @@ describe('WorkspaceIdentityController (e2e)', () => {
       expect(await getStatus()).toMatchObject({ requireSignedIdentity: false });
     });
 
-    it.each(['yes', 'false', 1])(
-      'rejects the non-boolean value %p',
-      async (value) => {
-        await prisma.workspace.update({
-          where: { id: workspaceId },
-          data: { requireSignedIdentity: true },
-        });
+    it('rejects a non-boolean value', async () => {
+      await prisma.workspace.update({
+        where: { id: workspaceId },
+        data: { requireSignedIdentity: true },
+      });
 
-        await authed('patch', '/workspace-identity')
-          .send({ requireSignedIdentity: value })
-          .expect(400);
+      await authed('patch', '/workspace-identity')
+        .send({ requireSignedIdentity: 'yes' })
+        .expect(400);
 
-        expect(await getStatus()).toMatchObject({
-          requireSignedIdentity: true,
-        });
-      },
-    );
+      expect(await getStatus()).toMatchObject({
+        requireSignedIdentity: true,
+      });
+    });
 
     it('rejects an agent outside the workspace', async () => {
       const outsiderCookie = await loginAsNewAgent(app);

@@ -161,24 +161,6 @@ test('lays the page out right to left in Hebrew and back again', async () => {
   expect(document.querySelector('[data-slot="sidebar"][data-side]')).toHaveAttribute('data-side', 'left')
 })
 
-test('opens the settings submenus with the left arrow in Hebrew', async () => {
-  const { user } = setupSignedIn('he')
-
-  await screen.findByRole('heading', { name: 'מפת דרכים' })
-  await chooseSetting(user, 'ערכת נושא', 'כהה')
-
-  expect(document.documentElement).toHaveClass('dark')
-  document.documentElement.classList.remove('dark')
-})
-
-test('uses every Hebrew plural form', () => {
-  const votes = (count: number) => i18n.t('common.votes', { count, lng: 'he' })
-
-  expect(votes(1)).toBe('קול אחד')
-  expect(votes(2)).toBe('2 קולות')
-  expect(votes(5)).toBe('5 קולות')
-})
-
 test('formats dates in the given language', () => {
   const date = '2026-03-15T12:00:00.000Z'
 

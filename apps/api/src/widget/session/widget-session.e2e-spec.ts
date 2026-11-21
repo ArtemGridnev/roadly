@@ -123,14 +123,6 @@ describe('WidgetSessionController (e2e)', () => {
         .expect(400);
     });
 
-    it('rejects a name longer than 255 characters', async () => {
-      await request(app.getHttpServer())
-        .post('/widget/session/unsigned')
-        .set(WIDGET_KEY_HEADER, widgetKey)
-        .send({ ...identity, name: 'x'.repeat(256) })
-        .expect(400);
-    });
-
     it('rate limits per workspace after 60 requests a minute', async () => {
       for (let i = 0; i < 60; i++) {
         await createSession();

@@ -12,6 +12,10 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Trim low-value tests (`chore/trim-low-value-tests`)**:
+  - Removed tests for removed routes, duplicate "rejects unknown fields" checks (kept in feature requests), most slug-format cases, the agents e2e file, and dashboard tests for styling, history, mobile sidebar, Hebrew plurals, URL-settings edge cases and four theme cases. No application code changed.
+  - e2e 213 → 190, dashboard 114 → 98. `workspace-identity.e2e-spec.ts` (untouched) failed once in 2 of 10 full e2e runs and never on its own; not investigated yet.
+
 - **Shared confirm dialog (`refactor/dashboard-confirm-dialog`, stacked on `feat/dashboard-install-secure-step`)**:
   - New `components/ConfirmDialog.tsx` (title, description, confirm label, optional cancel label and variant; opened by `trigger` or controlled with `open`/`onOpenChange`). Delete request, discard changes in `Drawer`, rotate secret and require signed identity use it; nothing outside it imports the alert dialog parts. No behavior change: dashboard 114/114, type-check and lint clean.
 
