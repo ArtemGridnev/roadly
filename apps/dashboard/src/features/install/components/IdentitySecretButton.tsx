@@ -2,17 +2,7 @@ import { KeyRound, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -45,24 +35,18 @@ export function IdentitySecretButton({ hasSecret }: IdentitySecretButtonProps) {
   return (
     <>
       {hasSecret ? (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
+        <ConfirmDialog
+          trigger={
             <Button variant="outline" className="self-start" disabled={isLoading}>
               <RefreshCw />
               {t('install.secure.rotate')}
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t('install.secure.rotateConfirmTitle')}</AlertDialogTitle>
-              <AlertDialogDescription>{t('install.secure.rotateConfirmDescription')}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-              <AlertDialogAction onClick={handleRotate}>{t('install.secure.rotateConfirm')}</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          }
+          title={t('install.secure.rotateConfirmTitle')}
+          description={t('install.secure.rotateConfirmDescription')}
+          confirmLabel={t('install.secure.rotateConfirm')}
+          onConfirm={handleRotate}
+        />
       ) : (
         <Button className="self-start" disabled={isLoading} onClick={handleRotate}>
           <KeyRound />

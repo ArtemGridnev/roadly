@@ -12,6 +12,9 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Shared confirm dialog (`refactor/dashboard-confirm-dialog`, stacked on `feat/dashboard-install-secure-step`)**:
+  - New `components/ConfirmDialog.tsx` (title, description, confirm label, optional cancel label and variant; opened by `trigger` or controlled with `open`/`onOpenChange`). Delete request, discard changes in `Drawer`, rotate secret and require signed identity use it; nothing outside it imports the alert dialog parts. No behavior change: dashboard 114/114, type-check and lint clean.
+
 - **Two-step Install page (`feat/dashboard-install-secure-step`)**:
   - Install page is now 1. Connect and 2. Secure, each with sub-step headings and a status tag beside the title from `GET /workspace-identity`, refetched on tab focus (`setupListeners` added to the store; only endpoints that opt in refetch).
   - Secure: a warning alert on the risk; Generate secret shows it once in a dialog, Rotate asks first; a note that any language and JWT library works; the install command, a Node token-route sample and the `getToken` snippet each in their own block; Require signed identity switch, disabled until signed identity has worked (with an info alert saying why), and turning it on or off asks first.

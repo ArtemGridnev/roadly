@@ -19,7 +19,7 @@
 
 - Functional components with hooks only. No class components.
 - Component files: PascalCase (`RequestList.tsx`). Hook files: camelCase prefixed with `use` (`useRequests.ts`).
-- Split components by layer. A UI pattern used across the app (page frame, drawer: layout, scrolling, close/discard behavior) is a generic component in `src/components/` that takes content as `children` and knows nothing about the domain — `PageContent`, `Drawer`. The feature component renders it and supplies only its own content (`RequestDrawer` = `Drawer` + request details). Small domain pieces shown in more than one place get their own component in the feature that owns the data (`StatusPill` in `feature-requests/`) instead of copied markup.
+- Split components by layer. A UI pattern used across the app (page frame, drawer: layout, scrolling, close/discard behavior) is a generic component in `src/components/` that takes content as `children` and knows nothing about the domain — `PageContent`, `Drawer`, `ConfirmDialog` (every "are you sure?" dialog goes through it, opened by its `trigger` or controlled with `open`). The feature component renders it and supplies only its own content (`RequestDrawer` = `Drawer` + request details). Small domain pieces shown in more than one place get their own component in the feature that owns the data (`StatusPill` in `feature-requests/`) instead of copied markup.
 
 ## State Management
 
