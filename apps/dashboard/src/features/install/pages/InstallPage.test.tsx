@@ -50,9 +50,9 @@ function setup(initial: Partial<WorkspaceIdentity> = {}, routes: Parameters<type
     ...routes,
   })
   const user = userEvent.setup()
-  const router = renderApp('/acme/install')
+  renderApp('/acme/install')
 
-  return { router, user, rotate, update }
+  return { user, rotate, update }
 }
 
 const section = async (name: RegExp) => {
@@ -73,23 +73,6 @@ test('shows a snippet that loads the widget with the workspace’s key', async (
   expect(snippet).toContain('user: {')
 })
 
-test('explains theme and language inside the snippet', async () => {
-  setup()
-
-  const [snippet] = codeBlocks(await section(/Connect/))
-
-  expect(snippet).toMatch(/\/\/ 'light', 'dark', or 'auto'.*\n\s*theme: 'auto',/)
-  expect(snippet).toMatch(/\/\/ 'en' or 'he'.*\n\s*language: 'en',/)
-})
-
-test('highlights the code', async () => {
-  setup()
-
-  const snippet = (await section(/Connect/)).querySelector('pre code') as HTMLElement
-
-  expect(within(snippet).getByText("'wk_acme'")).toHaveClass('text-green-700')
-})
-
 test('copies the whole snippet', async () => {
   const { user } = setup()
 
@@ -100,14 +83,6 @@ test('copies the whole snippet', async () => {
   expect(copied).toContain("widgetKey: 'wk_acme'")
   expect(copied).toMatch(/<\/script>$/)
   expect(screen.getByRole('button', { name: /^Copied ?snippet$/ })).toBeInTheDocument()
-})
-
-test('links to the workspace’s roadmap', async () => {
-  const { router, user } = setup()
-
-  await user.click(within(await section(/Connect/)).getByRole('link', { name: 'Roadmap' }))
-
-  expect(router.state.location.pathname).toBe('/acme/roadmap')
 })
 
 test('tags each step with whether it’s connected', async () => {

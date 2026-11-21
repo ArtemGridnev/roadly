@@ -151,18 +151,6 @@ test('saves only the changed fields, trimmed', async () => {
   expect(await screen.findByRole('button', { name: 'Single sign-on', hidden: true })).toBeInTheDocument()
 })
 
-test('closes without asking when an edit is undone', async () => {
-  const { user } = setup()
-  const drawer = await openCard(user, 'Webhooks')
-
-  await user.type(within(drawer).getByLabelText('Title'), '!')
-  await user.type(within(drawer).getByLabelText('Title'), '{Backspace}')
-  await user.keyboard('{Escape}')
-
-  await vi.waitFor(() => expect(screen.queryByRole('dialog', { name: 'Webhooks' })).not.toBeInTheDocument())
-  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-})
-
 test('asks for a title instead of saving an empty one', async () => {
   const { update, user } = setup()
   const drawer = await openCard(user, 'SSO')

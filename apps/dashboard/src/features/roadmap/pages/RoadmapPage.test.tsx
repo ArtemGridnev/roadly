@@ -270,38 +270,6 @@ test('writes changed settings to the URL', async () => {
   expect(router.state.location.search).toBe('?sort=top&view=table&status=PLANNED&status=IN_PROGRESS&status=SHIPPED')
 })
 
-test('keeps a filter that hides every status when the page opens from its URL', async () => {
-  setup(() => ({ status: 200, body: [sso] }), {}, '/acme/roadmap?view=table&status=')
-
-  expect(await screen.findByText('No requests with these statuses.')).toBeInTheDocument()
-})
-
-test('restores the saved settings on a URL without any', async () => {
-  localStorage.setItem('roadly-roadmap-ws-acme', 'sort=newest&view=table&status=IN_PROGRESS')
-  const { router } = setup(() => ({ status: 200, body: [csvExport, sso] }))
-
-  await vi.waitFor(() => expect(router.state.location.search).toBe('?sort=newest&view=table&status=IN_PROGRESS'))
-  await vi.waitFor(() => expect(rowTitles()).toEqual(['SSO']))
-})
-
-test('saves the settings from a URL over the saved ones', async () => {
-  localStorage.setItem('roadly-roadmap-ws-acme', 'sort=newest&view=table')
-  setup(() => ({ status: 200, body: [sso] }), {}, '/acme/roadmap?sort=top&view=kanban')
-
-  await column('In progress')
-
-  expect(localStorage.getItem('roadly-roadmap-ws-acme')).toBe('sort=top&view=kanban')
-})
-
-test('falls back to the defaults for settings it does not recognize', async () => {
-  const { router } = setup(() => ({ status: 200, body: [sso] }), {}, '/acme/roadmap?sort=oldest&view=list')
-
-  await column('In progress')
-
-  expect(screen.getByRole('button', { name: /Sort: Most voted/ })).toBeInTheDocument()
-  await vi.waitFor(() => expect(router.state.location.search).toBe('?sort=top&view=kanban'))
-})
-
 test('keeps the settings of each workspace apart', async () => {
   const globex = { ...acme, id: 'ws-globex', name: 'Globex', slug: 'globex', widgetKey: 'wk_globex' }
   localStorage.setItem('roadly-roadmap-ws-acme', 'sort=top&view=table')

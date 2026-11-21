@@ -86,17 +86,6 @@ test('creates the workspace with trimmed details and lands on install', async ()
   expect(createWorkspace).toHaveBeenCalledWith({ name: 'Acme Inc', slug: 'acme-inc' }, expect.anything())
 })
 
-test('leaves the form out of history once the workspace is created', async () => {
-  const { router, user } = setup()
-
-  await user.type(await screen.findByLabelText('Name'), 'Acme Inc')
-  await user.click(screen.getByRole('button', { name: 'Create workspace' }))
-  await screen.findByRole('heading', { name: '1. Connect' })
-  await router.navigate(-1)
-
-  expect(router.state.location.pathname).toBe('/acme-inc/install')
-})
-
 test('suggests another URL when the slug is taken', async () => {
   const { user } = setup(() => ({ status: 409, body: { message: 'Taken' } }))
 

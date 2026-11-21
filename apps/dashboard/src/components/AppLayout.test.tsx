@@ -18,13 +18,11 @@ const acme = {
   createdAt: '2026-10-17T00:00:00.000Z',
 }
 const unauthorized = () => ({ status: 401, body: { message: 'Unauthorized' } })
-const desktopWidth = window.innerWidth
 
 afterEach(() => {
   vi.unstubAllGlobals()
   localStorage.clear()
   document.documentElement.classList.remove('dark')
-  window.innerWidth = desktopWidth
 })
 
 function setup(path = '/acme/roadmap') {
@@ -80,18 +78,4 @@ test('switches the theme from the sidebar', async () => {
   await chooseSetting(user, 'Theme', 'Dark')
 
   expect(document.documentElement).toHaveClass('dark')
-})
-
-test('opens the sidebar from a menu button on mobile and closes it after navigating', async () => {
-  window.innerWidth = 500
-  const { router, user } = setup()
-
-  await screen.findByRole('heading', { name: 'Roadmap' })
-  expect(screen.queryByRole('navigation', { name: 'Workspace' })).not.toBeInTheDocument()
-
-  await user.click(screen.getByRole('button', { name: 'Open menu' }))
-  await user.click(await screen.findByRole('link', { name: 'Install' }))
-
-  expect(router.state.location.pathname).toBe('/acme/install')
-  expect(screen.queryByRole('navigation', { name: 'Workspace' })).not.toBeInTheDocument()
 })

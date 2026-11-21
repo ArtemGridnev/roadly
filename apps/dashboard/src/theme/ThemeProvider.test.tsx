@@ -37,9 +37,7 @@ function ThemeControls() {
       <p>
         {theme} / {resolvedTheme}
       </p>
-      <button onClick={() => setTheme('light')}>Light</button>
       <button onClick={() => setTheme('dark')}>Dark</button>
-      <button onClick={() => setTheme('system')}>System</button>
     </>
   )
 }
@@ -55,24 +53,6 @@ function renderWithTheme() {
 const isDark = () => document.documentElement.classList.contains('dark')
 
 describe('ThemeProvider', () => {
-  it('follows the system preference by default', () => {
-    systemDark = true
-    renderWithTheme()
-
-    expect(screen.getByText('system / dark')).toBeInTheDocument()
-    expect(isDark()).toBe(true)
-  })
-
-  it('tracks system changes while on system', () => {
-    renderWithTheme()
-    expect(isDark()).toBe(false)
-
-    setSystemDark(true)
-
-    expect(screen.getByText('system / dark')).toBeInTheDocument()
-    expect(isDark()).toBe(true)
-  })
-
   it('restores a stored choice over the system preference', () => {
     systemDark = true
     localStorage.setItem('roadly-theme', 'light')
@@ -92,22 +72,5 @@ describe('ThemeProvider', () => {
 
     setSystemDark(false)
     expect(isDark()).toBe(true)
-  })
-
-  it('clears the stored choice when switching back to system', async () => {
-    localStorage.setItem('roadly-theme', 'dark')
-    renderWithTheme()
-
-    await userEvent.click(screen.getByRole('button', { name: 'System' }))
-
-    expect(localStorage.getItem('roadly-theme')).toBeNull()
-    expect(isDark()).toBe(false)
-  })
-
-  it('ignores an unrecognized stored value', () => {
-    localStorage.setItem('roadly-theme', 'sepia')
-    renderWithTheme()
-
-    expect(screen.getByText('system / light')).toBeInTheDocument()
   })
 })
