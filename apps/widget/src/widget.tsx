@@ -2,11 +2,14 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { languageSchema, type RoadlyInitOptions } from '@roadly/shared'
+import { createSessionClient, type SessionIdentity } from './api/session'
 import { WidgetRoot } from './app/WidgetRoot'
 import { LanguageContext } from './i18n/use-language'
 import { WidgetSessionProvider } from './session/widget-session'
 import { mountShadowRoot } from './shadow/mount'
 import cssText from './index.css?inline'
+
+let unmountWidget: (() => void) | null = null
 
 function resolveContainer(container: RoadlyInitOptions['container']): HTMLElement | null {
   return typeof container === 'string'
@@ -14,13 +17,27 @@ function resolveContainer(container: RoadlyInitOptions['container']): HTMLElemen
     : container
 }
 
-function isValidOptions(options: RoadlyInitOptions): boolean {
-  return Boolean(options?.widgetKey && options.user?.id && options.user.name && options.user.email)
+function resolveIdentity({ getToken, user }: RoadlyInitOptions): SessionIdentity | null {
+  if (typeof getToken === 'function') {
+    return { kind: 'signed', getToken }
+  }
+
+  if (user?.id && user.name && user.email) {
+    return { kind: 'unsigned', contact: { externalId: user.id, name: user.name, email: user.email } }
+  }
+
+  return null
 }
 
 function init(options: RoadlyInitOptions) {
-  if (!isValidOptions(options)) {
-    console.error('[Roadly] init requires widgetKey and user { id, name, email }')
+  if (unmountWidget) {
+    console.error('[Roadly] init was already called; call Roadly.shutdown() first')
+    return
+  }
+
+  const identity = options?.widgetKey ? resolveIdentity(options) : null
+  if (!identity) {
+    console.error('[Roadly] init requires widgetKey and either getToken or user { id, name, email }')
     return
   }
 
@@ -31,27 +48,36 @@ function init(options: RoadlyInitOptions) {
   }
 
   const mount = mountShadowRoot(container, cssText)
-  if (!mount) {
-    return
-  }
-
+  const root = createRoot(mount.mountPoint)
   const queryClient = new QueryClient()
+  const session = createSessionClient(options.widgetKey, identity)
   const language = languageSchema.safeParse(options.language).data ?? 'en'
 
-  createRoot(mount.mountPoint).render(
+  root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <LanguageContext.Provider value={language}>
-          <WidgetSessionProvider widgetKey={options.widgetKey} user={options.user}>
+          <WidgetSessionProvider widgetKey={options.widgetKey} session={session}>
             <WidgetRoot theme={options.theme ?? 'auto'} />
           </WidgetSessionProvider>
         </LanguageContext.Provider>
       </QueryClientProvider>
     </StrictMode>,
   )
+
+  unmountWidget = () => {
+    root.unmount()
+    queryClient.clear()
+    mount.shadowRoot.replaceChildren()
+  }
 }
 
-const Roadly = { init }
+function shutdown() {
+  unmountWidget?.()
+  unmountWidget = null
+}
+
+const Roadly = { init, shutdown }
 
 declare global {
   interface Window {

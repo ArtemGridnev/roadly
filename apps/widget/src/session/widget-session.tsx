@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { RoadlyInitOptions } from '@roadly/shared'
-import { createSessionClient, useIdentify, type SessionClient } from '../api/session'
+import type { SessionClient } from '../api/session'
 
 interface WidgetSessionValue {
   widgetKey: RoadlyInitOptions['widgetKey']
@@ -14,27 +14,30 @@ const WidgetSessionContext = createContext<WidgetSessionValue | null>(null)
 
 interface WidgetSessionProviderProps {
   widgetKey: RoadlyInitOptions['widgetKey']
-  user: RoadlyInitOptions['user']
+  session: SessionClient
   children: ReactNode
 }
 
-export function WidgetSessionProvider({ widgetKey, user, children }: WidgetSessionProviderProps) {
+export function WidgetSessionProvider({ widgetKey, session, children }: WidgetSessionProviderProps) {
   const [contactId, setContactId] = useState<string>()
-  const session = useMemo(
-    () =>
-      createSessionClient(widgetKey, {
-        externalId: user.id,
-        name: user.name,
-        email: user.email,
-      }),
-    [widgetKey, user.id, user.name, user.email],
-  )
-  const identify = useIdentify()
-  const { mutate } = identify
+  const [identifyError, setIdentifyError] = useState<unknown>(null)
 
   useEffect(() => {
-    mutate(session, { onSuccess: ({ contactId }) => setContactId(contactId) })
-  }, [mutate, session])
+    let isCurrent = true
+
+    session.refresh().then(
+      ({ contactId }) => {
+        if (isCurrent) setContactId(contactId)
+      },
+      (error: unknown) => {
+        if (isCurrent) setIdentifyError(error)
+      },
+    )
+
+    return () => {
+      isCurrent = false
+    }
+  }, [session])
 
   return (
     <WidgetSessionContext.Provider
@@ -42,8 +45,8 @@ export function WidgetSessionProvider({ widgetKey, user, children }: WidgetSessi
         widgetKey,
         session,
         contactId,
-        isIdentifying: identify.isPending,
-        identifyError: identify.error,
+        isIdentifying: !contactId && !identifyError,
+        identifyError,
       }}
     >
       {children}

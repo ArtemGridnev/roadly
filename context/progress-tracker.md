@@ -8,9 +8,15 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Widget identity in five PRs (`docs/adr/0004-widget-identity.md`): 1 rate limits (done), 2 session token (done), 3 signed identity API (done), 4 signed identity in the widget, 5 two-step Install page.
+- Widget identity in five PRs (`docs/adr/0004-widget-identity.md`): 1 rate limits (done), 2 session token (done), 3 signed identity API (done), 4 signed identity in the widget (done), 5 two-step Install page.
 
 ## Completed
+
+- **Signed identity in the widget (`feat/widget-signed-identity`)**:
+  - `RoadlyInitOptions` gains `getToken?: () => Promise<string>`, and `user` becomes optional; `init` needs one of them. `getToken` wins when both are given, so the Secure step is only "add `getToken`". The session client takes a signed or unsigned identity; a signed refresh calls `getToken` and then `/signed`, sharing one call across concurrent requests. No fallback to unsigned and no read-only mode: a failed sign-in shows the existing errors. The provider runs the first sign-in in a plain effect with `useState`; `useIdentify` (a mutation used only as a state holder) is gone.
+  - `Roadly.shutdown()` unmounts, clears the query cache and empties the shadow root; `init` then works again in the same container. A second `init` without `shutdown` logs an error.
+  - Dev harness takes `?token=` (and `?widgetKey=`) to sign in with a host JWT.
+  - The widget has no test stack. Checked with throwaway scripts against a running API: the real session client (getToken on 401, one shared getToken call, sync and async throws, wrong secret 401, unsigned 403 under enforcement, signed request shows `verified`), and headless Chromium over CDP for init, shutdown, re-init, `getToken` winning over `user`, and the error state. Type-check, lint and build clean.
 
 - **Signed identity API (`feat/api-signed-identity`)**:
   - `POST /widget/session/signed` takes a host JWT (HS256 only, `user_id` and `exp` required, valid for at most 1h, `name`/`email` optional) and returns a verified session. Missing claims never overwrite stored values. `Contact` gains `emailVerifiedAt`, and `name`/`email` become nullable. There's no per-Contact verified flag; `Workspace.signedIdentityConnectedAt` records that a token signed with the current secret has worked, and rotation clears it.

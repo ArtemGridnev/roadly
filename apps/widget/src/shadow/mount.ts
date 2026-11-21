@@ -5,21 +5,16 @@ export interface ShadowMount {
   readonly mountPoint: HTMLElement
 }
 
-export function mountShadowRoot(container: HTMLElement, css: string): ShadowMount | null {
-  if (container.shadowRoot) {
-    return null
-  }
-
+export function mountShadowRoot(container: HTMLElement, css: string): ShadowMount {
   installDocumentStyles(css)
 
-  const shadowRoot = container.attachShadow({ mode: 'open' })
+  const shadowRoot = container.shadowRoot ?? container.attachShadow({ mode: 'open' })
 
   const style = document.createElement('style')
   style.textContent = css
-  shadowRoot.appendChild(style)
 
   const mountPoint = document.createElement('div')
-  shadowRoot.appendChild(mountPoint)
+  shadowRoot.replaceChildren(style, mountPoint)
 
   return { shadowRoot, mountPoint }
 }
