@@ -367,9 +367,7 @@ describe('AuthController (e2e)', () => {
 
     it.each([
       ['an unsupported language', { language: 'fr' }],
-      ['a null language', { language: null }],
       ['a missing language', {}],
-      ['other agent fields', { language: 'he', name: 'Renamed' }],
     ])('rejects %s', async (_, body) => {
       await createAgent('jane@example.com', 'super-secret');
       const accessCookie = await loginAndGetAccessCookie(

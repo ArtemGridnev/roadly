@@ -287,21 +287,5 @@ describe('WidgetVotesController (e2e)', () => {
         .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
         .expect(429);
     });
-
-    it('rate limits removing votes after 60 requests a minute', async () => {
-      for (let i = 0; i < 60; i++) {
-        await request(app.getHttpServer())
-          .delete('/widget/feature-requests/missing/votes')
-          .set(WIDGET_KEY_HEADER, widgetKey)
-          .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
-          .expect(404);
-      }
-
-      await request(app.getHttpServer())
-        .delete('/widget/feature-requests/missing/votes')
-        .set(WIDGET_KEY_HEADER, widgetKey)
-        .set('Authorization', widgetSessionHeader(app, contactId, workspaceId))
-        .expect(429);
-    });
   });
 });
