@@ -45,18 +45,26 @@
         follow this page.
       </p>
       <p>Add <code>?language=he</code> to the URL to see the widget in Hebrew.</p>
+      <p>
+        Add <code>?token=&lt;jwt&gt;</code> to sign in with a token signed by the Workspace's
+        identity secret instead of the unsigned <code>user</code>.
+      </p>
     </main>
 
     <div id="widget-container"></div>
 
     <script type="module" src="/src/widget.tsx"></script>
     <script type="module">
+      const params = new URLSearchParams(location.search)
+      const token = params.get('token')
+
       window.Roadly.init({
         container: document.getElementById('widget-container'),
-        widgetKey: 'dev-widget-key',
+        widgetKey: params.get('widgetKey') ?? 'dev-widget-key',
         user: { id: 'dev-user-1', name: 'Dev User', email: 'dev@example.com' },
+        getToken: token ? async () => token : undefined,
         theme: 'auto',
-        language: new URLSearchParams(location.search).get('language'),
+        language: params.get('language'),
       })
     </script>
   </body>
