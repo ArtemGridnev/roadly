@@ -109,7 +109,7 @@ Four access modes, all resolved via guards on `apps/api/src/auth/guards/`, never
 - **Enforcement:** with `requireSignedIdentity` on, the unsigned route returns 403 and the guard rejects any session token without `verified`, so unsigned sessions end on their next request. Reads that need no Contact still work. It can't be turned on until `signedIdentityConnectedAt` is set (409); rotating the secret clears it, so the new secret must work once first. Until it's on, any `externalId` still works on the unsigned route, including one that has signed in before. Admin feature-request authors carry `externalId` and `verified`. `verified` is `FeatureRequest.authorVerified`, set at creation from the session token, so it says whether this request was sent signed, not whether the Contact was ever verified.
 - **Rate limits:** widget write routes use `WidgetThrottlerGuard`, tracking by IP + resolved Workspace. Per minute: `POST /widget/session/unsigned` and `/signed` 60 each, `POST /widget/feature-requests` 10, each of `POST` and `DELETE` votes 60. Counters are in memory, so limits are per API instance.
 - **Widget side:** `Roadly.init` takes `getToken`, an async function returning a host JWT. When it's given, the widget always uses `/signed` and ignores `user`, and every refresh (on a 401) calls `getToken` again. If it throws or the token is rejected, the widget shows its usual errors and never falls back to `/unsigned`.
-- **Not built yet:** the Install page's Secure step (PR 5). See `docs/adr/0004-widget-identity.md`.
+- **Dashboard:** the Install page's Secure step manages the secret and the requirement, and the request drawer labels requests sent without a signed session "Unverified" (see `dashboard-pages.md`).
 
 ### Admin dashboard auth (Agent)
 

@@ -115,16 +115,68 @@ export const he: Translations<typeof en> = {
   install: {
     title: 'התקנה',
     intro: 'הוסיפו את הווידג׳ט לאפליקציה שלכם כדי שהמשתמשים יוכלו לבקש פיצ׳רים ולהצביע עליהם.',
-    snippet: 'קטע קוד',
     snippetCopyLabel: 'של קטע הקוד',
     copy: 'העתקה',
     copied: 'הועתק',
     copyFailed: 'ההעתקה נכשלה — סמנו את הטקסט ידנית',
-    step1: 'הדביקו את קטע הקוד באפליקציה שלכם, במקום שבו הווידג׳ט צריך להיטען.',
-    step2:
-      'החליפו את <code>currentUser</code> במשתמש המחובר שלכם. הבקשות וההצבעות שלו נשמרות לפי המזהה הזה.',
-    step3: 'פתחו את <a>מפת הדרכים</a> כדי לראות את הבקשות שמגיעות.',
     keyNote: 'מפתח הווידג׳ט שבקטע הקוד הוא ציבורי, ולכן בטוח להשתמש בו בצד הלקוח.',
+    connect: {
+      title: '1. חיבור',
+      waiting: 'ממתינים למשתמש הראשון',
+      connected: 'מחובר',
+      snippetTitle: 'הוספת קטע הקוד',
+      snippetStep:
+        'הדביקו אותו באפליקציה שלכם, במקום שבו הווידג׳ט צריך להיטען, והחליפו את <code>currentUser</code> במשתמש המחובר שלכם. הבקשות וההצבעות שלו נשמרות לפי המזהה הזה.',
+      checkTitle: 'בדיקה שזה עובד',
+      checkStep:
+        'פתחו את הווידג׳ט באפליקציה שלכם פעם אחת, והשלב הזה יסומן כמחובר. הבקשות שהמשתמשים שולחים יופיעו ב<a>מפת הדרכים</a>.',
+    },
+    secure: {
+      title: '2. אבטחה',
+      waiting: 'עדיין לא נחתם',
+      connected: 'זהות חתומה פועלת',
+      intro:
+        'בלי זה, כל מי שיודע מזהה של משתמש יכול לשלוח בקשות ולהצביע בשמו, והבקשות שלו מסומנות כלא מאומתות. חתמו כל משתמש בשרת שלכם כדי שהווידג׳ט יוכל להוכיח מי הוא.',
+      secretTitle: 'סוד זהות',
+      secretNote:
+        'שמרו אותו בשרת שלכם, למשל בתור <code>ROADLY_IDENTITY_SECRET</code>. לעולם אל תכניסו אותו לצד הלקוח.',
+      generate: 'יצירת סוד',
+      rotate: 'החלפת סוד',
+      secretFailed: 'הסוד לא נוצר. בדקו את החיבור ונסו שוב.',
+      secretDialogTitle: 'סוד הזהות שלכם',
+      secretDialogDescription: 'העתיקו אותו עכשיו. לא תוכלו לראות אותו שוב.',
+      secretCopyLabel: 'של סוד הזהות',
+      done: 'סיום',
+      rotateConfirmTitle: 'להחליף את הסוד?',
+      rotateConfirmDescription:
+        'הסוד הישן ימשיך לעבוד 24 שעות. זהות חתומה צריכה לעבוד עם הסוד החדש לפני שאפשר יהיה לחייב אותה שוב.',
+      rotateConfirm: 'החלפה',
+      serverTitle: 'בשרת שלכם',
+      serverIntro:
+        'הדוגמה משתמשת ב-Node וב-<code>jsonwebtoken</code>, אבל כל שפה וכל ספריית JWT יעבדו, כל עוד הן חותמות ב-HS256 וכוללות <code>user_id</code> ו-<code>exp</code>.',
+      installStep: 'התקינו ספריית JWT:',
+      installCopyLabel: 'של פקודת ההתקנה',
+      serverStep:
+        'הוסיפו נתיב מאחורי ההתחברות שלכם, כך שרק המשתמש המחובר יקבל את הטוקן שלו. הנתיב חותם את המשתמש עם הסוד מ-<code>ROADLY_IDENTITY_SECRET</code>, וטוקן יכול להיות תקף עד שעה.',
+      serverCopyLabel: 'של קוד השרת',
+      clientTitle: 'באפליקציה שלכם',
+      clientStep: 'החליפו את <code>user</code> ב-<code>getToken</code> בקטע הקוד. הוא מבקש מהנתיב שלכם טוקן חתום.',
+      clientCopyLabel: 'של קטע הקוד החתום',
+      enforceTitle: 'אכיפה',
+      requireLabel: 'חיוב זהות חתומה',
+      requireHint: 'משתמשים בלי טוקן חתום עדיין יכולים לקרוא בקשות, אבל לא לשלוח או להצביע.',
+      requireDisabledHint: 'זמין אחרי שמשתמש פתח את הווידג׳ט עם טוקן שנחתם בסוד הנוכחי.',
+      requireConfirmTitle: 'לחייב זהות חתומה?',
+      requireConfirmDescription:
+        'משתמשים בלי טוקן חתום ינותקו בפעולה הבאה שלהם. הם עדיין יוכלו לקרוא בקשות, אבל לא לשלוח או להצביע.',
+      requireConfirm: 'חיוב',
+      stopRequireConfirmTitle: 'להפסיק לחייב זהות חתומה?',
+      stopRequireConfirmDescription:
+        'כל מי שיודע את המזהה של משתמש יוכל שוב לשלוח בקשות ולהצביע בשמו, והבקשות שלו יוצגו כלא מאומתות.',
+      stopRequireConfirm: 'הפסקת החיוב',
+      requireFailed: 'ההגדרה לא נשמרה. בדקו את החיבור ונסו שוב.',
+      requireNotConnected: 'זהות חתומה צריכה קודם לעבוד עם הסוד הנוכחי.',
+    },
   },
   roadmap: {
     title: 'מפת דרכים',
@@ -171,6 +223,8 @@ export const he: Translations<typeof en> = {
       votes: 'קולות',
       author: 'מגיש/ה',
       addedByTeam: 'נוספה על ידי הצוות שלכם',
+      unverified: 'לא מאומת',
+      unverifiedNote: 'נשלחה בלי זהות חתומה, ולכן השם והאימייל לא אומתו.',
       status: 'סטטוס',
     },
     form: {

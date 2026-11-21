@@ -23,9 +23,15 @@ const sso = {
   status: 'PLANNED',
   workspaceId: acme.id,
   authorId: 'c1',
-  author: { name: 'Jane Doe', email: 'jane@example.com' },
+  author: { externalId: 'jane-1', name: 'Jane Doe', email: 'jane@example.com', verified: true },
   voteCount: 4,
   createdAt: '2026-10-05T00:00:00.000Z',
+}
+const darkMode = {
+  ...sso,
+  id: 'r3',
+  title: 'Dark mode',
+  author: { externalId: 'user-42', name: null, email: null, verified: false },
 }
 const webhooks = {
   ...sso,
@@ -42,7 +48,7 @@ afterEach(() => {
 })
 
 function setup(routes: Parameters<typeof mockApi>[0] = {}) {
-  let list = [sso, webhooks]
+  let list = [sso, darkMode, webhooks]
   const update = vi.fn((body: unknown, url: URL) => {
     const id = url.pathname.split('/').pop()
     list = list.map((request) => (request.id === id ? { ...request, ...(body as object) } : request))
@@ -88,6 +94,17 @@ test('opens a card with its votes, author and fields', async () => {
   expect(within(drawer).getByRole('link', { name: 'jane@example.com' })).toHaveAttribute('href', 'mailto:jane@example.com')
   expect(within(drawer).getByLabelText('Title')).toHaveValue('SSO')
   expect(within(drawer).getByRole('button', { name: 'Save changes' })).toBeDisabled()
+  expect(within(drawer).queryByText('Unverified')).not.toBeInTheDocument()
+})
+
+test('marks an author sent without signed identity as unverified', async () => {
+  const { user } = setup()
+
+  const drawer = await openCard(user, 'Dark mode')
+
+  expect(within(drawer).getByText('Unverified')).toBeInTheDocument()
+  expect(within(drawer).getByText('user-42')).toBeInTheDocument()
+  expect(within(drawer).queryByRole('link')).not.toBeInTheDocument()
 })
 
 test('says a request without an author was added by the team', async () => {

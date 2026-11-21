@@ -8,9 +8,16 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Widget identity in five PRs (`docs/adr/0004-widget-identity.md`): 1 rate limits (done), 2 session token (done), 3 signed identity API (done), 4 signed identity in the widget (done), 5 two-step Install page.
+- Widget identity in five PRs (`docs/adr/0004-widget-identity.md`): 1 rate limits (done), 2 session token (done), 3 signed identity API (done), 4 signed identity in the widget (done), 5 two-step Install page (done).
 
 ## Completed
+
+- **Two-step Install page (`feat/dashboard-install-secure-step`)**:
+  - Install page is now 1. Connect and 2. Secure, each with sub-step headings and a status tag beside the title from `GET /workspace-identity`, refetched on tab focus (`setupListeners` added to the store; only endpoints that opt in refetch).
+  - Secure: a warning alert on the risk; Generate secret shows it once in a dialog, Rotate asks first; a note that any language and JWT library works; the install command, a Node token-route sample and the `getToken` snippet each in their own block; Require signed identity switch, disabled until signed identity has worked (with an info alert saying why), and turning it on or off asks first.
+  - New `CodeBlock`: Copy inside the block, syntax highlighting via `prism-react-renderer` (added) mapped to Tailwind classes for light and dark. shadcn `Switch` and `Alert` (with a `warning` variant) added. The snippet comments explain `theme` and `language` values.
+  - Request drawer: "Unverified" badge and note for requests sent without a signed session; falls back to `externalId` without a name and drops the `mailto:` without an email (fixes `mailto:null`).
+  - Dashboard 114/114 (14 Install tests, 1 new drawer test; five tests that waited for the old "Snippet" heading now wait for "1. Connect"). Removing the switch's disabled state, either confirmation, the verified check, or the empty-line fix in highlighting each fails a test. Browser-checked in headless Chromium against a real API: fresh state, secret dialog, signed and unsigned sessions flipping both tags, enforcing (unsigned route then 403), the drawer label, dark mode, Hebrew RTL on a phone. Type-check clean, lint shows only existing warnings.
 
 - **Signed identity in the widget (`feat/widget-signed-identity`)**:
   - `RoadlyInitOptions` gains `getToken?: () => Promise<string>`, and `user` becomes optional; `init` needs one of them. `getToken` wins when both are given, so the Secure step is only "add `getToken`". The session client takes a signed or unsigned identity; a signed refresh calls `getToken` and then `/signed`, sharing one call across concurrent requests. No fallback to unsigned and no read-only mode: a failed sign-in shows the existing errors. The provider runs the first sign-in in a plain effect with `useState`; `useIdentify` (a mutation used only as a state holder) is gone.

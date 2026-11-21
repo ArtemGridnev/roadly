@@ -23,6 +23,7 @@
     "clsx": "^2.1.1",
     "i18next": "^26.7.2",
     "lucide-react": "^1.48.0",
+    "prism-react-renderer": "^2.4.1",
     "radix-ui": "^1.7.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
