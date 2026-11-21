@@ -16,13 +16,17 @@ export class FeatureRequestsService {
   async create(
     workspaceId: string,
     createFeatureRequestDto: CreateFeatureRequestDto,
-    { authorId }: { authorId?: string } = {},
+    {
+      authorId,
+      authorVerified,
+    }: { authorId?: string; authorVerified?: boolean } = {},
   ): Promise<FeatureRequestResponseDto> {
     const featureRequest = await this.prisma.featureRequest.create({
       data: {
         ...createFeatureRequestDto,
         workspaceId,
         authorId,
+        authorVerified,
         votes: authorId ? { create: { contactId: authorId } } : undefined,
       },
       include: featureRequestVoteCountSelect,

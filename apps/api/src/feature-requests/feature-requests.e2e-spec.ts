@@ -155,13 +155,33 @@ describe('FeatureRequestsController (e2e)', () => {
       expect(body).toHaveLength(2);
     });
 
-    it("includes the author's name and email, or null for agent-created requests", async () => {
+    it('includes the author and whether the request was signed, or null for agent-created requests', async () => {
+      const signer = await prisma.contact.create({
+        data: { workspaceId, externalId: 'ext-2' },
+      });
       await prisma.featureRequest.create({
         data: {
           title: 'From user',
           description: 'desc',
           workspaceId,
           authorId,
+        },
+      });
+      await prisma.featureRequest.create({
+        data: {
+          title: 'Signed',
+          description: 'desc',
+          workspaceId,
+          authorId: signer.id,
+          authorVerified: true,
+        },
+      });
+      await prisma.featureRequest.create({
+        data: {
+          title: 'Unsigned by the same contact',
+          description: 'desc',
+          workspaceId,
+          authorId: signer.id,
         },
       });
       await prisma.featureRequest.create({
@@ -177,7 +197,24 @@ describe('FeatureRequestsController (e2e)', () => {
         ]),
       );
       expect(authorByTitle).toEqual({
-        'From user': { name: 'Jane Doe', email: 'jane@example.com' },
+        'From user': {
+          externalId: 'ext-1',
+          name: 'Jane Doe',
+          email: 'jane@example.com',
+          verified: false,
+        },
+        Signed: {
+          externalId: 'ext-2',
+          name: null,
+          email: null,
+          verified: true,
+        },
+        'Unsigned by the same contact': {
+          externalId: 'ext-2',
+          name: null,
+          email: null,
+          verified: false,
+        },
         'From agent': null,
       });
     });
@@ -229,8 +266,10 @@ describe('FeatureRequestsController (e2e)', () => {
 
       expect(body.id).toBe(featureRequest.id);
       expect(body.author).toEqual({
+        externalId: 'ext-1',
         name: 'Jane Doe',
         email: 'jane@example.com',
+        verified: false,
       });
     });
 
@@ -342,12 +381,18 @@ describe('FeatureRequestsController (e2e)', () => {
       ['get', '/some-id'],
       ['patch', '/some-id'],
       ['delete', '/some-id'],
-    ] as const)('does not expose %s /feature-requests/:id/votes%s', async (method, suffix) => {
-      const featureRequest = await prisma.featureRequest.create({
-        data: { title: 'A', description: 'A desc', workspaceId, authorId },
-      });
+    ] as const)(
+      'does not expose %s /feature-requests/:id/votes%s',
+      async (method, suffix) => {
+        const featureRequest = await prisma.featureRequest.create({
+          data: { title: 'A', description: 'A desc', workspaceId, authorId },
+        });
 
-      await authed(method, `/feature-requests/${featureRequest.id}/votes${suffix}`).expect(404);
-    });
+        await authed(
+          method,
+          `/feature-requests/${featureRequest.id}/votes${suffix}`,
+        ).expect(404);
+      },
+    );
   });
 });

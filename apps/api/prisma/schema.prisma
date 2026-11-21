@@ -25,6 +25,12 @@ model Workspace {
   widgetKey String   @unique @default(cuid())
   createdAt DateTime @default(now())
 
+  requireSignedIdentity           Boolean   @default(false)
+  identitySecret                  String?
+  previousIdentitySecret          String?
+  previousIdentitySecretExpiresAt DateTime?
+  signedIdentityConnectedAt       DateTime?
+
   members         WorkspaceMember[]
   contacts        Contact[]
   featureRequests FeatureRequest[]
@@ -56,11 +62,12 @@ model Agent {
 }
 
 model Contact {
-  id         String   @id @default(cuid())
-  externalId String
-  name       String
-  email      String
-  createdAt  DateTime @default(now())
+  id              String    @id @default(cuid())
+  externalId      String
+  name            String?
+  email           String?
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
 
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
@@ -81,8 +88,9 @@ model FeatureRequest {
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  authorId String?
-  author   Contact? @relation(fields: [authorId], references: [id])
+  authorId       String?
+  author         Contact? @relation(fields: [authorId], references: [id])
+  authorVerified Boolean  @default(false)
 
   votes Vote[]
 

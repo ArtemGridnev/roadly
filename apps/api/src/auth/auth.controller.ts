@@ -1,10 +1,27 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, Request, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  Request,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { AgentLoginDto } from './dto/agent-login.dto';
 import type { Response } from 'express';
-import { clearAccessCookie, clearRefreshCookie, REFRESH_COOKIE_NAME, setAccessCookie, setRefreshCookie } from './utils/authCookie';
+import {
+  clearAccessCookie,
+  clearRefreshCookie,
+  REFRESH_COOKIE_NAME,
+  setAccessCookie,
+  setRefreshCookie,
+} from './utils/authCookie';
 import { AgentLoginResponseDto } from './dto/agent-login-response.dto';
 import { TokenRefreshResponseDto } from './dto/token-refresh-response.dto';
 import { RefreshTokenAuthGuard } from './guards/refresh-token-auth.guard';
@@ -18,67 +35,93 @@ import { LoginThrottlerGuard } from './guards/login-throttler.guard';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-    @Public()
-    @UseGuards(LoginThrottlerGuard, LocalAuthGuard)
-    @Post('login')
-    async login(@Res({ passthrough: true }) res: Response, @Request() req, @Body() _loginDto: AgentLoginDto): Promise<AgentLoginResponseDto> {
-        const { accessToken, refreshToken, agent } = await this.authService.login(req.user);
+  @Public()
+  @UseGuards(LoginThrottlerGuard, LocalAuthGuard)
+  @Post('login')
+  async login(
+    @Res({ passthrough: true }) res: Response,
+    @Request() req,
+    @Body() _loginDto: AgentLoginDto,
+  ): Promise<AgentLoginResponseDto> {
+    const { accessToken, refreshToken, agent } = await this.authService.login(
+      req.user,
+    );
 
-        setAccessCookie(res, accessToken);
-        setRefreshCookie(res, refreshToken);
+    setAccessCookie(res, accessToken);
+    setRefreshCookie(res, refreshToken);
 
-        return new AgentLoginResponseDto("Login successfully", agent);
+    return new AgentLoginResponseDto('Login successfully', agent);
+  }
+
+  @Public()
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { ttl: 3_600_000, limit: 10 } })
+  @Post('signup')
+  async signup(
+    @Res({ passthrough: true }) res: Response,
+    @Body() createAgentDto: CreateAgentDto,
+  ): Promise<AgentLoginResponseDto> {
+    const { accessToken, refreshToken, agent } =
+      await this.authService.signup(createAgentDto);
+
+    setAccessCookie(res, accessToken);
+    setRefreshCookie(res, refreshToken);
+
+    return new AgentLoginResponseDto('Signup successfully', agent);
+  }
+
+  @Get('me')
+  me(@CurrentAgent() agent: AccessTokenPayload): Promise<AgentResponseDto> {
+    return this.authService.getCurrentAgent(agent.sub);
+  }
+
+  @Patch('me')
+  updateMe(
+    @CurrentAgent() agent: AccessTokenPayload,
+    @Body() updateCurrentAgentDto: UpdateCurrentAgentDto,
+  ): Promise<AgentResponseDto> {
+    return this.authService.updateCurrentAgent(
+      agent.sub,
+      updateCurrentAgentDto,
+    );
+  }
+
+  @Public()
+  @UseGuards(RefreshTokenAuthGuard)
+  @Post('refresh')
+  async refresh(
+    @Res({ passthrough: true }) res: Response,
+    @Request() req,
+  ): Promise<TokenRefreshResponseDto> {
+    const refreshToken = req.cookies[REFRESH_COOKIE_NAME];
+    const {
+      accessToken,
+      refreshToken: newRefreshToken,
+      agent,
+    } = await this.authService.rotateRefreshToken(refreshToken);
+
+    setAccessCookie(res, accessToken);
+    setRefreshCookie(res, newRefreshToken);
+
+    return new TokenRefreshResponseDto('Token refresh successfully', agent);
+  }
+
+  @Public()
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(
+    @Res({ passthrough: true }) res: Response,
+    @Request() req,
+  ): Promise<void> {
+    const refreshToken: string | undefined = req.cookies?.[REFRESH_COOKIE_NAME];
+
+    if (refreshToken) {
+      await this.authService.logout(refreshToken);
     }
 
-    @Public()
-    @UseGuards(ThrottlerGuard)
-    @Throttle({ default: { ttl: 3_600_000, limit: 10 } })
-    @Post('signup')
-    async signup(@Res({ passthrough: true }) res: Response, @Body() createAgentDto: CreateAgentDto): Promise<AgentLoginResponseDto> {
-        const { accessToken, refreshToken, agent } = await this.authService.signup(createAgentDto);
-
-        setAccessCookie(res, accessToken);
-        setRefreshCookie(res, refreshToken);
-
-        return new AgentLoginResponseDto("Signup successfully", agent);
-    }
-
-    @Get('me')
-    me(@CurrentAgent() agent: AccessTokenPayload): Promise<AgentResponseDto> {
-        return this.authService.getCurrentAgent(agent.sub);
-    }
-
-    @Patch('me')
-    updateMe(@CurrentAgent() agent: AccessTokenPayload, @Body() updateCurrentAgentDto: UpdateCurrentAgentDto): Promise<AgentResponseDto> {
-        return this.authService.updateCurrentAgent(agent.sub, updateCurrentAgentDto);
-    }
-
-    @Public()
-    @UseGuards(RefreshTokenAuthGuard)
-    @Post('refresh')
-    async refresh(@Res({ passthrough: true }) res: Response, @Request() req): Promise<TokenRefreshResponseDto> {
-        const refreshToken = req.cookies[REFRESH_COOKIE_NAME];
-        const { accessToken, refreshToken: newRefreshToken, agent } = await this.authService.rotateRefreshToken(refreshToken);
-
-        setAccessCookie(res, accessToken);
-        setRefreshCookie(res, newRefreshToken);
-
-        return new TokenRefreshResponseDto("Token refresh successfully", agent);
-    }
-
-    @Public()
-    @Post('logout')
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async logout(@Res({ passthrough: true }) res: Response, @Request() req): Promise<void> {
-        const refreshToken: string | undefined = req.cookies?.[REFRESH_COOKIE_NAME];
-
-        if (refreshToken) {
-            await this.authService.logout(refreshToken);
-        }
-
-        clearAccessCookie(res);
-        clearRefreshCookie(res);
-    }
+    clearAccessCookie(res);
+    clearRefreshCookie(res);
+  }
 }

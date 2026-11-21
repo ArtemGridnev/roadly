@@ -8,9 +8,18 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Goal
 
-- Widget identity in five PRs (`docs/adr/0004-widget-identity.md`): 1 rate limits (done), 2 session token (done), 3 signed identity API, 4 signed identity in the widget, 5 two-step Install page.
+- Widget identity in five PRs (`docs/adr/0004-widget-identity.md`): 1 rate limits (done), 2 session token (done), 3 signed identity API (done), 4 signed identity in the widget, 5 two-step Install page.
 
 ## Completed
+
+- **Signed identity API (`feat/api-signed-identity`)**:
+  - `POST /widget/session/signed` takes a host JWT (HS256 only, `user_id` and `exp` required, valid for at most 1h, `name`/`email` optional) and returns a verified session. Missing claims never overwrite stored values. `Contact` gains `emailVerifiedAt`, and `name`/`email` become nullable. There's no per-Contact verified flag; `Workspace.signedIdentityConnectedAt` records that a token signed with the current secret has worked, and rotation clears it.
+  - Agent routes: `GET /workspace-identity` (`widgetConnected`, `signedIdentityConnected`, `hasSecret`, `requireSignedIdentity`), `POST /workspace-identity/secret` (shown once, stored AES-256-GCM encrypted, previous secret valid for 24h), `PATCH /workspace-identity` (409 until `signedIdentityConnectedAt` is set). Admin feature-request authors carry `externalId` and `verified`, which comes from `FeatureRequest.authorVerified`, set from the session at creation, so a request sent unsigned as a Contact who has signed in before still shows as unverified.
+  - Enforcement: the unsigned route returns 403 when the Workspace requires signed identity (any `externalId` still works unsigned until then), and unsigned sessions get a 401 on their next request. Session tokens carry `verified`; PR 2 tokens count as unverified.
+  - Requires a new `IDENTITY_SECRET_ENCRYPTION_KEY` (32 bytes, base64) in every environment; the API won't boot without it.
+  - Rotating twice within 24h drops the oldest secret. `user_id` must be a string, so numeric ids need converting by the host.
+  - Dashboard still shows `mailto:null` for an author with no email until PR 5.
+  - e2e 213/213. Disabling the HS256 pin, the 1h limit, the 24h secret expiry, the guard's verified check taking `authorVerified` from the session, clearing the connected state on rotation, or setting it only for the current secret each fails a test.
 
 - **Widget session token (`feat/monorepo-widget-session`)**:
   - `POST /widget/session/unsigned` returns `{ sessionToken, contactId }` and no contact details. `POST /widget/contacts` and `x-contact-id` are gone, so a Contact id is no longer a credential. Requires a new `WIDGET_SESSION_SECRET` in every environment; the API won't boot without it.

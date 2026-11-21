@@ -9,6 +9,7 @@ const WIDGET_SESSION_AUDIENCE = 'roadly-widget-session';
 export interface WidgetSessionTokenPayload {
   sub: string;
   workspaceId: string;
+  verified?: boolean;
 }
 
 @Injectable()
@@ -18,10 +19,14 @@ export class WidgetSessionTokensService {
     private readonly configService: ConfigService,
   ) {}
 
-  sign(contact: ResolvedContact): string {
+  sign(
+    contact: Pick<ResolvedContact, 'id' | 'workspaceId'>,
+    verified = false,
+  ): string {
     const payload: WidgetSessionTokenPayload = {
       sub: contact.id,
       workspaceId: contact.workspaceId,
+      verified,
     };
 
     return this.jwtService.sign(payload, {
