@@ -3,7 +3,12 @@ import request from 'supertest';
 import { RequestStatus } from '@prisma/client';
 import { prisma } from '../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
-import { seedWorkspaceWithContact } from 'test/utils/seed';
+import {
+  createContact,
+  createFeatureRequest,
+  createWorkspace,
+  seedWorkspaceWithContact,
+} from 'test/utils/seed';
 import { loginAsAgentInWorkspace } from 'test/utils/auth';
 import { WORKSPACE_ID_HEADER } from '../auth/constants/workspace-header';
 import { FeatureRequestResponseDto } from './dto/feature-request-response.dto';
@@ -16,7 +21,6 @@ describe('FeatureRequestsController (e2e)', () => {
 
   beforeAll(async () => {
     app = await createTestingApp();
-    await app.init();
   });
 
   afterAll(async () => {
@@ -120,9 +124,7 @@ describe('FeatureRequestsController (e2e)', () => {
     });
 
     it('rejects a request when the agent is not a member of the workspace', async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
+      const otherWorkspace = await createWorkspace();
 
       await authed('post', '/feature-requests', otherWorkspace.id)
         .send({
@@ -135,17 +137,11 @@ describe('FeatureRequestsController (e2e)', () => {
 
   describe('GET /feature-requests', () => {
     it('lists feature requests for the resolved workspace', async () => {
-      await prisma.featureRequest.create({
-        data: { title: 'A', description: 'A desc', workspaceId, authorId },
-      });
-      await prisma.featureRequest.create({
-        data: {
-          title: 'B',
-          description: 'B desc',
-          workspaceId,
-          authorId,
-          status: RequestStatus.PLANNED,
-        },
+      await createFeatureRequest(workspaceId, { title: 'A', authorId });
+      await createFeatureRequest(workspaceId, {
+        title: 'B',
+        authorId,
+        status: RequestStatus.PLANNED,
       });
 
       const response = await authed('get', '/feature-requests').expect(200);
@@ -156,37 +152,18 @@ describe('FeatureRequestsController (e2e)', () => {
     });
 
     it('includes the author and whether the request was signed, or null for agent-created requests', async () => {
-      const signer = await prisma.contact.create({
-        data: { workspaceId, externalId: 'ext-2' },
+      const signer = await createContact(workspaceId, { externalId: 'ext-2' });
+      await createFeatureRequest(workspaceId, { title: 'From user', authorId });
+      await createFeatureRequest(workspaceId, {
+        title: 'Signed',
+        authorId: signer.id,
+        authorVerified: true,
       });
-      await prisma.featureRequest.create({
-        data: {
-          title: 'From user',
-          description: 'desc',
-          workspaceId,
-          authorId,
-        },
+      await createFeatureRequest(workspaceId, {
+        title: 'Unsigned by the same contact',
+        authorId: signer.id,
       });
-      await prisma.featureRequest.create({
-        data: {
-          title: 'Signed',
-          description: 'desc',
-          workspaceId,
-          authorId: signer.id,
-          authorVerified: true,
-        },
-      });
-      await prisma.featureRequest.create({
-        data: {
-          title: 'Unsigned by the same contact',
-          description: 'desc',
-          workspaceId,
-          authorId: signer.id,
-        },
-      });
-      await prisma.featureRequest.create({
-        data: { title: 'From agent', description: 'desc', workspaceId },
-      });
+      await createFeatureRequest(workspaceId, { title: 'From agent' });
 
       const response = await authed('get', '/feature-requests').expect(200);
 
@@ -220,17 +197,11 @@ describe('FeatureRequestsController (e2e)', () => {
     });
 
     it('filters by status', async () => {
-      await prisma.featureRequest.create({
-        data: { title: 'A', description: 'A desc', workspaceId, authorId },
-      });
-      await prisma.featureRequest.create({
-        data: {
-          title: 'B',
-          description: 'B desc',
-          workspaceId,
-          authorId,
-          status: RequestStatus.PLANNED,
-        },
+      await createFeatureRequest(workspaceId, { title: 'A', authorId });
+      await createFeatureRequest(workspaceId, {
+        title: 'B',
+        authorId,
+        status: RequestStatus.PLANNED,
       });
 
       const response = await authed('get', '/feature-requests')
@@ -253,8 +224,9 @@ describe('FeatureRequestsController (e2e)', () => {
 
   describe('GET /feature-requests/:id', () => {
     it('returns a single feature request', async () => {
-      const featureRequest = await prisma.featureRequest.create({
-        data: { title: 'A', description: 'A desc', workspaceId, authorId },
+      const featureRequest = await createFeatureRequest(workspaceId, {
+        title: 'A',
+        authorId,
       });
 
       const response = await authed(
@@ -280,13 +252,9 @@ describe('FeatureRequestsController (e2e)', () => {
     it('returns 404 when the feature request belongs to a different workspace', async () => {
       const { workspaceId: otherWorkspaceId, authorId: otherAuthorId } =
         await seedWorkspaceWithContact();
-      const featureRequest = await prisma.featureRequest.create({
-        data: {
-          title: 'A',
-          description: 'A desc',
-          workspaceId: otherWorkspaceId,
-          authorId: otherAuthorId,
-        },
+      const featureRequest = await createFeatureRequest(otherWorkspaceId, {
+        title: 'A',
+        authorId: otherAuthorId,
       });
 
       await authed('get', `/feature-requests/${featureRequest.id}`).expect(404);
@@ -295,8 +263,9 @@ describe('FeatureRequestsController (e2e)', () => {
 
   describe('PATCH /feature-requests/:id', () => {
     it('updates a feature request', async () => {
-      const featureRequest = await prisma.featureRequest.create({
-        data: { title: 'A', description: 'A desc', workspaceId, authorId },
+      const featureRequest = await createFeatureRequest(workspaceId, {
+        title: 'A',
+        authorId,
       });
 
       const response = await authed(
@@ -321,13 +290,9 @@ describe('FeatureRequestsController (e2e)', () => {
     it('returns 404 when updating a feature request from a different workspace', async () => {
       const { workspaceId: otherWorkspaceId, authorId: otherAuthorId } =
         await seedWorkspaceWithContact();
-      const featureRequest = await prisma.featureRequest.create({
-        data: {
-          title: 'A',
-          description: 'A desc',
-          workspaceId: otherWorkspaceId,
-          authorId: otherAuthorId,
-        },
+      const featureRequest = await createFeatureRequest(otherWorkspaceId, {
+        title: 'A',
+        authorId: otherAuthorId,
       });
 
       await authed('patch', `/feature-requests/${featureRequest.id}`)
@@ -338,8 +303,9 @@ describe('FeatureRequestsController (e2e)', () => {
 
   describe('DELETE /feature-requests/:id', () => {
     it('deletes a feature request', async () => {
-      const featureRequest = await prisma.featureRequest.create({
-        data: { title: 'A', description: 'A desc', workspaceId, authorId },
+      const featureRequest = await createFeatureRequest(workspaceId, {
+        title: 'A',
+        authorId,
       });
 
       await authed('delete', `/feature-requests/${featureRequest.id}`).expect(
@@ -350,14 +316,10 @@ describe('FeatureRequestsController (e2e)', () => {
     });
 
     it('deletes a feature request that has votes', async () => {
-      const featureRequest = await prisma.featureRequest.create({
-        data: {
-          title: 'A',
-          description: 'A desc',
-          workspaceId,
-          authorId,
-          votes: { create: { contactId: authorId } },
-        },
+      const featureRequest = await createFeatureRequest(workspaceId, {
+        title: 'A',
+        authorId,
+        votes: { create: { contactId: authorId } },
       });
 
       await authed('delete', `/feature-requests/${featureRequest.id}`).expect(

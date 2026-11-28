@@ -2,6 +2,11 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { prisma } from '../../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
+import {
+  createContact,
+  createFeatureRequest,
+  createWorkspace,
+} from 'test/utils/seed';
 import { widgetSessionHeader } from 'test/utils/widget-session';
 import { WIDGET_KEY_HEADER } from '../../auth/constants/widget-headers';
 import { FeatureRequestResponseDto } from '../../feature-requests/dto/feature-request-response.dto';
@@ -15,7 +20,6 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
 
   beforeAll(async () => {
     app = await createTestingApp();
-    await app.init();
   });
 
   afterAll(async () => {
@@ -23,52 +27,35 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const workspace = await prisma.workspace.create({
-      data: { name: 'Acme', slug: `acme-${Date.now()}-${Math.random()}` },
-    });
+    const workspace = await createWorkspace();
     workspaceId = workspace.id;
     widgetKey = workspace.widgetKey;
 
-    const contact = await prisma.contact.create({
-      data: {
-        workspaceId,
-        externalId: 'ext-1',
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-      },
+    const contact = await createContact(workspaceId, {
+      externalId: 'ext-1',
+      name: 'Jane Doe',
+      email: 'jane@example.com',
     });
     contactId = contact.id;
   });
 
   describe('GET /widget/feature-requests', () => {
     it('lists feature requests scoped to the resolved workspace', async () => {
-      await prisma.featureRequest.create({
-        data: {
-          title: 'Dark mode',
-          description: 'Please add dark mode',
-          workspaceId,
-          authorId: contactId,
-        },
+      await createFeatureRequest(workspaceId, {
+        title: 'Dark mode',
+        authorId: contactId,
       });
 
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
+      const otherWorkspace = await createWorkspace();
+      const otherContact = await createContact(otherWorkspace.id, {
+        externalId: 'ext-1',
+        name: 'John Roe',
+        email: 'john@example.com',
       });
-      const otherContact = await prisma.contact.create({
-        data: {
-          workspaceId: otherWorkspace.id,
-          externalId: 'ext-1',
-          name: 'John Roe',
-          email: 'john@example.com',
-        },
-      });
-      await prisma.featureRequest.create({
-        data: {
-          title: 'Other workspace request',
-          description: 'Should not appear',
-          workspaceId: otherWorkspace.id,
-          authorId: otherContact.id,
-        },
+      await createFeatureRequest(otherWorkspace.id, {
+        title: 'Other workspace request',
+        description: 'Should not appear',
+        authorId: otherContact.id,
       });
 
       const response = await request(app.getHttpServer())
@@ -83,22 +70,15 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
     });
 
     it('returns the vote count for each feature request', async () => {
-      const featureRequest = await prisma.featureRequest.create({
-        data: {
-          title: 'Dark mode',
-          description: 'Please add dark mode',
-          workspaceId,
-          authorId: contactId,
-        },
+      const featureRequest = await createFeatureRequest(workspaceId, {
+        title: 'Dark mode',
+        authorId: contactId,
       });
 
-      const voter = await prisma.contact.create({
-        data: {
-          workspaceId,
-          externalId: 'ext-2',
-          name: 'John Roe',
-          email: 'john@example.com',
-        },
+      const voter = await createContact(workspaceId, {
+        externalId: 'ext-2',
+        name: 'John Roe',
+        email: 'john@example.com',
       });
       await prisma.vote.createMany({
         data: [
@@ -118,13 +98,9 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
     });
 
     it('returns a zero vote count for a feature request with no votes', async () => {
-      await prisma.featureRequest.create({
-        data: {
-          title: 'Dark mode',
-          description: 'Please add dark mode',
-          workspaceId,
-          authorId: contactId,
-        },
+      await createFeatureRequest(workspaceId, {
+        title: 'Dark mode',
+        authorId: contactId,
       });
 
       const response = await request(app.getHttpServer())
@@ -142,21 +118,13 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       let unvotedId: string;
 
       beforeEach(async () => {
-        const voted = await prisma.featureRequest.create({
-          data: {
-            title: 'Voted',
-            description: 'Voted',
-            workspaceId,
-            authorId: contactId,
-          },
+        const voted = await createFeatureRequest(workspaceId, {
+          title: 'Voted',
+          authorId: contactId,
         });
-        const unvoted = await prisma.featureRequest.create({
-          data: {
-            title: 'Unvoted',
-            description: 'Unvoted',
-            workspaceId,
-            authorId: contactId,
-          },
+        const unvoted = await createFeatureRequest(workspaceId, {
+          title: 'Unvoted',
+          authorId: contactId,
         });
         votedId = voted.id;
         unvotedId = unvoted.id;
@@ -185,13 +153,10 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       });
 
       it("ignores other contacts' votes", async () => {
-        const otherContact = await prisma.contact.create({
-          data: {
-            workspaceId,
-            externalId: 'ext-2',
-            name: 'John Roe',
-            email: 'john@example.com',
-          },
+        const otherContact = await createContact(workspaceId, {
+          externalId: 'ext-2',
+          name: 'John Roe',
+          email: 'john@example.com',
         });
 
         const response = await request(app.getHttpServer())
@@ -231,31 +196,20 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       let otherContactId: string;
 
       beforeEach(async () => {
-        const otherContact = await prisma.contact.create({
-          data: {
-            workspaceId,
-            externalId: 'ext-2',
-            name: 'John Roe',
-            email: 'john@example.com',
-          },
+        const otherContact = await createContact(workspaceId, {
+          externalId: 'ext-2',
+          name: 'John Roe',
+          email: 'john@example.com',
         });
         otherContactId = otherContact.id;
 
-        const mine = await prisma.featureRequest.create({
-          data: {
-            title: 'Mine',
-            description: 'Mine',
-            workspaceId,
-            authorId: contactId,
-          },
+        const mine = await createFeatureRequest(workspaceId, {
+          title: 'Mine',
+          authorId: contactId,
         });
-        const others = await prisma.featureRequest.create({
-          data: {
-            title: 'Others',
-            description: 'Others',
-            workspaceId,
-            authorId: otherContactId,
-          },
+        const others = await createFeatureRequest(workspaceId, {
+          title: 'Others',
+          authorId: otherContactId,
         });
         mineId = mine.id;
         othersId = others.id;
@@ -330,26 +284,19 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       beforeEach(async () => {
         const voters = await Promise.all(
           [1, 2, 3].map((n) =>
-            prisma.contact.create({
-              data: {
-                workspaceId,
-                externalId: `voter-${n}`,
-                name: `Voter ${n}`,
-                email: `voter${n}@example.com`,
-              },
+            createContact(workspaceId, {
+              externalId: `voter-${n}`,
+              name: `Voter ${n}`,
+              email: `voter${n}@example.com`,
             }),
           ),
         );
 
         const createRequest = (title: string, createdAt: string) =>
-          prisma.featureRequest.create({
-            data: {
-              title,
-              description: title,
-              workspaceId,
-              authorId: contactId,
-              createdAt: new Date(createdAt),
-            },
+          createFeatureRequest(workspaceId, {
+            title,
+            authorId: contactId,
+            createdAt: new Date(createdAt),
           });
 
         const oldPopular = await createRequest('Old popular', '2026-01-01');
@@ -423,23 +370,16 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
     });
 
     it('leaves out shipped feature requests', async () => {
-      const open = await prisma.featureRequest.create({
-        data: {
-          title: 'Dark mode',
-          description: 'Please add dark mode',
-          workspaceId,
-          authorId: contactId,
-          status: 'IN_PROGRESS',
-        },
+      const open = await createFeatureRequest(workspaceId, {
+        title: 'Dark mode',
+        authorId: contactId,
+        status: 'IN_PROGRESS',
       });
-      await prisma.featureRequest.create({
-        data: {
-          title: 'CSV export',
-          description: 'Already shipped',
-          workspaceId,
-          authorId: contactId,
-          status: 'SHIPPED',
-        },
+      await createFeatureRequest(workspaceId, {
+        title: 'CSV export',
+        description: 'Already shipped',
+        authorId: contactId,
+        status: 'SHIPPED',
       });
 
       const response = await request(app.getHttpServer())
@@ -473,13 +413,10 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
     let otherContactId: string;
 
     beforeEach(async () => {
-      const otherContact = await prisma.contact.create({
-        data: {
-          workspaceId,
-          externalId: 'ext-2',
-          name: 'John Roe',
-          email: 'john@example.com',
-        },
+      const otherContact = await createContact(workspaceId, {
+        externalId: 'ext-2',
+        name: 'John Roe',
+        email: 'john@example.com',
       });
       otherContactId = otherContact.id;
     });
@@ -490,15 +427,11 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
       createdAt: string,
       status: 'BACKLOG' | 'SHIPPED' = 'BACKLOG',
     ) =>
-      prisma.featureRequest.create({
-        data: {
-          title,
-          description: title,
-          workspaceId,
-          authorId,
-          status,
-          createdAt: new Date(createdAt),
-        },
+      createFeatureRequest(workspaceId, {
+        title,
+        authorId,
+        status,
+        createdAt: new Date(createdAt),
       });
 
     const listMine = async (query = '') => {
@@ -566,16 +499,11 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
     });
 
     it('rejects a session for a contact that belongs to a different workspace', async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
-      const outsider = await prisma.contact.create({
-        data: {
-          workspaceId: otherWorkspace.id,
-          externalId: 'ext-1',
-          name: 'John Roe',
-          email: 'john@example.com',
-        },
+      const otherWorkspace = await createWorkspace();
+      const outsider = await createContact(otherWorkspace.id, {
+        externalId: 'ext-1',
+        name: 'John Roe',
+        email: 'john@example.com',
       });
 
       await request(app.getHttpServer())
@@ -657,16 +585,11 @@ describe('WidgetFeatureRequestsController (e2e)', () => {
     });
 
     it('rejects a session for a contact that belongs to a different workspace', async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
-      const otherContact = await prisma.contact.create({
-        data: {
-          workspaceId: otherWorkspace.id,
-          externalId: 'ext-1',
-          name: 'John Roe',
-          email: 'john@example.com',
-        },
+      const otherWorkspace = await createWorkspace();
+      const otherContact = await createContact(otherWorkspace.id, {
+        externalId: 'ext-1',
+        name: 'John Roe',
+        email: 'john@example.com',
       });
 
       await request(app.getHttpServer())

@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { prisma } from '../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
+import { createContact, createWorkspace } from 'test/utils/seed';
 import { loginAsAgentInWorkspace, loginAsNewAgent } from 'test/utils/auth';
 import { WORKSPACE_ID_HEADER } from '../auth/constants/workspace-header';
 import { IdentitySecretResponseDto } from './dto/identity-secret-response.dto';
@@ -14,7 +15,6 @@ describe('WorkspaceIdentityController (e2e)', () => {
 
   beforeAll(async () => {
     app = await createTestingApp();
-    await app.init();
   });
 
   afterAll(async () => {
@@ -22,9 +22,7 @@ describe('WorkspaceIdentityController (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const workspace = await prisma.workspace.create({
-      data: { name: 'Acme', slug: `acme-${Date.now()}-${Math.random()}` },
-    });
+    const workspace = await createWorkspace();
     workspaceId = workspace.id;
     agentCookie = await loginAsAgentInWorkspace(app, workspaceId);
   });
@@ -63,9 +61,7 @@ describe('WorkspaceIdentityController (e2e)', () => {
     });
 
     it('reports the widget connected once a contact exists', async () => {
-      await prisma.contact.create({
-        data: { workspaceId, externalId: 'ext-1' },
-      });
+      await createContact(workspaceId, { externalId: 'ext-1' });
 
       expect(await getStatus()).toMatchObject({
         widgetConnected: true,
@@ -82,15 +78,8 @@ describe('WorkspaceIdentityController (e2e)', () => {
     });
 
     it('ignores contacts in other workspaces', async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
-      await prisma.contact.create({
-        data: {
-          workspaceId: otherWorkspace.id,
-          externalId: 'ext-1',
-        },
-      });
+      const otherWorkspace = await createWorkspace();
+      await createContact(otherWorkspace.id, { externalId: 'ext-1' });
 
       expect(await getStatus()).toMatchObject({ widgetConnected: false });
     });
@@ -173,9 +162,7 @@ describe('WorkspaceIdentityController (e2e)', () => {
 
   describe('PATCH /workspace-identity', () => {
     it('refuses to require signed identity before a signed session', async () => {
-      await prisma.contact.create({
-        data: { workspaceId, externalId: 'ext-1' },
-      });
+      await createContact(workspaceId, { externalId: 'ext-1' });
 
       await authed('patch', '/workspace-identity')
         .send({ requireSignedIdentity: true })

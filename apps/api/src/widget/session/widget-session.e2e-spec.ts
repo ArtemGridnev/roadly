@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import request from 'supertest';
 import { prisma } from '../../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
+import { createFeatureRequest, createWorkspace } from 'test/utils/seed';
 import { WIDGET_KEY_HEADER } from '../../auth/constants/widget-headers';
 import { ACCESS_COOKIE_NAME } from '../../auth/utils/authCookie';
 import { WorkspaceIdentityService } from '../../workspace-identity/workspace-identity.service';
@@ -38,7 +39,6 @@ describe('WidgetSessionController (e2e)', () => {
 
   beforeAll(async () => {
     app = await createTestingApp();
-    await app.init();
   });
 
   afterAll(async () => {
@@ -46,9 +46,7 @@ describe('WidgetSessionController (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const workspace = await prisma.workspace.create({
-      data: { name: 'Acme', slug: `acme-${Date.now()}-${Math.random()}` },
-    });
+    const workspace = await createWorkspace();
     workspaceId = workspace.id;
     widgetKey = workspace.widgetKey;
   });
@@ -134,9 +132,7 @@ describe('WidgetSessionController (e2e)', () => {
         .send(identity)
         .expect(429);
 
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
+      const otherWorkspace = await createWorkspace();
       await createSession(otherWorkspace.widgetKey);
     });
   });
@@ -311,9 +307,7 @@ describe('WidgetSessionController (e2e)', () => {
     });
 
     it("rejects a token signed with another workspace's secret", async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
+      const otherWorkspace = await createWorkspace();
       const otherSecret = await rotateSecret(otherWorkspace.id);
 
       await createSignedSession(
@@ -322,9 +316,7 @@ describe('WidgetSessionController (e2e)', () => {
     });
 
     it('rejects every token when the workspace has no secret', async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
+      const otherWorkspace = await createWorkspace();
 
       await createSignedSession(
         signIdentity({ user_id: 'ext-1' }),
@@ -449,13 +441,9 @@ describe('WidgetSessionController (e2e)', () => {
     it('authenticates the contact', async () => {
       const { sessionToken, contactId } = await createSession();
 
-      await prisma.featureRequest.create({
-        data: {
-          title: 'Dark mode',
-          description: 'Please add dark mode',
-          workspaceId,
-          authorId: contactId,
-        },
+      await createFeatureRequest(workspaceId, {
+        title: 'Dark mode',
+        authorId: contactId,
       });
 
       const response = await listMine(widgetKey, sessionToken).expect(200);
@@ -465,9 +453,7 @@ describe('WidgetSessionController (e2e)', () => {
 
     it('fails with another workspace key', async () => {
       const { sessionToken } = await createSession();
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
+      const otherWorkspace = await createWorkspace();
 
       await listMine(otherWorkspace.widgetKey, sessionToken).expect(401);
     });

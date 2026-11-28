@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { prisma } from '../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
+import { createAgent, createWorkspace } from 'test/utils/seed';
 import { loginAsAgentInWorkspace } from 'test/utils/auth';
 import { WORKSPACE_ID_HEADER } from '../auth/constants/workspace-header';
 import { WorkspaceMemberResponseDto } from './dto/workspace-member-response.dto';
@@ -14,7 +15,6 @@ describe('WorkspaceMembersController (e2e)', () => {
 
   beforeAll(async () => {
     app = await createTestingApp();
-    await app.init();
   });
 
   afterAll(async () => {
@@ -22,19 +22,11 @@ describe('WorkspaceMembersController (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const workspace = await prisma.workspace.create({
-      data: { name: 'Acme', slug: `acme-${Date.now()}-${Math.random()}` },
-    });
+    const workspace = await createWorkspace();
     workspaceId = workspace.id;
     agentCookie = await loginAsAgentInWorkspace(app, workspaceId);
 
-    const agent = await prisma.agent.create({
-      data: {
-        name: 'Jane Doe',
-        email: `jane-${Date.now()}-${Math.random()}@example.com`,
-        passwordHash: 'hash',
-      },
-    });
+    const agent = await createAgent();
     agentId = agent.id;
   });
 
@@ -47,13 +39,7 @@ describe('WorkspaceMembersController (e2e)', () => {
 
   describe('GET /workspace-members', () => {
     it('lists members of the resolved workspace', async () => {
-      const otherAgent = await prisma.agent.create({
-        data: {
-          name: 'John Roe',
-          email: `john-${Date.now()}-${Math.random()}@example.com`,
-          passwordHash: 'hash',
-        },
-      });
+      const otherAgent = await createAgent({ name: 'John Roe' });
       await prisma.workspaceMember.create({ data: { agentId, workspaceId } });
       await prisma.workspaceMember.create({
         data: { agentId: otherAgent.id, workspaceId },
@@ -68,9 +54,7 @@ describe('WorkspaceMembersController (e2e)', () => {
     });
 
     it('rejects a request when the acting agent is not a member of the workspace', async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
+      const otherWorkspace = await createWorkspace();
 
       await request(app.getHttpServer())
         .get('/workspace-members')
@@ -101,9 +85,7 @@ describe('WorkspaceMembersController (e2e)', () => {
     });
 
     it('returns 404 when the member belongs to a different workspace', async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
+      const otherWorkspace = await createWorkspace();
       const member = await prisma.workspaceMember.create({
         data: { agentId, workspaceId: otherWorkspace.id },
       });
