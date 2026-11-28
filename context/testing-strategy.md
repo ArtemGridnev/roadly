@@ -9,7 +9,7 @@ Test where a bug would hurt a user or break a promise the product makes. Most of
 | API e2e | `apps/api/src/**/*.e2e-spec.ts` | Jest + Supertest, real Postgres (`apps/api/test/docker-compose.yml`) | Main backend layer. Real HTTP through guards, pipes, DTOs, Prisma and DB constraints. |
 | Frontend integration | `apps/dashboard`, `apps/widget`, next to the file they test (`*.test.tsx`) | Vitest + React Testing Library + user-event | Main frontend layer. Render a feature, act like a user, fake only the server. |
 | Unit | Next to the file they test | Vitest (frontend), Jest (API) | Only for pure logic with real rules. |
-| Browser e2e | Not set up yet | Playwright | 1 to 3 tests for what only a real browser can prove. |
+| Browser e2e | `apps/widget/e2e/*.spec.ts` | Playwright (Chromium) | 1 to 3 tests for what only a real browser can prove. |
 
 ### API e2e
 
@@ -25,6 +25,11 @@ Test where a bug would hurt a user or break a promise the product makes. Most of
 - Render through `renderApp()` (dashboard) so the real router, store and RTK Query run. The widget renders through `openWidget()`: the real providers and session client with a fresh TanStack `QueryClient` per test (queries don't retry, so error states show at once), then it opens the panel.
 - Query by role, label and text. Not by class name, test id or component internals.
 - Do not `vi.mock` our own hooks, slices or API layer.
+
+### Browser e2e
+
+- Only for what jsdom can't show: the widget mounting in a shadow root, styles staying on their side of it, and `Roadly.init` / `shutdown` in `widget.tsx`.
+- Runs the built `widget.js` (built with a fake API URL before the run) on a fake host page. `openHostPage()` serves both and fakes the API through `page.route`, with the same rule as `mockApi()`: an unhandled request fails.
 
 ### Unit
 
@@ -82,8 +87,9 @@ Defaults, not hard bans. To add a test that goes against one, explain why in the
 
 ```bash
 pnpm test                                    # frontend tests (Turborepo)
-pnpm test:e2e                                # API e2e, needs the test Postgres
+pnpm test:e2e                                # API e2e (needs the test Postgres) and widget browser e2e
+pnpm --filter widget test:e2e                # widget browser e2e only
 npx vitest run src/path/to/file.test.tsx     # one frontend file, from the app folder
 ```
 
-Start the test Postgres with `docker compose -f apps/api/test/docker-compose.yml up -d`. API e2e reads `apps/api/.env.test`.
+Install the browser once with `npx playwright install chromium` from `apps/widget`. Start the test Postgres with `docker compose -f apps/api/test/docker-compose.yml up -d`. API e2e reads `apps/api/.env.test`.
