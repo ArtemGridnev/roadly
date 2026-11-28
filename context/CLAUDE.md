@@ -7,8 +7,9 @@ Read the following files in order before implementing or making any architectura
 3. `context/ui-context.md` — theme, colors, typography, canvas design, and component conventions
 4. `context/dashboard-pages.md` — admin dashboard pages, routes, guards, and workspace model
 5. `context/code-standards.md` — implementation rules and conventions
-6. `context/ai-workflow-rules.md` — development workflow, scoping rules, and delivery approach
-7. `context/progress-tracker.md` — current phase, completed work, open questions, and next steps
+6. `context/testing-strategy.md` — what to test, at which layer, and what not to test
+7. `context/ai-workflow-rules.md` — development workflow, scoping rules, and delivery approach
+8. `context/progress-tracker.md` — current phase, completed work, open questions, and next steps
 
 Update `context/progress-tracker.md` after each meaningful implementation change.
 

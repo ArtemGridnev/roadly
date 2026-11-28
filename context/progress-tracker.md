@@ -266,8 +266,11 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Next Up
 
-- Roadmap Board is complete for the MVP. Candidates next: route-level code splitting (bundle 851 kB), widget tests, applying the two pending dev-DB migrations. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
-- Widget has no tests yet — Vitest + React Testing Library are the documented stack but not installed in `apps/widget`. First targets: vote toggle optimistic update + rollback, submit form.
+- Roadmap Board is complete for the MVP. Candidates next: route-level code splitting (bundle 851 kB), applying the two pending dev-DB migrations. Active workspace comes from the `/:slug` URL into `workspaceSlice` (`dashboard-pages.md`).
+- Testing, in this order (rules in `context/testing-strategy.md`):
+  1. Missing API tests: cross-workspace PATCH and DELETE on Contacts, cross-workspace DELETE on Feature Requests, two votes from the same Contact sent at the same time.
+  2. Widget test stack: Vitest + React Testing Library in `apps/widget`, with the dashboard's `mockApi` approach and a fresh `QueryClient` per test. First tests: vote toggle with optimistic update and rollback, submit form, sort, "mine" view, error state for a bad widget key.
+  3. Playwright, 1 to 3 tests: widget submit and vote, then see it on the dashboard board; the widget bundle mounted on a plain page with hostile global CSS to prove Shadow DOM isolation.
 
 ## Open Questions
 

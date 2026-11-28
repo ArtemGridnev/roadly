@@ -60,9 +60,12 @@
 
 ## Testing
 
-- Vitest + React Testing Library across the whole monorepo.
-- Test behavior, not implementation — query by role/text.
-- Always cover: vote deduplication, auth/role guards, optimistic-update rollback, status transitions.
+Full strategy in `context/testing-strategy.md`. Read it before writing or changing tests. In short:
+
+- API: Jest + Supertest e2e against a real Postgres. Frontend: Vitest + React Testing Library, faking only `fetch`.
+- Test behavior, not implementation. Query by role and text. Do not mock our own hooks or Prisma.
+- Always cover the product promises listed there.
+- Every new test must fail when the behavior it protects is broken.
 - Every bug fix gets a regression test that fails before the fix and passes after.
 
 ## Git & Commits
