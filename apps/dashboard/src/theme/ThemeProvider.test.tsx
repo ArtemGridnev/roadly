@@ -26,10 +26,6 @@ beforeEach(() => {
   }))
 })
 
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
-
 function ThemeControls() {
   const { theme, resolvedTheme, setTheme } = useTheme()
   return (

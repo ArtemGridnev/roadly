@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { prisma } from '../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
+import { createContact, createWorkspace } from 'test/utils/seed';
 import { loginAsAgentInWorkspace } from 'test/utils/auth';
 import { WORKSPACE_ID_HEADER } from '../auth/constants/workspace-header';
 import { ContactResponseDto } from './dto/contact-response.dto';
@@ -13,7 +13,6 @@ describe('ContactsController (e2e)', () => {
 
   beforeAll(async () => {
     app = await createTestingApp();
-    await app.init();
   });
 
   afterAll(async () => {
@@ -21,9 +20,7 @@ describe('ContactsController (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const workspace = await prisma.workspace.create({
-      data: { name: 'Acme', slug: `acme-${Date.now()}-${Math.random()}` },
-    });
+    const workspace = await createWorkspace();
     workspaceId = workspace.id;
     agentCookie = await loginAsAgentInWorkspace(app, workspaceId);
   });
@@ -67,13 +64,10 @@ describe('ContactsController (e2e)', () => {
     });
 
     it('rejects a duplicate externalId within the same workspace', async () => {
-      await prisma.contact.create({
-        data: {
-          workspaceId,
-          externalId: 'ext-1',
-          name: 'Jane Doe',
-          email: 'jane@example.com',
-        },
+      await createContact(workspaceId, {
+        externalId: 'ext-1',
+        name: 'Jane Doe',
+        email: 'jane@example.com',
       });
 
       await authed('post', '/contacts')
@@ -110,9 +104,7 @@ describe('ContactsController (e2e)', () => {
     });
 
     it('rejects a request when the agent is not a member of the workspace', async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
+      const otherWorkspace = await createWorkspace();
 
       await request(app.getHttpServer())
         .post('/contacts')
@@ -129,21 +121,15 @@ describe('ContactsController (e2e)', () => {
 
   describe('GET /contacts', () => {
     it('lists contacts for the resolved workspace', async () => {
-      await prisma.contact.create({
-        data: {
-          workspaceId,
-          externalId: 'ext-1',
-          name: 'Jane Doe',
-          email: 'jane@example.com',
-        },
+      await createContact(workspaceId, {
+        externalId: 'ext-1',
+        name: 'Jane Doe',
+        email: 'jane@example.com',
       });
-      await prisma.contact.create({
-        data: {
-          workspaceId,
-          externalId: 'ext-2',
-          name: 'John Roe',
-          email: 'john@example.com',
-        },
+      await createContact(workspaceId, {
+        externalId: 'ext-2',
+        name: 'John Roe',
+        email: 'john@example.com',
       });
 
       const response = await authed('get', '/contacts').expect(200);
@@ -156,13 +142,10 @@ describe('ContactsController (e2e)', () => {
 
   describe('GET /contacts/:id', () => {
     it('returns a single contact', async () => {
-      const contact = await prisma.contact.create({
-        data: {
-          workspaceId,
-          externalId: 'ext-1',
-          name: 'Jane Doe',
-          email: 'jane@example.com',
-        },
+      const contact = await createContact(workspaceId, {
+        externalId: 'ext-1',
+        name: 'Jane Doe',
+        email: 'jane@example.com',
       });
 
       const response = await authed('get', `/contacts/${contact.id}`).expect(
@@ -179,16 +162,11 @@ describe('ContactsController (e2e)', () => {
     });
 
     it('returns 404 when the contact belongs to a different workspace', async () => {
-      const otherWorkspace = await prisma.workspace.create({
-        data: { name: 'Other', slug: `other-${Date.now()}-${Math.random()}` },
-      });
-      const contact = await prisma.contact.create({
-        data: {
-          workspaceId: otherWorkspace.id,
-          externalId: 'ext-1',
-          name: 'Jane Doe',
-          email: 'jane@example.com',
-        },
+      const otherWorkspace = await createWorkspace();
+      const contact = await createContact(otherWorkspace.id, {
+        externalId: 'ext-1',
+        name: 'Jane Doe',
+        email: 'jane@example.com',
       });
 
       await authed('get', `/contacts/${contact.id}`).expect(404);
@@ -197,13 +175,10 @@ describe('ContactsController (e2e)', () => {
 
   describe('PATCH /contacts/:id', () => {
     it('updates a contact', async () => {
-      const contact = await prisma.contact.create({
-        data: {
-          workspaceId,
-          externalId: 'ext-1',
-          name: 'Jane Doe',
-          email: 'jane@example.com',
-        },
+      const contact = await createContact(workspaceId, {
+        externalId: 'ext-1',
+        name: 'Jane Doe',
+        email: 'jane@example.com',
       });
 
       const response = await authed('patch', `/contacts/${contact.id}`)
@@ -223,21 +198,15 @@ describe('ContactsController (e2e)', () => {
     });
 
     it('returns 409 when the update creates a duplicate externalId', async () => {
-      await prisma.contact.create({
-        data: {
-          workspaceId,
-          externalId: 'ext-1',
-          name: 'Jane Doe',
-          email: 'jane@example.com',
-        },
+      await createContact(workspaceId, {
+        externalId: 'ext-1',
+        name: 'Jane Doe',
+        email: 'jane@example.com',
       });
-      const contact = await prisma.contact.create({
-        data: {
-          workspaceId,
-          externalId: 'ext-2',
-          name: 'John Roe',
-          email: 'john@example.com',
-        },
+      const contact = await createContact(workspaceId, {
+        externalId: 'ext-2',
+        name: 'John Roe',
+        email: 'john@example.com',
       });
 
       await authed('patch', `/contacts/${contact.id}`)
@@ -248,13 +217,10 @@ describe('ContactsController (e2e)', () => {
 
   describe('DELETE /contacts/:id', () => {
     it('deletes a contact', async () => {
-      const contact = await prisma.contact.create({
-        data: {
-          workspaceId,
-          externalId: 'ext-1',
-          name: 'Jane Doe',
-          email: 'jane@example.com',
-        },
+      const contact = await createContact(workspaceId, {
+        externalId: 'ext-1',
+        name: 'Jane Doe',
+        email: 'jane@example.com',
       });
 
       await authed('delete', `/contacts/${contact.id}`).expect(204);

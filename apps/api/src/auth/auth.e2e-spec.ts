@@ -9,7 +9,6 @@ describe('AuthController (e2e)', () => {
 
   beforeEach(async () => {
     app = await createTestingApp();
-    await app.init();
   });
 
   afterEach(async () => {

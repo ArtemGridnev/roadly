@@ -1,25 +1,12 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { agent, buildWorkspace, unauthorized } from '@/test/fixtures'
 import { mockApi, type MockResponse } from '@/test/mock-api'
 import { renderApp } from '@/test/render-app'
 
-const agent = {
-  id: 'agent-1',
-  name: 'Ada Lovelace',
-  email: 'ada@example.com',
-  createdAt: '2026-10-12T00:00:00.000Z',
-}
-const workspace = {
-  id: 'workspace-1',
-  name: 'Acme Inc',
-  slug: 'acme-inc',
-  widgetKey: 'wk_1',
-  createdAt: '2026-10-17T00:00:00.000Z',
-}
-const unauthorized = () => ({ status: 401, body: { message: 'Unauthorized' } })
+const workspace = buildWorkspace('Acme Inc', 'acme-inc')
 
 afterEach(() => {
-  vi.unstubAllGlobals()
   localStorage.clear()
 })
 

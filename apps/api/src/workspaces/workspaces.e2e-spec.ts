@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { prisma } from '../../test/prisma-test-client';
 import { createTestingApp } from 'test/utils/create-testing-app';
+import { createWorkspace } from 'test/utils/seed';
 import { loginAsNewAgent } from 'test/utils/auth';
 import { WorkspaceResponseDto } from './dto/workspace-response.dto';
 
@@ -11,7 +12,6 @@ describe('WorkspacesController (e2e)', () => {
 
   beforeAll(async () => {
     app = await createTestingApp();
-    await app.init();
   });
 
   afterAll(async () => {
@@ -90,7 +90,7 @@ describe('WorkspacesController (e2e)', () => {
       await authed('post', '/workspaces')
         .send({ name: 'Acme', slug: 'acme' })
         .expect(201);
-      await prisma.workspace.create({ data: { name: 'Other', slug: 'other' } });
+      await createWorkspace();
 
       const response = await authed('get', '/workspaces').expect(200);
 

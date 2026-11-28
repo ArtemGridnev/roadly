@@ -1,23 +1,11 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { i18n } from '@/i18n/i18n'
+import { acme, agent } from '@/test/fixtures'
 import { mockApi, type MockResponse } from '@/test/mock-api'
 import { renderApp } from '@/test/render-app'
 import { REQUEST_STATUSES } from '../../feature-requests/constants/request-status'
 
-const agent = {
-  id: 'agent-1',
-  name: 'Ada Lovelace',
-  email: 'ada@example.com',
-  createdAt: '2026-10-12T00:00:00.000Z',
-}
-const acme = {
-  id: 'ws-acme',
-  name: 'Acme',
-  slug: 'acme',
-  widgetKey: 'wk_acme',
-  createdAt: '2026-10-17T00:00:00.000Z',
-}
 const request = (id: string, title: string, status: string, voteCount: number, createdAt: string) => ({
   id,
   title,
@@ -33,7 +21,6 @@ const csvExport = request('r2', 'CSV export', 'BACKLOG', 9, '2026-09-01T00:00:00
 const sso = request('r3', 'SSO', 'IN_PROGRESS', 5, '2026-10-05T00:00:00.000Z')
 
 afterEach(() => {
-  vi.unstubAllGlobals()
   vi.restoreAllMocks()
   localStorage.clear()
 })

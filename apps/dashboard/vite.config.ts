@@ -16,6 +16,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    unstubGlobals: true,
     setupFiles: ['./src/test/setup.ts'],
     env: { VITE_API_URL: 'http://api.test', VITE_WIDGET_URL: 'https://cdn.test/widget.js' }
   }

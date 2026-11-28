@@ -1,19 +1,8 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { agent, unauthorized } from '@/test/fixtures'
 import { mockApi, type MockResponse } from '@/test/mock-api'
 import { renderApp } from '@/test/render-app'
-
-const agent = {
-  id: 'agent-1',
-  name: 'Ada Lovelace',
-  email: 'ada@example.com',
-  createdAt: '2026-10-12T00:00:00.000Z',
-}
-const unauthorized = () => ({ status: 401, body: { message: 'Unauthorized' } })
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
 
 function setup(signupResponse: () => MockResponse) {
   const signup = vi.fn((_body: unknown) => signupResponse())

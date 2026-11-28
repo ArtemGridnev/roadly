@@ -1,26 +1,13 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { agent, buildWorkspace } from '@/test/fixtures'
 import { mockApi, type MockResponse } from '@/test/mock-api'
 import { renderApp } from '@/test/render-app'
 
-const agent = {
-  id: 'agent-1',
-  name: 'Ada Lovelace',
-  email: 'ada@example.com',
-  createdAt: '2026-10-12T00:00:00.000Z',
-}
-const workspace = (name: string, slug: string) => ({
-  id: `ws-${slug}`,
-  name,
-  slug,
-  widgetKey: `wk_${slug}`,
-  createdAt: '2026-10-17T00:00:00.000Z',
-})
-const acme = workspace('Acme', 'acme')
-const beta = workspace('Beta', 'beta')
+const acme = buildWorkspace('Acme', 'acme')
+const beta = buildWorkspace('Beta', 'beta')
 
 afterEach(() => {
-  vi.unstubAllGlobals()
   localStorage.clear()
 })
 
@@ -34,7 +21,7 @@ function setup(createResponse?: (body: { name: string; slug: string }) => MockRe
       const input = body as { name: string; slug: string }
       const response = createResponse?.(input) ?? {
         status: 201,
-        body: workspace(input.name, input.slug),
+        body: buildWorkspace(input.name, input.slug),
       }
       if (response.status === 201) workspaces = [...workspaces, response.body as typeof acme]
       return response
