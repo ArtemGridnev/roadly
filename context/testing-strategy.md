@@ -22,7 +22,7 @@ Test where a bug would hurt a user or break a promise the product makes. Most of
 
 - Fake the network only: `mockApi()` stubs `fetch` per `METHOD /path`. An unhandled request throws, so unexpected calls fail the test.
 - Each test sets up its own routes. Take the Agent and Workspace data from `src/test/fixtures.ts` instead of redefining them. Vitest undoes the `fetch` stub after each test (`unstubGlobals`).
-- Render through `renderApp()` (dashboard) so the real router, store and RTK Query run. The widget uses the same approach with a fresh TanStack `QueryClient` per test.
+- Render through `renderApp()` (dashboard) so the real router, store and RTK Query run. The widget renders through `openWidget()`: the real providers and session client with a fresh TanStack `QueryClient` per test (queries don't retry, so error states show at once), then it opens the panel.
 - Query by role, label and text. Not by class name, test id or component internals.
 - Do not `vi.mock` our own hooks, slices or API layer.
 
