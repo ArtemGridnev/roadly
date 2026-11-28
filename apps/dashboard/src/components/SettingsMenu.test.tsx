@@ -3,28 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { i18n } from '@/i18n/i18n'
 import { detectLanguage } from '@/i18n/language-storage'
 import { formatRequestDate } from '@/lib/format-date'
+import { acme, agent, unauthorized } from '@/test/fixtures'
 import { mockApi, type MockResponse } from '@/test/mock-api'
 import { renderApp } from '@/test/render-app'
 import { chooseSetting } from '@/test/settings-menu'
 
-const agent = {
-  id: 'agent-1',
-  name: 'Ada Lovelace',
-  email: 'ada@example.com',
-  language: null,
-  createdAt: '2026-10-12T00:00:00.000Z',
-}
-const acme = {
-  id: 'ws-acme',
-  name: 'Acme',
-  slug: 'acme',
-  widgetKey: 'wk_acme',
-  createdAt: '2026-10-17T00:00:00.000Z',
-}
-const unauthorized = () => ({ status: 401, body: { message: 'Unauthorized' } })
-
 afterEach(() => {
-  vi.unstubAllGlobals()
   localStorage.clear()
 })
 

@@ -1,24 +1,11 @@
 import type { WorkspaceIdentity } from '@roadly/shared'
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { acme, agent } from '@/test/fixtures'
 import { mockApi } from '@/test/mock-api'
 import { renderApp } from '@/test/render-app'
 import { tokenRouteSnippet } from '../utils/install-snippet'
 
-const agent = {
-  id: 'agent-1',
-  name: 'Ada Lovelace',
-  email: 'ada@example.com',
-  createdAt: '2026-10-12T00:00:00.000Z',
-}
-const acme = {
-  id: 'ws-acme',
-  name: 'Acme',
-  slug: 'acme',
-  widgetKey: 'wk_acme',
-  requireSignedIdentity: false,
-  createdAt: '2026-10-17T00:00:00.000Z',
-}
 const notSetUp: WorkspaceIdentity = {
   widgetConnected: false,
   signedIdentityConnected: false,
@@ -27,7 +14,6 @@ const notSetUp: WorkspaceIdentity = {
 }
 
 afterEach(() => {
-  vi.unstubAllGlobals()
   localStorage.clear()
 })
 

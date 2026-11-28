@@ -1,12 +1,9 @@
 import { cleanup, screen } from '@testing-library/react'
+import { acme, agent, buildWorkspace, unauthorized } from '@/test/fixtures'
 import { mockApi } from '@/test/mock-api'
 import { renderApp } from '@/test/render-app'
 
-const agent = { id: 'agent-1', name: 'Ada', email: 'ada@example.com', createdAt: '2026-10-12T00:00:00.000Z' }
-const unauthorized = () => ({ status: 401, body: { message: 'Unauthorized' } })
-
 afterEach(() => {
-  vi.unstubAllGlobals()
   localStorage.clear()
 })
 
@@ -75,8 +72,7 @@ test('sends the agent to sign in when the session ends mid-use', async () => {
   expect(router.state.location.pathname).toBe('/login')
 })
 
-const acme = { id: 'ws-acme', name: 'Acme', slug: 'acme', widgetKey: 'wk_acme', createdAt: '2026-10-17T00:00:00.000Z' }
-const beta = { id: 'ws-beta', name: 'Beta', slug: 'beta', widgetKey: 'wk_beta', createdAt: '2026-10-17T00:00:00.000Z' }
+const beta = buildWorkspace('Beta', 'beta')
 
 test.each(['/', '/login', '/signup', '/onboarding'])(
   'sends a signed-in agent with workspaces from %s to the first workspace',
