@@ -17,6 +17,8 @@ self-mounting IIFE bundle (`dist/widget.js`) that a host app loads and initializ
 ```
 
 Run `pnpm dev` and open the dev harness (`index.html`) to work on it against a real host page.
+Run `pnpm test` for the integration tests and `pnpm test:e2e` for the browser tests in `e2e/` (see
+`context/testing-strategy.md`).
 
 ## Folder structure
 
@@ -36,6 +38,8 @@ Run `pnpm dev` and open the dev harness (`index.html`) to work on it against a r
 | `src/theme/` | `theme` option → resolved `light` / `dark` |
 | `src/i18n/` | `language` option → text and direction, with `locales/en.ts` and `he.ts` |
 | `src/lib/` | Small shared helpers (`cn`, date formatting) |
+| `src/test/` | Test helpers: `mockApi`, fixtures, `openWidget` |
+| `e2e/` | Playwright tests of the built bundle on a fake host page |
 
 ## Shadow DOM
 

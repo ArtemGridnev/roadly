@@ -12,6 +12,12 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Completed
 
+- **Widget integration and browser tests (`chore/widget-tests`)**:
+  - The widget gets a test stack: Vitest + Testing Library in a separate `vitest.config.ts` (the protected `vite.config.ts` is untouched), helpers in `src/test/` (`mockApi`, fixtures, `openWidget`), and a `test` script, so `pnpm test` runs it.
+  - 15 tests: requests list (sort, empty, retry), My requests (shipped requests listed but not votable, empty), voting (optimistic count, un-vote, rollback on failure), new request (validation, trimmed send shown in My requests, send failure, identify failure), session (one new session and retry on 401, a fresh `getToken` call on each renewal), details (open, Escape returns focus).
+  - Each test failed with the code it protects broken. `setActiveTab('mine')` after sending is a no-op today (the form opens only from My requests), so nothing tests it.
+  - Playwright, the first browser e2e layer (`apps/widget/e2e/`), runs the built `widget.js` on a fake host page with the API faked through `page.route`. 3 tests: mounts styled in a shadow root with host rules kept out and widget CSS kept in (including the hoisted `@property` rules that borders depend on), `getToken` wins over `user`, and a second `init` is ignored while `init` after `shutdown` mounts again. Each failed with the code it protects broken. `pnpm test:e2e` now also runs them.
+
 - **Trim low-value tests (`chore/trim-low-value-tests`)**:
   - Removed tests for removed routes, duplicate "rejects unknown fields" checks (kept in feature requests), most slug-format cases, the agents e2e file, and dashboard tests for styling, history, mobile sidebar, Hebrew plurals, URL-settings edge cases and four theme cases. No application code changed.
   - e2e 213 → 190, dashboard 114 → 98. `workspace-identity.e2e-spec.ts` (untouched) failed once in 2 of 10 full e2e runs and never on its own; not investigated yet.
@@ -281,6 +287,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - The launcher uses `rounded-full`, which breaks the `ui-context.md` hard rule (`rounded-lg` everywhere, except status badges). Either square it off or add launchers to the documented exceptions.
 - The widget launcher is `position: fixed` bottom-right rather than flowing inside the host-provided container. That matches how the sketch and every comparable widget behaves, but it means a host container with a `transform`/`filter`/`contain` ancestor will re-parent the containing block and misplace the launcher. Worth deciding whether placement becomes an `init` option.
 - `ui-context.md` §5 says the widget should inherit the host page font and fall back to Inter only if none is set. Implemented as an overridable `--roadly-font-family` defaulting to Inter, which inverts that default — the host opts in to its own font rather than the widget detecting one. Confirm this reading or change the default.
+- A failed widget vote rolls the count back silently. `testing-strategy.md` says a failed optimistic change should also say so. Add a message (and where to show it, since the widget has no toasts)?
 - Does `contacts` need any admin-facing route at all beyond the widget upsert, or should `ContactsController`'s full CRUD be trimmed?
 - ~~Is `DELETE` on feature-requests in MVP scope~~ — resolved: yes, admin-only, from the dashboard drawer (`dashboard-pages.md`). Vote removal is in scope widget-side.
 
